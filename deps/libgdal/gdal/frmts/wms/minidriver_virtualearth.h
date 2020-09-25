@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: minidriver_virtualearth.h 27044 2014-03-16 23:41:27Z rouault $
+ * $Id: minidriver_virtualearth.h b73bc525428c4d0c0b398b937223b11a119caa5e 2016-12-01 23:13:38Z Lucian Plesea $
  *
  * Project:  WMS Client Driver
  * Purpose:  Implementation of Dataset and RasterBand classes for WMS
@@ -28,20 +28,14 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-H_GDALWMSMiniDriverFactory(VirtualEarth)
-
-class GDALWMSMiniDriver_VirtualEarth : public GDALWMSMiniDriver {
+class WMSMiniDriver_VirtualEarth : public WMSMiniDriver {
 public:
-    GDALWMSMiniDriver_VirtualEarth();
-    virtual ~GDALWMSMiniDriver_VirtualEarth();
+    WMSMiniDriver_VirtualEarth();
+    virtual ~WMSMiniDriver_VirtualEarth();
 
 public:
-    virtual CPLErr Initialize(CPLXMLNode *config);
-    virtual void GetCapabilities(GDALWMSMiniDriverCapabilities *caps);
-    virtual void TiledImageRequest(CPLString *url, const GDALWMSImageRequestInfo &iri, const GDALWMSTiledImageRequestInfo &tiri);
-    virtual const char* GetProjectionInWKT();
-
-protected:
-    CPLString m_base_url;
-    CPLString m_projection_wkt;
+    virtual CPLErr Initialize(CPLXMLNode *config, char **papszOpenOptions) override;
+    virtual CPLErr TiledImageRequest(WMSHTTPRequest &request,
+                                        const GDALWMSImageRequestInfo &iri,
+                                        const GDALWMSTiledImageRequestInfo &tiri) override;
 };

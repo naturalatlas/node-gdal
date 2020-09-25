@@ -1,12 +1,11 @@
 /******************************************************************************
- * $Id: ogrvfkdatasource.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRVFKDatasource class.
  * Author:   Martin Landa, landa.martin gmail.com
  *
  ******************************************************************************
- * Copyright (c) 2009-2010, 2013 Martin Landa <landa.martin gmail.com>
+ * Copyright (c) 2009-2010, 2013-2018 Martin Landa <landa.martin gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -33,20 +32,17 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrvfkdatasource.cpp 33713 2016-03-12 17:41:57Z goatbar $");
+CPL_CVSID("$Id: ogrvfkdatasource.cpp 1cfeb033bf33dceff1ca7e1fafa13e63149c1de5 2018-05-02 20:13:02 +0200 Martin Landa $")
 
 /*!
   \brief OGRVFKDataSource constructor
 */
-OGRVFKDataSource::OGRVFKDataSource()
-{
-    pszName    = NULL;
-
-    poReader   = NULL;
-
-    papoLayers = NULL;
-    nLayers    = 0;
-}
+OGRVFKDataSource::OGRVFKDataSource() :
+    papoLayers(nullptr),
+    nLayers(0),
+    pszName(nullptr),
+    poReader(nullptr)
+{}
 
 /*!
   \brief OGRVFKDataSource destructor
@@ -55,10 +51,10 @@ OGRVFKDataSource::~OGRVFKDataSource()
 {
     CPLFree(pszName);
 
-    if (poReader)
+    if( poReader )
         delete poReader;
 
-    for(int i = 0; i < nLayers; i++)
+    for( int i = 0; i < nLayers; i++ )
         delete papoLayers[i];
 
     CPLFree(papoLayers);
@@ -67,73 +63,50 @@ OGRVFKDataSource::~OGRVFKDataSource()
 /*!
   \brief Open VFK datasource
 
-  \param pszNewName datasource name
-  \param bTestOpen True to test if datasource is possible to open
+  \param poOpenInfo open info
 
   \return TRUE on success or FALSE on failure
 */
-int OGRVFKDataSource::Open(const char *pszNewName, int bTestOpen)
+int OGRVFKDataSource::Open(GDALOpenInfo* poOpenInfo)
 {
-    FILE * fp;
-    char   szHeader[1000];
+    pszName = CPLStrdup(poOpenInfo->pszFilename);
 
-    /* open the source file */
-    fp = VSIFOpen(pszNewName, "r");
-    if (fp == NULL) {
-        if (!bTestOpen)
-            CPLError(CE_Failure, CPLE_OpenFailed,
-                     "Failed to open VFK file `%s'",
-                     pszNewName);
-
-        return FALSE;
-    }
-
-   /* If we aren't sure it is VFK, load a header chunk and check
-      for signs it is VFK */
-    if (bTestOpen) {
-        size_t nRead = VSIFRead(szHeader, 1, sizeof(szHeader), fp);
-        if (nRead <= 0) {
-            VSIFClose(fp);
-            return FALSE;
-        }
-        szHeader[MIN(nRead, sizeof(szHeader))-1] = '\0';
-
-        // TODO: improve check
-        if (!STARTS_WITH(szHeader, "&H")) {
-            VSIFClose(fp);
-            return FALSE;
-        }
-    }
-
-    /* We assume now that it is VFK. Close and instantiate a
-       VFKReader on it. */
-    VSIFClose(fp);
-
-    pszName = CPLStrdup(pszNewName);
-
-    poReader = CreateVFKReader(pszNewName);
-    if (poReader == NULL) {
+    /* create VFK reader */
+    poReader = CreateVFKReader( poOpenInfo );
+    if (poReader == nullptr || !poReader->IsValid()) {
+        /*
         CPLError(CE_Failure, CPLE_AppDefined,
                  "File %s appears to be VFK but the VFK reader can't"
                  "be instantiated",
-                 pszNewName);
+                     pszFileName);
+        */
         return FALSE;
     }
 
+    bool bSuppressGeometry = CPLFetchBool(poOpenInfo->papszOpenOptions, "SUPPRESS_GEOMETRY", false);
     /* read data blocks, i.e. &B */
-    poReader->ReadDataBlocks();
+    poReader->ReadDataBlocks(bSuppressGeometry);
 
     /* get list of layers */
     papoLayers = (OGRVFKLayer **) CPLCalloc(sizeof(OGRVFKLayer *), poReader->GetDataBlockCount());
 
+    /* create layers from VFK blocks */
     for (int iLayer = 0; iLayer < poReader->GetDataBlockCount(); iLayer++) {
         papoLayers[iLayer] = CreateLayerFromBlock(poReader->GetDataBlock(iLayer));
         nLayers++;
     }
 
-    /* read data records if required */
-    if (CPLTestBool(CPLGetConfigOption("OGR_VFK_DB_READ_ALL_BLOCKS", "YES")))
+    if (CPLTestBool(CPLGetConfigOption("OGR_VFK_DB_READ_ALL_BLOCKS", "YES"))) {
+        /* read data records if requested */
         poReader->ReadDataRecords();
+
+        if ( !bSuppressGeometry ) {
+            for (int iLayer = 0; iLayer < poReader->GetDataBlockCount(); iLayer++) {
+                /* load geometry */
+                poReader->GetDataBlock(iLayer)->LoadGeometry();
+            }
+        }
+    }
 
     return TRUE;
 }
@@ -148,7 +121,7 @@ int OGRVFKDataSource::Open(const char *pszNewName, int bTestOpen)
 OGRLayer *OGRVFKDataSource::GetLayer(int iLayer)
 {
     if( iLayer < 0 || iLayer >= nLayers )
-        return NULL;
+        return nullptr;
 
     return papoLayers[iLayer];
 }
@@ -179,13 +152,10 @@ int OGRVFKDataSource::TestCapability(const char * pszCap)
 */
 OGRVFKLayer *OGRVFKDataSource::CreateLayerFromBlock(const IVFKDataBlock *poDataBlock)
 {
-    OGRVFKLayer *poLayer;
-
-    poLayer = NULL;
-
     /* create an empty layer */
-    poLayer = new OGRVFKLayer(poDataBlock->GetName(), NULL,
-                              poDataBlock->GetGeometryType(), this);
+    OGRVFKLayer *poLayer =
+        new OGRVFKLayer(poDataBlock->GetName(), nullptr,
+                        poDataBlock->GetGeometryType(), this);
 
     /* define attributes (properties) */
     for (int iField = 0; iField < poDataBlock->GetPropertyCount(); iField++) {
@@ -197,6 +167,14 @@ OGRVFKLayer *OGRVFKDataSource::CreateLayerFromBlock(const IVFKDataBlock *poDataB
         if(poProperty->GetPrecision() > 0)
             oField.SetPrecision(poProperty->GetPrecision());
 
+        poLayer->GetLayerDefn()->AddFieldDefn(&oField);
+    }
+
+    if ( poDataBlock->GetReader()->HasFileField() ) {
+        /* open option FILE_FIELD=YES specified, append extra
+         * attribute */
+        OGRFieldDefn oField(FILE_COLUMN, OFTString);
+        oField.SetWidth(255);
         poLayer->GetLayerDefn()->AddFieldDefn(&oField);
     }
 

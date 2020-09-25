@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrpgdriver.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRPGDriver class.
@@ -30,8 +29,7 @@
 #include "ogr_pg.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrpgdriver.cpp 33713 2016-03-12 17:41:57Z goatbar $");
-
+CPL_CVSID("$Id: ogrpgdriver.cpp 1439dfd01ac6dfcbb4f4f0c267c8db2b15c98461 2018-09-09 15:02:14 +0200 Even Rouault $")
 
 /************************************************************************/
 /*                              Identify()                              */
@@ -52,19 +50,17 @@ static int OGRPGDriverIdentify( GDALOpenInfo* poOpenInfo )
 static GDALDataset *OGRPGDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
-    OGRPGDataSource     *poDS;
-
     if( !OGRPGDriverIdentify(poOpenInfo) )
-        return NULL;
+        return nullptr;
 
-    poDS = new OGRPGDataSource();
+    OGRPGDataSource *poDS = new OGRPGDataSource();
 
     if( !poDS->Open( poOpenInfo->pszFilename,
                      poOpenInfo->eAccess == GA_Update, TRUE,
                      poOpenInfo->papszOpenOptions ) )
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
     else
         return poDS;
@@ -82,9 +78,7 @@ static GDALDataset *OGRPGDriverCreate( const char * pszName,
                                           char **papszOptions )
 
 {
-    OGRPGDataSource     *poDS;
-
-    poDS = new OGRPGDataSource();
+    OGRPGDataSource *poDS = new OGRPGDataSource();
 
     if( !poDS->Open( pszName, TRUE, TRUE, papszOptions ) )
     {
@@ -92,7 +86,7 @@ static GDALDataset *OGRPGDriverCreate( const char * pszName,
         CPLError( CE_Failure, CPLE_AppDefined,
          "PostgreSQL driver doesn't currently support database creation.\n"
                   "Please create database with the `createdb' command." );
-        return NULL;
+        return nullptr;
     }
 
     return poDS;
@@ -108,7 +102,7 @@ void RegisterOGRPG()
     if (! GDAL_CHECK_VERSION("PG driver"))
         return;
 
-    if( GDALGetDriverByName( "PostgreSQL" ) != NULL )
+    if( GDALGetDriverByName( "PostgreSQL" ) != nullptr )
         return;
 
     GDALDriver* poDriver = new GDALDriver();
@@ -151,7 +145,12 @@ void RegisterOGRPG()
 "  <Option name='DIM' type='string' description='Set to 2 to force the geometries to be 2D, 3 to be 2.5D, XYM or XYZM'/>"
 "  <Option name='GEOMETRY_NAME' type='string' description='Name of geometry column. Defaults to wkb_geometry for GEOM_TYPE=geometry or the_geog for GEOM_TYPE=geography'/>"
 "  <Option name='SCHEMA' type='string' description='Name of schema into which to create the new table'/>"
-"  <Option name='SPATIAL_INDEX' type='boolean' description='Whether to create a spatial index' default='YES'/>"
+"  <Option name='SPATIAL_INDEX' type='string-select' description='Type of spatial index to create' default='GIST'>"
+"    <Value>NONE</Value>"
+"    <Value>GIST</Value>"
+"    <Value>SPGIST</Value>"
+"    <Value>BRIN</Value>"
+"  </Option>"
 "  <Option name='TEMPORARY' type='boolean' description='Whether to a temporary table instead of a permanent one' default='NO'/>"
 "  <Option name='UNLOGGED' type='boolean' description='Whether to create the table as a unlogged one' default='NO'/>"
 "  <Option name='NONE_AS_UNKNOWN' type='boolean' description='Whether to force non-spatial layers to be created as spatial tables' default='NO'/>"
@@ -166,6 +165,7 @@ void RegisterOGRPG()
                                "Integer Integer64 Real String Date DateTime "
                                "Time IntegerList Integer64List RealList "
                                "StringList Binary" );
+    poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATASUBTYPES, "Boolean Int16 Float32" );
     poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_FIELDS, "YES" );
     poDriver->SetMetadataItem( GDAL_DCAP_DEFAULT_FIELDS, "YES" );
     poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_GEOMFIELDS, "YES" );

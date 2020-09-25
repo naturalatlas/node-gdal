@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_ili2.h 33713 2016-03-12 17:41:57Z goatbar $
+ * $Id: ogr_ili2.h 29dcefd34892121afac0b7b978757ee6daad614a 2018-05-03 15:55:54 +0200 Even Rouault $
  *
  * Project:  Interlis 2 Translator
  * Purpose:   Definition of classes for OGR Interlis 2 driver.
@@ -55,27 +55,27 @@ class OGRILI2Layer : public OGRLayer
 
   public:
                         OGRILI2Layer( OGRFeatureDefn* poFeatureDefn,
-                                      GeomFieldInfos oGeomFieldInfos,
+                                      const GeomFieldInfos& oGeomFieldInfos,
                                       OGRILI2DataSource *poDS );
 
                        ~OGRILI2Layer();
 
-    OGRErr              ISetFeature(OGRFeature *poFeature);
+    void                AddFeature(OGRFeature *poFeature);
 
-    void                ResetReading();
-    OGRFeature *        GetNextFeature();
+    void                ResetReading() override;
+    OGRFeature *        GetNextFeature() override;
 
-    GIntBig             GetFeatureCount( int bForce = TRUE );
+    GIntBig             GetFeatureCount( int bForce = TRUE ) override;
 
-    OGRErr              ICreateFeature( OGRFeature *poFeature );
+    OGRErr              ICreateFeature( OGRFeature *poFeature ) override;
 
-    OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
+    OGRFeatureDefn *    GetLayerDefn() override { return poFeatureDefn; }
 
-    CPLString           GetIliGeomType( const char* cFieldName) { return oGeomFieldInfos[cFieldName].iliGeomType; };
+    CPLString           GetIliGeomType( const char* cFieldName) { return oGeomFieldInfos[cFieldName].iliGeomType; }
 
-    OGRErr              CreateField( OGRFieldDefn *poField, int bApproxOK = TRUE );
+    OGRErr              CreateField( OGRFieldDefn *poField, int bApproxOK = TRUE ) override;
 
-    int                 TestCapability( const char * );
+    int                 TestCapability( const char * ) override;
 };
 
 /************************************************************************/
@@ -95,24 +95,26 @@ class OGRILI2DataSource : public OGRDataSource
     int         nLayers;
     OGRILI2Layer** papoLayers;
 
+    CPL_DISALLOW_COPY_ASSIGN(OGRILI2DataSource)
+
   public:
                 OGRILI2DataSource();
-               ~OGRILI2DataSource();
+               virtual ~OGRILI2DataSource();
 
     int         Open( const char *, char** papszOpenOptions, int bTestOpen );
     int         Create( const char *pszFile, char **papszOptions );
 
-    const char *GetName() { return pszName; }
-    int         GetLayerCount() { return static_cast<int>(listLayer.size()); }
-    OGRLayer   *GetLayer( int );
+    const char *GetName() override { return pszName; }
+    int         GetLayerCount() override { return static_cast<int>(listLayer.size()); }
+    OGRLayer   *GetLayer( int ) override;
 
     virtual OGRLayer *ICreateLayer( const char *,
-                                      OGRSpatialReference * = NULL,
+                                      OGRSpatialReference * = nullptr,
                                       OGRwkbGeometryType = wkbUnknown,
-                                      char ** = NULL );
+                                      char ** = nullptr ) override;
 
     VSILFILE *  GetOutputFP() { return fpOutput; }
-    int         TestCapability( const char * );
+    int         TestCapability( const char * ) override;
 };
 
 #endif /* OGR_ILI2_H_INCLUDED */

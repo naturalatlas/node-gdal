@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrmutexeddatasource.cpp 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMutexedDataSource class
@@ -27,26 +26,28 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#ifndef DOXYGEN_SKIP
+
 #include "ogrmutexeddatasource.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: ogrmutexeddatasource.cpp 33714 2016-03-13 05:42:13Z goatbar $");
+CPL_CVSID("$Id: ogrmutexeddatasource.cpp e5a287aeb4a9c8665a45b9877e555e16ed93843d 2018-04-18 19:06:22 +0200 Even Rouault $")
 
-OGRMutexedDataSource::OGRMutexedDataSource(OGRDataSource* poBaseDataSource,
-                                           int bTakeOwnership,
-                                           CPLMutex* hMutexIn,
-                                           int bWrapLayersInMutexedLayer) :
-            m_poBaseDataSource(poBaseDataSource),
-            m_bHasOwnership(bTakeOwnership),
-            m_hGlobalMutex(hMutexIn),
-            m_bWrapLayersInMutexedLayer(bWrapLayersInMutexedLayer)
-{
-}
+OGRMutexedDataSource::OGRMutexedDataSource( OGRDataSource* poBaseDataSource,
+                                            int bTakeOwnership,
+                                            CPLMutex* hMutexIn,
+                                            int bWrapLayersInMutexedLayer ) :
+    m_poBaseDataSource(poBaseDataSource),
+    m_bHasOwnership(bTakeOwnership),
+    m_hGlobalMutex(hMutexIn),
+    m_bWrapLayersInMutexedLayer(bWrapLayersInMutexedLayer)
+{}
 
 OGRMutexedDataSource::~OGRMutexedDataSource()
 {
-    std::map<OGRLayer*, OGRMutexedLayer*>::iterator oIter = m_oMapLayers.begin();
-    for(; oIter != m_oMapLayers.end(); ++oIter )
+    std::map<OGRLayer*, OGRMutexedLayer*>::iterator oIter =
+        m_oMapLayers.begin();
+    for( ; oIter != m_oMapLayers.end(); ++oIter )
         delete oIter->second;
 
     if( m_bHasOwnership )
@@ -98,7 +99,7 @@ OGRLayer    *OGRMutexedDataSource::GetLayerByName(const char *pszName)
 OGRErr      OGRMutexedDataSource::DeleteLayer(int iIndex)
 {
     CPLMutexHolderOptionalLockD(m_hGlobalMutex);
-    OGRLayer* poLayer = m_bWrapLayersInMutexedLayer ? GetLayer(iIndex) : NULL;
+    OGRLayer* poLayer = m_bWrapLayersInMutexedLayer ? GetLayer(iIndex) : nullptr;
     OGRErr eErr = m_poBaseDataSource->DeleteLayer(iIndex);
     if( eErr == OGRERR_NONE && poLayer)
     {
@@ -168,7 +169,8 @@ void        OGRMutexedDataSource::ReleaseResultSet( OGRLayer * poResultsSet )
     CPLMutexHolderOptionalLockD(m_hGlobalMutex);
     if( poResultsSet && m_bWrapLayersInMutexedLayer )
     {
-        std::map<OGRMutexedLayer*, OGRLayer*>::iterator oIter = m_oReverseMapLayers.find((OGRMutexedLayer*)poResultsSet);
+        std::map<OGRMutexedLayer*, OGRLayer*>::iterator oIter =
+            m_oReverseMapLayers.find(cpl::down_cast<OGRMutexedLayer*>(poResultsSet));
         CPLAssert(oIter != m_oReverseMapLayers.end());
         delete poResultsSet;
         poResultsSet = oIter->second;
@@ -240,3 +242,5 @@ void OGRRegisterMutexedDataSource()
     delete new OGRMutexedDataSource(NULL, FALSE, NULL, FALSE);
 }
 #endif
+
+#endif /* #ifndef DOXYGEN_SKIP */

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id$
  *
  * Project:  GDAL Core
  * Purpose:  The library set-up/clean-up routines.
@@ -28,16 +27,20 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
 #include "gdal.h"
-#include "ogr_api.h"
-#include "cpl_multiproc.h"
+
 #include "cpl_conv.h"
+#include "cpl_error.h"
+#include "cpl_multiproc.h"
 #include "cpl_string.h"
+#include "ogr_api.h"
 
-static int bInGDALGlobalDestructor = FALSE;
-extern "C" int CPL_DLL GDALIsInGlobalDestructor(void);
 
-int GDALIsInGlobalDestructor(void)
+static bool bInGDALGlobalDestructor = false;
+extern "C" int CPL_DLL GDALIsInGlobalDestructor();
+
+int GDALIsInGlobalDestructor()
 {
     return bInGDALGlobalDestructor;
 }
@@ -53,9 +56,14 @@ void CPLFinalizeTLS();
  * This function calls GDALDestroyDriverManager() and OGRCleanupAll() and
  * finalize Thread Local Storage variables.
  *
- * This function should *not* usually be explicitly called by application code
- * if GDAL is dynamically linked, since it is automatically called through
+ * Prior to GDAL 2.4.0, this function should normally be explicitly called by
+ * application code if GDAL is dynamically linked (but that does not hurt),
+ * since it was automatically called through
  * the unregistration mechanisms of dynamic library loading.
+ *
+ * Since GDAL 2.4.0, this function may be called by application code, since
+ * it is no longer called automatically, on non-MSVC builds, due to ordering
+ * problems with respect to automatic destruction of global C++ objects.
  *
  * Note: no GDAL/OGR code should be called after this call!
  *
@@ -69,17 +77,23 @@ void GDALDestroy(void)
         return;
     bGDALDestroyAlreadyCalled = true;
 
+    bInGDALGlobalDestructor = true;
+
+    // logging/error handling may call GDALIsInGlobalDestructor()
     CPLDebug("GDAL", "In GDALDestroy - unloading GDAL shared library.");
-    bInGDALGlobalDestructor = TRUE;
+
     GDALDestroyDriverManager();
 
     OGRCleanupAll();
-    bInGDALGlobalDestructor = FALSE;
+    bInGDALGlobalDestructor = false;
 
-    /* See https://trac.osgeo.org/gdal/ticket/6139 */
+    /* See corresponding bug reports: */
+    /* https://trac.osgeo.org/gdal/ticket/6139 */
+    /* https://trac.osgeo.org/gdal/ticket/6868 */
     /* Needed in case no driver manager has been instantiated. */
     CPLFreeConfig();
     CPLFinalizeTLS();
+    CPLCleanupErrorMutex();
     CPLCleanupMasterMutex();
 }
 
@@ -90,55 +104,39 @@ void GDALDestroy(void)
 /************************************************************************/
 #ifdef __GNUC__
 
-static void GDALInitialize(void) __attribute__ ((constructor)) ;
-static void GDALDestructor(void) __attribute__ ((destructor)) ;
+static void GDALInitialize() __attribute__ ((constructor)) ;
 
 /************************************************************************/
 /* Called when GDAL is loaded by loader or by dlopen(),                 */
 /* and before dlopen() returns.                                         */
 /************************************************************************/
 
-static void GDALInitialize(void)
+static void GDALInitialize()
 {
     // nothing to do
     //CPLDebug("GDAL", "Library loaded");
 #ifdef DEBUG
-    const char* pszLocale = CPLGetConfigOption("GDAL_LOCALE", NULL);
+    const char* pszLocale = CPLGetConfigOption("GDAL_LOCALE", nullptr);
     if( pszLocale )
         CPLsetlocale( LC_ALL, pszLocale );
 #endif
 }
 
-/************************************************************************/
-/* Called when GDAL is unloaded by loader or by dlclose(),              */
-/* and before dlclose() returns.                                        */
-/************************************************************************/
-
-static void GDALDestructor(void)
-{
-    if( bGDALDestroyAlreadyCalled )
-        return;
-    if( !CPLTestBool(CPLGetConfigOption("GDAL_DESTROY", "YES")) )
-        return;
-    GDALDestroy();
-}
-
 #endif // __GNUC__
-
 
 /************************************************************************/
 /*  The library set-up/clean-up routine implemented as DllMain entry    */
 /*  point specific for Windows.                                         */
 /************************************************************************/
 #ifdef _MSC_VER
+#ifndef CPL_DISABLE_DLL
 
 #include <windows.h>
 
-extern "C" int WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+extern "C" int WINAPI DllMain( HINSTANCE /* hInstance */,
+                               DWORD dwReason,
+                               LPVOID /* lpReserved */ )
 {
-    UNREFERENCED_PARAMETER(hInstance);
-    UNREFERENCED_PARAMETER(lpReserved);
-
     if (dwReason == DLL_PROCESS_ATTACH)
     {
         // nothing to do
@@ -159,4 +157,5 @@ extern "C" int WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpRese
     return 1; // ignored for all reasons but DLL_PROCESS_ATTACH
 }
 
+#endif // CPL_DISABLE_DLL
 #endif // _MSC_VER

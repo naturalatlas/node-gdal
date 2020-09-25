@@ -5,7 +5,7 @@ set -eu
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR/libgdal"
 
-GDAL_VERSION=2.1.1
+GDAL_VERSION=2.4.4
 dir_gdal=./gdal
 dir_formats_gyp=./gyp-formats
 dir_gyp_templates=./gyp-templates
@@ -77,11 +77,15 @@ rm -f $dir_gdal/makefile.vc
 rm -f $dir_gdal/aclocal.m4
 rm -f $dir_gdal/NEWS
 rm -f $dir_gdal/COMMITERS*
+rm -f $dir_gdal/COMMITTERS*
+rm -f $dir_gdal/Doxygen*
 rm -f $dir_gdal/PERFORMANCE*
 rm -f $dir_gdal/PROVENANCE*
 rm -f $dir_gdal/MIGRATION_GUIDE*
 rm -f $dir_gdal/HOWTO-RELEASE*
 rm -f $dir_gdal/Vagrantfile
+rm -rf $dir_gdal/ci
+rm -rf $dir_gdal/fuzzers
 
 #
 # apply patches
@@ -90,7 +94,7 @@ rm -f $dir_gdal/Vagrantfile
 #patch gdal/gcore/gdal_priv.h < patches/gcore_gdal_priv.diff # clang support
 #patch gdal/frmts/wms/gdalwmsdataset.cpp < patches/frmts_wms_gdalwmsdataset.diff # fixes error in wms driver
 patch gdal/ogr/ogrsf_frmts/shape/shptree.c < patches/ogrsf_frmts_shape_shptree.diff # fixes INT_MAX undeclared error
-patch gdal/gcore/gdalexif.cpp < patches/gcore_gdalexif.diff # fixes MSVC++ internal compiler error (https://github.com/naturalatlas/node-gdal/issues/45)
+#patch gdal/gcore/gdalexif.cpp < patches/gcore_gdalexif.diff # fixes MSVC++ internal compiler error (https://github.com/naturalatlas/node-gdal/issues/45)
 patch gdal/ogr/ogrsf_frmts/shape/shpopen.c < patches/ogrsf_frmts_shape_shpopenc.diff # missing cpl_port.h
 patch gdal/ogr/ogrsf_frmts/shape/dbfopen.c < patches/ogrsf_frmts_shape_dbfopen.diff
 patch gdal/ogr/ogrsf_frmts/shape/sbnsearch.c < patches/ogrsf_frmts_shape_sbnsearch.diff
@@ -107,13 +111,13 @@ GDAL_FORMATS="gtiff hfa aigrid aaigrid ceos ceos2 iso8211 xpm
 	idrisi gsg ingr ers jaxapalsar dimap gff cosar pds adrg
 	coasp tsx terragen blx til r northwood saga xyz hf2
 	kmlsuperoverlay ctg e00grid zmap ngsgeoid iris map zlib
-	jpeg png
+	jpeg png grib sigdem derived null
 	${OPT_GDAL_FORMATS:-}"
 
 OGR_FORMATS="shape vrt avc geojson mem mitab kml gpx aeronavfaa
 	bna dxf csv edigeo geoconcept georss gml gmt gpsbabel gtm htf
 	idrisi dgn openair openfilegdb pds pgdump rec s57 sdts segukooa
-	segy sua svg sxf ntf xplane wasp"
+	segy sua svg sxf ntf xplane wasp mvt"
 
 mkdir -p $dir_formats_gyp
 

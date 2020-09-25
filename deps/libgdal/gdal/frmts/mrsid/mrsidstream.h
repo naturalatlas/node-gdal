@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: mrsidstream.h 32179 2015-12-14 16:22:34Z goatbar $
+ * $Id: mrsidstream.h 865d298b99eaca4bbc765fb83c05a1e7b27103cc 2015-12-14 16:22:34Z Kurt Schwehr $
  *
  * Project:  Multi-resolution Seamless Image Database (MrSID)
  * Purpose:  Input/output stream wrapper for usage with LizardTech's

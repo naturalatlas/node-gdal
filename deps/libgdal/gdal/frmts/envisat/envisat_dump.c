@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: envisat_dump.c 33720 2016-03-15 00:39:53Z goatbar $
+ * $Id: envisat_dump.c bde879dd6c2dd67ecf317ad588846089f0905cb9 2016-03-15 00:39:53Z Kurt Schwehr $
  *
  * Project:  APP ENVISAT Support
  * Purpose:  Test mainline for dumping ENVISAT format files.

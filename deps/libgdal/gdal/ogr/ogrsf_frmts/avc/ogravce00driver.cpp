@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogravcbindriver.cpp 10645 2007-01-18 02:22:39Z warmerdam $
  *
  * Project:  OGR
  * Purpose:  OGRAVCE00Driver implementation (Arc/Info E00ary Coverages)
@@ -29,7 +28,30 @@
 
 #include "ogr_avc.h"
 
-CPL_CVSID("$Id: ogravcbindriver.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: ogravce00driver.cpp f93644db7bb54fe7f1b0bd28b3b6320e1331e74f 2018-03-03 19:24:43Z Even Rouault $")
+
+/************************************************************************/
+/*                             Identify()                               */
+/************************************************************************/
+
+static int OGRAVCE00DriverIdentify( GDALOpenInfo * poOpenInfo )
+{
+    if( !EQUAL(CPLGetExtension(poOpenInfo->pszFilename), "E00") )
+        return FALSE;
+
+    if (poOpenInfo->nHeaderBytes == 0)
+        return FALSE;
+
+    if (!(STARTS_WITH_CI((const char*)poOpenInfo->pabyHeader, "EXP  0") ||
+          STARTS_WITH_CI((const char*)poOpenInfo->pabyHeader, "EXP  1")))
+        return FALSE;
+
+    if (strstr((const char*)poOpenInfo->pabyHeader, "GRD  2") != nullptr ||
+        strstr((const char*)poOpenInfo->pabyHeader, "GRD  3") != nullptr )
+        return FALSE;
+
+    return TRUE;
+}
 
 /************************************************************************/
 /*                                Open()                                */
@@ -38,12 +60,10 @@ CPL_CVSID("$Id: ogravcbindriver.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
 static GDALDataset *OGRAVCE00DriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
+    if( !OGRAVCE00DriverIdentify(poOpenInfo) )
+        return nullptr;
     if( poOpenInfo->eAccess == GA_Update )
-        return NULL;
-    if( !poOpenInfo->bStatOK )
-        return NULL;
-    if( !EQUAL(CPLGetExtension(poOpenInfo->pszFilename), "E00") )
-        return NULL;
+        return nullptr;
 
     OGRAVCE00DataSource *poDSE00 = new OGRAVCE00DataSource();
 
@@ -54,7 +74,7 @@ static GDALDataset *OGRAVCE00DriverOpen( GDALOpenInfo* poOpenInfo )
     }
     delete poDSE00;
 
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
@@ -64,7 +84,7 @@ static GDALDataset *OGRAVCE00DriverOpen( GDALOpenInfo* poOpenInfo )
 void RegisterOGRAVCE00()
 
 {
-    if( GDALGetDriverByName( "AVCE00" ) != NULL )
+    if( GDALGetDriverByName( "AVCE00" ) != nullptr )
         return;
 
     GDALDriver  *poDriver = new GDALDriver();
@@ -75,7 +95,9 @@ void RegisterOGRAVCE00()
                                "Arc/Info E00 (ASCII) Coverage" );
     poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "e00" );
     poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_avce00.html" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
 
+    poDriver->pfnIdentify = OGRAVCE00DriverIdentify;
     poDriver->pfnOpen = OGRAVCE00DriverOpen;
 
     GetGDALDriverManager()->RegisterDriver( poDriver );

@@ -1,5 +1,5 @@
 /*
- * $Id: keamaskband.h 33720 2016-03-15 00:39:53Z goatbar $
+ * $Id: keamaskband.h 1dd8a744bbfec8b849371abec5cd44f729eecb03 2018-05-06 21:11:29 +0200 Even Rouault $
  *  keamaskband.h
  *
  *  Created by Pete Bunting on 01/08/2012.
@@ -35,7 +35,7 @@
 
 #include "libkea_headers.h"
 
-class KEAMaskBand : public GDALRasterBand
+class KEAMaskBand final: public GDALRasterBand
 {
     int m_nSrcBand;
     kealib::KEAImageIO  *m_pImageIO; // our image access pointer - refcounted
@@ -46,9 +46,8 @@ public:
 
 protected:
     // we just override these functions from GDALRasterBand
-    virtual CPLErr IReadBlock( int, int, void * );
-    virtual CPLErr IWriteBlock( int, int, void * );
-
+    virtual CPLErr IReadBlock( int, int, void * ) override;
+    virtual CPLErr IWriteBlock( int, int, void * ) override;
 };
 
 #endif //KEAMASKBAND_H

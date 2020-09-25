@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrsdtsdriver.cpp 32110 2015-12-10 17:19:40Z goatbar $
  *
  * Project:  SDTS Translator
  * Purpose:  Implements OGRSDTSDriver
@@ -30,7 +29,7 @@
 #include "ogr_sdts.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrsdtsdriver.cpp 32110 2015-12-10 17:19:40Z goatbar $");
+CPL_CVSID("$Id: ogrsdtsdriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                                Open()                                */
@@ -40,31 +39,31 @@ static GDALDataset *OGRSDTSDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
     if( !EQUAL(CPLGetExtension(poOpenInfo->pszFilename), "DDF") )
-        return NULL;
+        return nullptr;
     if( poOpenInfo->nHeaderBytes < 10 )
-        return NULL;
+        return nullptr;
     const char* pachLeader = (const char* )poOpenInfo->pabyHeader;
     if( (pachLeader[5] != '1' && pachLeader[5] != '2'
                 && pachLeader[5] != '3' )
             || pachLeader[6] != 'L'
             || (pachLeader[8] != '1' && pachLeader[8] != ' ') )
     {
-        return NULL;
+        return nullptr;
     }
 
     OGRSDTSDataSource   *poDS = new OGRSDTSDataSource();
     if( !poDS->Open( poOpenInfo->pszFilename, TRUE ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
-    if( poDS != NULL && poOpenInfo->eAccess == GA_Update )
+    if( poDS != nullptr && poOpenInfo->eAccess == GA_Update )
     {
         CPLError( CE_Failure, CPLE_OpenFailed,
                   "SDTS Driver doesn't support update." );
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
@@ -77,7 +76,7 @@ static GDALDataset *OGRSDTSDriverOpen( GDALOpenInfo* poOpenInfo )
 void RegisterOGRSDTS()
 
 {
-    if( GDALGetDriverByName( "OGR_SDTS" ) != NULL )
+    if( GDALGetDriverByName( "OGR_SDTS" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();
@@ -86,6 +85,7 @@ void RegisterOGRSDTS()
     poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
     poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, "SDTS" );
     poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_sdts.html" );
+    poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
 
     poDriver->pfnOpen = OGRSDTSDriverOpen;
 

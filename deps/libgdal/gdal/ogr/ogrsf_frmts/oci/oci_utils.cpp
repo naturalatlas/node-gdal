@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: oci_utils.cpp 10645 2007-01-18 02:22:39Z warmerdam $
  *
  * Project:  Oracle Spatial Driver
  * Purpose:  Various low level utility functions for OCI connections.
@@ -29,5 +28,4 @@
 
 #include "ogr_oci.h"
 
-CPL_CVSID("$Id: oci_utils.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
-
+CPL_CVSID("$Id: oci_utils.cpp ff8146d84de7cba8e09d212d5481ea7d2ede3e98 2017-06-27 20:47:31Z Even Rouault $")

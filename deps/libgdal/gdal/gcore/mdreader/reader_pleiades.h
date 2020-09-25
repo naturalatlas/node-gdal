@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: reader_pleiades.h 34367 2016-06-17 13:58:32Z rouault $
+ * $Id: reader_pleiades.h e37e476c4cf8f4b0df8995e0d95d5d672fca1a9b 2018-05-05 16:54:18 +0200 Even Rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Read metadata from Pleiades imagery.
@@ -51,15 +51,21 @@ class GDALMDReaderPleiades: public GDALMDReaderBase
 public:
     GDALMDReaderPleiades(const char *pszPath, char **papszSiblingFiles);
     virtual ~GDALMDReaderPleiades();
-    virtual bool HasRequiredFiles() const;
-    virtual char** GetMetadataFiles() const;
-protected:
-    virtual void LoadMetadata();
+    virtual bool HasRequiredFiles() const override;
+    virtual char** GetMetadataFiles() const override;
+
+    static GDALMDReaderPleiades* CreateReaderForRPC(const char* pszRPCSourceFilename);
+
     char** LoadRPCXmlFile();
+
 protected:
-    CPLString m_osBaseFilename;
-    CPLString m_osIMDSourceFilename;
-    CPLString m_osRPBSourceFilename;
+    virtual void LoadMetadata() override;
+protected:
+    CPLString m_osBaseFilename{};
+    CPLString m_osIMDSourceFilename{};
+    CPLString m_osRPBSourceFilename{};
+private:
+    GDALMDReaderPleiades();
 };
 
 #endif // READER_PLEIADES_H_INCLUDED

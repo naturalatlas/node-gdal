@@ -24,7 +24,10 @@
 				"../gdal/ogr/ogrsf_frmts/geojson/ogrgeojsonutils.cpp",
 				"../gdal/ogr/ogrsf_frmts/geojson/ogrgeojsonwritelayer.cpp",
 				"../gdal/ogr/ogrsf_frmts/geojson/ogrgeojsonwriter.cpp",
-				"../gdal/ogr/ogrsf_frmts/geojson/ogrtopojsonreader.cpp"
+				"../gdal/ogr/ogrsf_frmts/geojson/ogrtopojsonreader.cpp",
+				"../gdal/ogr/ogrsf_frmts/geojson/ogresrijsondriver.cpp",
+				"../gdal/ogr/ogrsf_frmts/geojson/ogrgeojsonseqdriver.cpp",
+				"../gdal/ogr/ogrsf_frmts/geojson/ogrtopojsondriver.cpp"
 			],
 			"include_dirs": [
 				"../gdal/ogr/ogrsf_frmts/geojson",

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: pdfreadvectors.cpp 33123 2016-01-23 18:59:28Z rouault $
  *
  * Project:  PDF driver
  * Purpose:  GDALDataset driver for PDF dataset (read vector features)
@@ -32,9 +31,11 @@
 #define SQUARE(x) ((x)*(x))
 #define EPSILON 1e-5
 
-CPL_CVSID("$Id: pdfreadvectors.cpp 33123 2016-01-23 18:59:28Z rouault $");
+CPL_CVSID("$Id: pdfreadvectors.cpp 325077148f678a89f4e51b26a74650a871486f06 2019-10-19 19:57:30 +0200 Even Rouault $")
 
 #if defined(HAVE_POPPLER) || defined(HAVE_PODOFO) || defined(HAVE_PDFIUM)
+
+constexpr int BEZIER_STEPS = 10;
 
 /************************************************************************/
 /*                        OpenVectorLayers()                            */
@@ -46,19 +47,19 @@ int PDFDataset::OpenVectorLayers(GDALPDFDictionary* poPageDict)
         return TRUE;
     bHasLoadedLayers = TRUE;
 
-    if( poPageDict == NULL )
+    if( poPageDict == nullptr )
     {
         poPageDict = poPageObj->GetDictionary();
-        if ( poPageDict == NULL )
+        if ( poPageDict == nullptr )
             return FALSE;
     }
 
     GetCatalog();
-    if( poCatalogObject == NULL )
+    if( poCatalogObject == nullptr )
         return FALSE;
 
     GDALPDFObject* poContents = poPageDict->Get("Contents");
-    if (poContents == NULL)
+    if (poContents == nullptr)
         return FALSE;
 
     if (poContents->GetType() != PDFObjectType_Dictionary &&
@@ -66,12 +67,12 @@ int PDFDataset::OpenVectorLayers(GDALPDFDictionary* poPageDict)
         return FALSE;
 
     GDALPDFObject* poResources = poPageDict->Get("Resources");
-    if (poResources == NULL || poResources->GetType() != PDFObjectType_Dictionary)
+    if (poResources == nullptr || poResources->GetType() != PDFObjectType_Dictionary)
         return FALSE;
 
     GDALPDFObject* poStructTreeRoot = poCatalogObject->GetDictionary()->Get("StructTreeRoot");
     if (CPLTestBool(CPLGetConfigOption("OGR_PDF_READ_NON_STRUCTURED", "NO")) ||
-        poStructTreeRoot == NULL ||
+        poStructTreeRoot == nullptr ||
         poStructTreeRoot->GetType() != PDFObjectType_Dictionary)
     {
         ExploreContentsNonStructured(poContents, poResources);
@@ -79,7 +80,8 @@ int PDFDataset::OpenVectorLayers(GDALPDFDictionary* poPageDict)
     else
     {
         ExploreContents(poContents, poResources);
-        ExploreTree(poStructTreeRoot, 0);
+        std::set< std::pair<int,int> > aoSetAlreadyVisited;
+        ExploreTree(poStructTreeRoot, aoSetAlreadyVisited, 0);
     }
 
     CleanupIntermediateResources();
@@ -217,9 +219,9 @@ int PDFDataset::TestCapability( CPL_UNUSED const char * pszCap )
 OGRLayer *PDFDataset::GetLayer( int iLayer )
 
 {
-    OpenVectorLayers(NULL);
+    OpenVectorLayers(nullptr);
     if (iLayer < 0 || iLayer >= nLayers)
-        return NULL;
+        return nullptr;
 
     return papoLayers[iLayer];
 }
@@ -230,7 +232,7 @@ OGRLayer *PDFDataset::GetLayer( int iLayer )
 
 int PDFDataset::GetLayerCount()
 {
-    OpenVectorLayers(NULL);
+    OpenVectorLayers(nullptr);
     return nLayers;
 }
 
@@ -238,10 +240,17 @@ int PDFDataset::GetLayerCount()
 /*                            ExploreTree()                             */
 /************************************************************************/
 
-void PDFDataset::ExploreTree(GDALPDFObject* poObj, int nRecLevel)
+void PDFDataset::ExploreTree(GDALPDFObject* poObj,
+                             std::set< std::pair<int,int> > aoSetAlreadyVisited,
+                             int nRecLevel)
 {
     if (nRecLevel == 16)
         return;
+
+    std::pair<int,int> oObjPair( poObj->GetRefNum(), poObj->GetRefGen() );
+    if( aoSetAlreadyVisited.find( oObjPair ) != aoSetAlreadyVisited.end() )
+        return;
+    aoSetAlreadyVisited.insert( oObjPair );
 
     if (poObj->GetType() != PDFObjectType_Dictionary)
         return;
@@ -250,47 +259,48 @@ void PDFDataset::ExploreTree(GDALPDFObject* poObj, int nRecLevel)
 
     GDALPDFObject* poS = poDict->Get("S");
     CPLString osS;
-    if (poS != NULL && poS->GetType() == PDFObjectType_Name)
+    if (poS != nullptr && poS->GetType() == PDFObjectType_Name)
     {
         osS = poS->GetName();
     }
 
     GDALPDFObject* poT = poDict->Get("T");
     CPLString osT;
-    if (poT != NULL && poT->GetType() == PDFObjectType_String)
+    if (poT != nullptr && poT->GetType() == PDFObjectType_String)
     {
         osT = poT->GetString();
     }
 
     GDALPDFObject* poK = poDict->Get("K");
-    if (poK == NULL)
+    if (poK == nullptr)
         return;
 
     if (poK->GetType() == PDFObjectType_Array)
     {
         GDALPDFArray* poArray = poK->GetArray();
         if (poArray->GetLength() > 0 &&
+            poArray->Get(0) &&
             poArray->Get(0)->GetType() == PDFObjectType_Dictionary &&
-            poArray->Get(0)->GetDictionary()->Get("K") != NULL &&
+            poArray->Get(0)->GetDictionary()->Get("K") != nullptr &&
             poArray->Get(0)->GetDictionary()->Get("K")->GetType() == PDFObjectType_Int)
         {
             CPLString osLayerName;
-            if (osT.size())
+            if (!osT.empty() )
                 osLayerName = osT;
             else
             {
-                if (osS.size())
+                if (!osS.empty() )
                     osLayerName = osS;
                 else
                     osLayerName = CPLSPrintf("Layer%d", nLayers + 1);
             }
 
             const char* l_pszWKT = GetProjectionRef();
-            OGRSpatialReference* poSRS = NULL;
+            OGRSpatialReference* poSRS = nullptr;
             if (l_pszWKT && l_pszWKT[0] != '\0')
             {
                 poSRS = new OGRSpatialReference();
-                poSRS->importFromWkt((char**) &l_pszWKT);
+                poSRS->importFromWkt(l_pszWKT);
             }
 
             OGRPDFLayer* poLayer =
@@ -307,12 +317,19 @@ void PDFDataset::ExploreTree(GDALPDFObject* poObj, int nRecLevel)
         else
         {
             for(int i=0;i<poArray->GetLength();i++)
-                ExploreTree(poArray->Get(i), nRecLevel + 1);
+            {
+                auto poSubObj = poArray->Get(i);
+                if (poSubObj )
+                {
+                    ExploreTree(poSubObj, aoSetAlreadyVisited,
+                                nRecLevel + 1);
+                }
+            }
         }
     }
     else if (poK->GetType() == PDFObjectType_Dictionary)
     {
-        ExploreTree(poK, nRecLevel + 1);
+        ExploreTree(poK, aoSetAlreadyVisited, nRecLevel + 1);
     }
 }
 
@@ -326,7 +343,7 @@ OGRGeometry* PDFDataset::GetGeometryFromMCID(int nMCID)
     if (oMapIter != oMapMCID.end())
         return oMapIter->second;
     else
-        return NULL;
+        return nullptr;
 }
 
 /************************************************************************/
@@ -402,7 +419,10 @@ void PDFDataset::PDFCoordsToSRSCoords(double x, double y,
                                             double& X, double &Y)
 {
     x = x / dfPageWidth * nRasterXSize;
-    y = (1 - y / dfPageHeight) * nRasterYSize;
+    if( bGeoTransformValid )
+        y = (1 - y / dfPageHeight) * nRasterYSize;
+    else
+        y = (y / dfPageHeight) * nRasterYSize;
 
     X = adfGeoTransform[0] + x * adfGeoTransform[1] + y * adfGeoTransform[2];
     Y = adfGeoTransform[3] + x * adfGeoTransform[4] + y * adfGeoTransform[5];
@@ -421,18 +441,18 @@ void PDFDataset::PDFCoordsToSRSCoords(double x, double y,
 
 static OGRPoint* PDFGetCircleCenter(OGRLineString* poLS)
 {
-    if (poLS == NULL || poLS->getNumPoints() != 5)
-        return NULL;
+    if (poLS == nullptr || poLS->getNumPoints() != 1 + 4 * BEZIER_STEPS)
+        return nullptr;
 
-    if (poLS->getY(0) == poLS->getY(2) &&
-        poLS->getX(1) == poLS->getX(3) &&
-        fabs((poLS->getX(0) + poLS->getX(2)) / 2 - poLS->getX(1)) < EPSILON &&
-        fabs((poLS->getY(1) + poLS->getY(3)) / 2 - poLS->getY(0)) < EPSILON)
+    if (poLS->getY(0 * BEZIER_STEPS) == poLS->getY(2 * BEZIER_STEPS) &&
+        poLS->getX(1 * BEZIER_STEPS) == poLS->getX(3 * BEZIER_STEPS) &&
+        fabs((poLS->getX(0 * BEZIER_STEPS) + poLS->getX(2 * BEZIER_STEPS)) / 2 - poLS->getX(1 * BEZIER_STEPS)) < EPSILON &&
+        fabs((poLS->getY(1 * BEZIER_STEPS) + poLS->getY(3 * BEZIER_STEPS)) / 2 - poLS->getY(0 * BEZIER_STEPS)) < EPSILON)
     {
-        return new OGRPoint((poLS->getX(0) + poLS->getX(2)) / 2,
-                            (poLS->getY(1) + poLS->getY(3)) / 2);
+        return new OGRPoint((poLS->getX(0 * BEZIER_STEPS) + poLS->getX(2 * BEZIER_STEPS)) / 2,
+                            (poLS->getY(1 * BEZIER_STEPS) + poLS->getY(3 * BEZIER_STEPS)) / 2);
     }
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
@@ -443,8 +463,8 @@ static OGRPoint* PDFGetCircleCenter(OGRLineString* poLS)
 
 static OGRPoint* PDFGetSquareCenter(OGRLineString* poLS)
 {
-    if (poLS == NULL || poLS->getNumPoints() < 4 || poLS->getNumPoints() > 5)
-        return NULL;
+    if (poLS == nullptr || poLS->getNumPoints() < 4 || poLS->getNumPoints() > 5)
+        return nullptr;
 
     if (poLS->getX(0) == poLS->getX(3) &&
         poLS->getY(0) == poLS->getY(1) &&
@@ -455,7 +475,7 @@ static OGRPoint* PDFGetSquareCenter(OGRLineString* poLS)
         return new OGRPoint((poLS->getX(0) + poLS->getX(1)) / 2,
                             (poLS->getY(0) + poLS->getY(3)) / 2);
     }
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
@@ -466,8 +486,8 @@ static OGRPoint* PDFGetSquareCenter(OGRLineString* poLS)
 
 static OGRPoint* PDFGetTriangleCenter(OGRLineString* poLS)
 {
-    if (poLS == NULL || poLS->getNumPoints() < 3 || poLS->getNumPoints() > 4)
-        return NULL;
+    if (poLS == nullptr || poLS->getNumPoints() < 3 || poLS->getNumPoints() > 4)
+        return nullptr;
 
     double dfSqD1 = SQUARE(poLS->getX(0) - poLS->getX(1)) + SQUARE(poLS->getY(0) - poLS->getY(1));
     double dfSqD2 = SQUARE(poLS->getX(1) - poLS->getX(2)) + SQUARE(poLS->getY(1) - poLS->getY(2));
@@ -477,7 +497,7 @@ static OGRPoint* PDFGetTriangleCenter(OGRLineString* poLS)
         return new OGRPoint((poLS->getX(0) + poLS->getX(1) + poLS->getX(2)) / 3,
                             (poLS->getY(0) + poLS->getY(1) + poLS->getY(2)) / 3);
     }
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
@@ -488,8 +508,8 @@ static OGRPoint* PDFGetTriangleCenter(OGRLineString* poLS)
 
 static OGRPoint* PDFGetStarCenter(OGRLineString* poLS)
 {
-    if (poLS == NULL || poLS->getNumPoints() < 10 || poLS->getNumPoints() > 11)
-        return NULL;
+    if (poLS == nullptr || poLS->getNumPoints() < 10 || poLS->getNumPoints() > 11)
+        return nullptr;
 
     double dfSqD01 = SQUARE(poLS->getX(0) - poLS->getX(1)) +
                      SQUARE(poLS->getY(0) - poLS->getY(1));
@@ -525,7 +545,7 @@ static OGRPoint* PDFGetStarCenter(OGRLineString* poLS)
                             (poLS->getY(0) + poLS->getY(2) + poLS->getY(4) +
                              poLS->getY(6) + poLS->getY(8)) / 5);
     }
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
@@ -552,6 +572,42 @@ int PDFDataset::UnstackTokens(const char* pszToken,
 }
 
 /************************************************************************/
+/*                           AddBezierCurve()                           */
+/************************************************************************/
+
+static void AddBezierCurve(std::vector<double>& oCoords,
+                           const double* x0_y0,
+                           const double* x1_y1,
+                           const double* x2_y2,
+                           const double* x3_y3)
+{
+    double x0 = x0_y0[0];
+    double y0 = x0_y0[1];
+    double x1 = x1_y1[0];
+    double y1 = x1_y1[1];
+    double x2 = x2_y2[0];
+    double y2 = x2_y2[1];
+    double x3 = x3_y3[0];
+    double y3 = x3_y3[1];
+    for( int i = 1; i < BEZIER_STEPS; i++ )
+    {
+        const double t = static_cast<double>(i) / BEZIER_STEPS;
+        const double t2 = t * t;
+        const double t3 = t2 * t;
+        const double oneMinust = 1 - t;
+        const double oneMinust2 = oneMinust * oneMinust;
+        const double oneMinust3 = oneMinust2 * oneMinust;
+        const double three_t_oneMinust = 3 * t * oneMinust;
+        const double x = oneMinust3 * x0 + three_t_oneMinust * (oneMinust * x1 + t * x2) + t3 * x3;
+        const double y = oneMinust3 * y0 + three_t_oneMinust * (oneMinust * y1 + t * y2) + t3 * y3;
+        oCoords.push_back(x);
+        oCoords.push_back(y);
+    }
+    oCoords.push_back(x3);
+    oCoords.push_back(y3);
+}
+
+/************************************************************************/
 /*                           ParseContent()                             */
 /************************************************************************/
 
@@ -574,10 +630,11 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
             memcpy(aszTokenStack[nTokenStackSize ++], str, strlen + 1); \
         else \
         { \
-            CPLError(CE_Failure, CPLE_AppDefined, "Max token stack size reached");\
-            return NULL; \
+            CPLError(CE_Failure, CPLE_AppDefined, \
+                     "Max token stack size reached"); \
+            return nullptr; \
         }; \
-    } while(0)
+    } while( false )
 
 #define ADD_CHAR(szToken, c) \
     do \
@@ -590,9 +647,9 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
         else \
         { \
             CPLError(CE_Failure, CPLE_AppDefined, "Max token size reached");\
-            return NULL; \
+            return nullptr; \
         }; \
-    } while(0)
+    } while( false )
 
     char szToken[MAX_TOKEN_SIZE];
     int nTokenSize = 0;
@@ -605,7 +662,7 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
     int nArrayLevel = 0;
     int nBTLevel = 0;
 
-    int bCollectAllObjects = poResources != NULL && !bInitBDCStack && !bMatchQ;
+    int bCollectAllObjects = poResources != nullptr && !bInitBDCStack && !bMatchQ;
 
     GraphicState oGS;
     std::stack<GraphicState> oGSStack;
@@ -621,7 +678,7 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
     {
         PUSH(aszTokenStack, "dummy", 5);
         PUSH(aszTokenStack, "dummy", 5);
-        oLayerStack.push(NULL);
+        oLayerStack.push(nullptr);
     }
 
     while((ch = *pszContent) != '\0')
@@ -650,7 +707,7 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
         {
             nArrayLevel ++;
         }
-        else if (!bInString && nArrayLevel && nTokenSize == 0 && ch == ']')
+        else if (!bInString && nArrayLevel && ch == ']')
         {
             nArrayLevel --;
         }
@@ -674,6 +731,54 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
             {
                 bInString = FALSE;
                 bPushToken = TRUE;
+            }
+        }
+        else if( bInString && ch == '\\' )
+        {
+            const auto nextCh = pszContent[1];
+            if( nextCh == 'n' )
+            {
+                ADD_CHAR(szToken, '\n');
+                pszContent ++;
+            }
+            else if( nextCh == 'r' )
+            {
+                ADD_CHAR(szToken, '\r');
+                pszContent ++;
+            }
+            else if( nextCh == 't' )
+            {
+                ADD_CHAR(szToken, '\t');
+                pszContent ++;
+            }
+            else if( nextCh == 'b' )
+            {
+                ADD_CHAR(szToken, '\b');
+                pszContent ++;
+            }
+            else if( nextCh == '(' || nextCh == ')' || nextCh == '\\' )
+            {
+                ADD_CHAR(szToken, nextCh);
+                pszContent ++;
+            }
+            else if( nextCh >= '0' && nextCh <= '7' &&
+                     pszContent[2] >= '0' && pszContent[2] <= '7' &&
+                     pszContent[3] >= '0' && pszContent[3] <= '7' )
+            {
+                ADD_CHAR(szToken,
+                         ((nextCh - '\0') * 64 + (pszContent[2] - '\0') * 8 + pszContent[3] - '\0'));
+                pszContent += 3;
+            }
+            else if( nextCh == '\n' )
+            {
+                if( pszContent[2] == '\r' )
+                    pszContent += 2;
+                else
+                    pszContent ++;
+            }
+            else if( nextCh == '\r' )
+            {
+                pszContent ++;
             }
         }
         else if (ch == '<' && pszContent[1] == '<' && nTokenSize == 0)
@@ -714,7 +819,12 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
         }
         else
         {
-            ADD_CHAR(szToken, ch);
+            // Do not create too long tokens in arrays, that we will ignore
+            // anyway
+            if( nArrayLevel == 0 || nTokenSize == 0 )
+            {
+                ADD_CHAR(szToken, ch);
+            }
         }
 
         pszContent ++;
@@ -740,7 +850,7 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                 if( pszContent[0] == 'E' )
                     pszContent += 3;
                 else
-                    return NULL;
+                    return nullptr;
             }
             else if (EQUAL3(szToken, "BDC"))
             {
@@ -749,7 +859,7 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                     CPLDebug("PDF",
                                 "not enough arguments for %s",
                                 szToken);
-                    return NULL;
+                    return nullptr;
                 }
                 nTokenStackSize -= 2;
                 const char* pszOC = aszTokenStack[nTokenStackSize];
@@ -780,7 +890,7 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                     if( !oLayerStack.empty() )
                         poCurLayer = oLayerStack.top();
                     else
-                        poCurLayer = NULL;
+                        poCurLayer = nullptr;
 
                     /*if (poCurLayer)
                     {
@@ -790,7 +900,7 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                 else
                 {
                     CPLDebug("PDF", "Should not happen at line %d", __LINE__);
-                    poCurLayer = NULL;
+                    poCurLayer = nullptr;
                     //return NULL;
                 }
 
@@ -808,7 +918,7 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                 if (nBTLevel < 0)
                 {
                     CPLDebug("PDF", "Should not happen at line %d", __LINE__);
-                    return NULL;
+                    return nullptr;
                 }
             }
             else if (!nArrayLevel && !nBTLevel)
@@ -828,7 +938,7 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                     if (oGSStack.empty())
                     {
                         CPLDebug("PDF", "not enough arguments for %s", szToken);
-                        return NULL;
+                        return nullptr;
                     }
 
                     oGS = oGSStack.top();
@@ -843,7 +953,7 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                     if (!UnstackTokens(szToken, 6, aszTokenStack, nTokenStackSize, adfMatrix))
                     {
                         CPLDebug("PDF", "Should not happen at line %d", __LINE__);
-                        return NULL;
+                        return nullptr;
                     }
 
                     oGS.MultiplyBy(adfMatrix);
@@ -851,9 +961,9 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                 else if (EQUAL1(szToken, "b") || /* closepath, fill, stroke */
                          EQUAL2(szToken, "b*")   /* closepath, eofill, stroke */)
                 {
-                    if (!(oCoords.size() > 0 &&
+                    if (!(!oCoords.empty() &&
                           oCoords[oCoords.size() - 2] == CLOSE_SUBPATH &&
-                          oCoords[oCoords.size() - 1] == CLOSE_SUBPATH))
+                          oCoords.back() == CLOSE_SUBPATH))
                     {
                         oCoords.push_back(CLOSE_SUBPATH);
                         oCoords.push_back(CLOSE_SUBPATH);
@@ -878,9 +988,9 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                 }
                 else if (EQUAL1(szToken, "h")) /* close subpath */
                 {
-                    if (!(oCoords.size() > 0 &&
+                    if (!(!oCoords.empty() &&
                           oCoords[oCoords.size() - 2] == CLOSE_SUBPATH &&
-                          oCoords[oCoords.size() - 1] == CLOSE_SUBPATH))
+                          oCoords.back() == CLOSE_SUBPATH))
                     {
                         oCoords.push_back(CLOSE_SUBPATH);
                         oCoords.push_back(CLOSE_SUBPATH);
@@ -892,9 +1002,9 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                 }
                 else if (EQUAL1(szToken, "s")) /* close and stroke */
                 {
-                    if (!(oCoords.size() > 0 &&
+                    if (!(!oCoords.empty() &&
                           oCoords[oCoords.size() - 2] == CLOSE_SUBPATH &&
-                          oCoords[oCoords.size() - 1] == CLOSE_SUBPATH))
+                          oCoords.back() == CLOSE_SUBPATH))
                     {
                         oCoords.push_back(CLOSE_SUBPATH);
                         oCoords.push_back(CLOSE_SUBPATH);
@@ -912,12 +1022,12 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                     if (!UnstackTokens(szToken, 2, aszTokenStack, nTokenStackSize, adfCoords))
                     {
                         CPLDebug("PDF", "Should not happen at line %d", __LINE__);
-                        return NULL;
+                        return nullptr;
                     }
 
                     if (EQUAL1(szToken, "m"))
                     {
-                        if (oCoords.size() != 0)
+                        if (!oCoords.empty())
                             bHasMultiPart = TRUE;
                         oCoords.push_back(NEW_SUBPATH);
                         oCoords.push_back(NEW_SUBPATH);
@@ -933,25 +1043,51 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                     if (!UnstackTokens(szToken, 6, aszTokenStack, nTokenStackSize, adfCoords))
                     {
                         CPLDebug("PDF", "Should not happen at line %d", __LINE__);
-                        return NULL;
+                        return nullptr;
                     }
 
+                    oGS.ApplyMatrix(adfCoords + 0);
+                    oGS.ApplyMatrix(adfCoords + 2);
                     oGS.ApplyMatrix(adfCoords + 4);
-                    oCoords.push_back(adfCoords[4]);
-                    oCoords.push_back(adfCoords[5]);
+                    AddBezierCurve(oCoords,
+                                   oCoords.empty() ? &adfCoords[0] : &oCoords[oCoords.size()-2],
+                                   &adfCoords[0],
+                                   &adfCoords[2],
+                                   &adfCoords[4]);
                 }
-                else if (EQUAL1(szToken, "v") || EQUAL1(szToken, "y")) /* Bezier curve */
+                else if (EQUAL1(szToken, "v")) /* Bezier curve */
                 {
                     double adfCoords[4];
                     if (!UnstackTokens(szToken, 4, aszTokenStack, nTokenStackSize, adfCoords))
                     {
                         CPLDebug("PDF", "Should not happen at line %d", __LINE__);
-                        return NULL;
+                        return nullptr;
                     }
 
+                    oGS.ApplyMatrix(adfCoords + 0);
                     oGS.ApplyMatrix(adfCoords + 2);
-                    oCoords.push_back(adfCoords[2]);
-                    oCoords.push_back(adfCoords[3]);
+                    AddBezierCurve(oCoords,
+                                   oCoords.empty() ? &adfCoords[0] : &oCoords[oCoords.size()-2],
+                                   oCoords.empty() ? &adfCoords[0] : &oCoords[oCoords.size()-2],
+                                   &adfCoords[0],
+                                   &adfCoords[2]);
+                }
+                else if (EQUAL1(szToken, "y")) /* Bezier curve */
+                {
+                    double adfCoords[4];
+                    if (!UnstackTokens(szToken, 4, aszTokenStack, nTokenStackSize, adfCoords))
+                    {
+                        CPLDebug("PDF", "Should not happen at line %d", __LINE__);
+                        return nullptr;
+                    }
+
+                    oGS.ApplyMatrix(adfCoords + 0);
+                    oGS.ApplyMatrix(adfCoords + 2);
+                    AddBezierCurve(oCoords,
+                                   oCoords.empty() ? &adfCoords[0] : &oCoords[oCoords.size()-2],
+                                   &adfCoords[0],
+                                   &adfCoords[2],
+                                   &adfCoords[2]);
                 }
                 else if (EQUAL2(szToken, "re")) /* Rectangle */
                 {
@@ -959,7 +1095,7 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                     if (!UnstackTokens(szToken, 4, aszTokenStack, nTokenStackSize, adfCoords))
                     {
                         CPLDebug("PDF", "Should not happen at line %d", __LINE__);
-                        return NULL;
+                        return nullptr;
                     }
 
                     adfCoords[2] += adfCoords[0];
@@ -968,7 +1104,7 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                     oGS.ApplyMatrix(adfCoords);
                     oGS.ApplyMatrix(adfCoords + 2);
 
-                    if (oCoords.size() != 0)
+                    if (!oCoords.empty())
                         bHasMultiPart = TRUE;
                     oCoords.push_back(NEW_SUBPATH);
                     oCoords.push_back(NEW_SUBPATH);
@@ -991,7 +1127,7 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                         CPLDebug("PDF",
                                  "not enough arguments for %s",
                                  szToken);
-                        return NULL;
+                        return nullptr;
                     }
 
                     CPLString osObjectName = aszTokenStack[--nTokenStackSize];
@@ -999,10 +1135,10 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                     if (osObjectName[0] != '/')
                     {
                         CPLDebug("PDF", "Should not happen at line %d", __LINE__);
-                        return NULL;
+                        return nullptr;
                     }
 
-                    if (poResources == NULL)
+                    if (poResources == nullptr)
                     {
                         if (osObjectName.find("/SymImage") == 0)
                         {
@@ -1012,7 +1148,7 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                             szToken[0] = '\0';
                             nTokenSize = 0;
 
-                            if( poCurLayer != NULL)
+                            if( poCurLayer != nullptr)
                                 bEmitFeature = TRUE;
                             else
                                 continue;
@@ -1020,7 +1156,7 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                         else
                         {
                             //CPLDebug("PDF", "Should not happen at line %d", __LINE__);
-                            return NULL;
+                            return nullptr;
                         }
                     }
 
@@ -1028,19 +1164,19 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                     {
                         GDALPDFObject* poXObject =
                             poResources->GetDictionary()->Get("XObject");
-                        if (poXObject == NULL ||
+                        if (poXObject == nullptr ||
                             poXObject->GetType() != PDFObjectType_Dictionary)
                         {
                             CPLDebug("PDF", "Should not happen at line %d", __LINE__);
-                            return NULL;
+                            return nullptr;
                         }
 
                         GDALPDFObject* poObject =
                             poXObject->GetDictionary()->Get(osObjectName.c_str() + 1);
-                        if (poObject == NULL)
+                        if (poObject == nullptr)
                         {
                             CPLDebug("PDF", "Should not happen at line %d", __LINE__);
-                            return NULL;
+                            return nullptr;
                         }
 
                         int bParseStream = TRUE;
@@ -1049,7 +1185,7 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                         if (poObject->GetType() == PDFObjectType_Dictionary)
                         {
                             GDALPDFObject* poSubtype = poObject->GetDictionary()->Get("Subtype");
-                            if (poSubtype != NULL &&
+                            if (poSubtype != nullptr &&
                                 poSubtype->GetType() == PDFObjectType_Name &&
                                 poSubtype->GetName() == "Image" )
                             {
@@ -1063,13 +1199,13 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                             if (!poStream)
                             {
                                 CPLDebug("PDF", "Should not happen at line %d", __LINE__);
-                                return NULL;
+                                return nullptr;
                             }
 
                             char* pszStr = poStream->GetBytes();
                             if( pszStr )
                             {
-                                OGRGeometry* poGeom = ParseContent(pszStr, NULL, FALSE, FALSE,
+                                OGRGeometry* poGeom = ParseContent(pszStr, nullptr, FALSE, FALSE,
                                                                 oMapPropertyToLayer, poCurLayer);
                                 CPLFree(pszStr);
                                 if (poGeom && !bCollectAllObjects)
@@ -1085,7 +1221,7 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                     if (!UnstackTokens(szToken, 3, aszTokenStack, nTokenStackSize, padf))
                     {
                         CPLDebug("PDF", "Should not happen at line %d", __LINE__);
-                        return NULL;
+                        return nullptr;
                     }
                 }
                 else if (oMapOperators.find(szToken) != oMapOperators.end())
@@ -1107,7 +1243,7 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                             CPLDebug("PDF",
                                     "not enough arguments for %s",
                                     szToken);
-                            return NULL;
+                            return nullptr;
                         }
                         nTokenStackSize -= nArgs;
                     }
@@ -1117,10 +1253,11 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                     PUSH(aszTokenStack, szToken, nTokenSize);
                 }
 
-                if( bEmitFeature && poCurLayer != NULL)
+                if( bEmitFeature && poCurLayer != nullptr)
                 {
                     OGRGeometry* poGeom = BuildGeometry(oCoords, bHasFoundFill, bHasMultiPart);
-                    bHasFoundFill = bHasMultiPart = FALSE;
+                    bHasFoundFill = FALSE;
+                    bHasMultiPart = FALSE;
                     if (poGeom)
                     {
                         OGRFeature* poFeature = new OGRFeature(poCurLayer->GetLayerDefn());
@@ -1169,11 +1306,11 @@ OGRGeometry* PDFDataset::ParseContent(const char* pszContent,
                      "Remaining values in stack : %s",
                      aszTokenStack[nTokenStackSize]);
         }
-        return  NULL;
+        return  nullptr;
     }
 
     if (bCollectAllObjects)
-        return NULL;
+        return nullptr;
 
     return BuildGeometry(oCoords, bHasFoundFill, bHasMultiPart);
 }
@@ -1186,10 +1323,10 @@ OGRGeometry* PDFDataset::BuildGeometry(std::vector<double>& oCoords,
                                              int bHasFoundFill,
                                              int bHasMultiPart)
 {
-    OGRGeometry* poGeom = NULL;
+    OGRGeometry* poGeom = nullptr;
 
     if (!oCoords.size())
-        return NULL;
+        return nullptr;
 
     if (oCoords.size() == 2)
     {
@@ -1199,8 +1336,8 @@ OGRGeometry* PDFDataset::BuildGeometry(std::vector<double>& oCoords,
     }
     else if (!bHasFoundFill)
     {
-        OGRLineString* poLS = NULL;
-        OGRMultiLineString* poMLS = NULL;
+        OGRLineString* poLS = nullptr;
+        OGRMultiLineString* poMLS = nullptr;
         if (bHasMultiPart)
         {
             poMLS = new OGRMultiLineString();
@@ -1249,34 +1386,34 @@ OGRGeometry* PDFDataset::BuildGeometry(std::vector<double>& oCoords,
         }
 
         // Recognize points as written by GDAL (ogr-sym-2 : circle (not filled))
-        OGRGeometry* poCenter = NULL;
-        if (poCenter == NULL && poLS != NULL && poLS->getNumPoints() == 5)
+        OGRGeometry* poCenter = nullptr;
+        if (poCenter == nullptr && poLS != nullptr && poLS->getNumPoints() == 1 + BEZIER_STEPS * 4 )
         {
             poCenter = PDFGetCircleCenter(poLS);
         }
 
         // Recognize points as written by GDAL (ogr-sym-4: square (not filled))
-        if (poCenter == NULL && poLS != NULL && (poLS->getNumPoints() == 4 || poLS->getNumPoints() == 5))
+        if (poCenter == nullptr && poLS != nullptr && (poLS->getNumPoints() == 4 || poLS->getNumPoints() == 5))
         {
             poCenter = PDFGetSquareCenter(poLS);
         }
 
         // Recognize points as written by GDAL (ogr-sym-6: triangle (not filled))
-        if (poCenter == NULL && poLS != NULL && (poLS->getNumPoints() == 3 || poLS->getNumPoints() == 4))
+        if (poCenter == nullptr && poLS != nullptr && (poLS->getNumPoints() == 3 || poLS->getNumPoints() == 4))
         {
             poCenter = PDFGetTriangleCenter(poLS);
         }
 
         // Recognize points as written by GDAL (ogr-sym-8: star (not filled))
-        if (poCenter == NULL && poLS != NULL && (poLS->getNumPoints() == 10 || poLS->getNumPoints() == 11))
+        if (poCenter == nullptr && poLS != nullptr && (poLS->getNumPoints() == 10 || poLS->getNumPoints() == 11))
         {
             poCenter = PDFGetStarCenter(poLS);
         }
 
-        if (poCenter == NULL && poMLS != NULL && poMLS->getNumGeometries() == 2)
+        if (poCenter == nullptr && poMLS != nullptr && poMLS->getNumGeometries() == 2)
         {
-            OGRLineString* poLS1 = (OGRLineString* )poMLS->getGeometryRef(0);
-            OGRLineString* poLS2 = (OGRLineString* )poMLS->getGeometryRef(1);
+            OGRLineString* poLS1 = poMLS->getGeometryRef(0)->toLineString();
+            OGRLineString* poLS2 = poMLS->getGeometryRef(1)->toLineString();
 
             // Recognize points as written by GDAL (ogr-sym-0: cross (+) ).
             if (poLS1->getNumPoints() == 2 && poLS2->getNumPoints() == 2 &&
@@ -1309,14 +1446,23 @@ OGRGeometry* PDFDataset::BuildGeometry(std::vector<double>& oCoords,
     }
     else
     {
-        OGRLinearRing* poLS = NULL;
+        OGRLinearRing* poLS = nullptr;
         int nPolys = 0;
-        OGRGeometry** papoPoly = NULL;
+        OGRGeometry** papoPoly = nullptr;
 
         for(size_t i=0;i<oCoords.size();i+=2)
         {
             if (oCoords[i] == NEW_SUBPATH && oCoords[i+1] == NEW_SUBPATH)
             {
+                if (poLS && poLS->getNumPoints() >= 3)
+                {
+                    OGRPolygon* poPoly =  new OGRPolygon();
+                    poPoly->addRingDirectly(poLS);
+                    poLS = nullptr;
+
+                    papoPoly = (OGRGeometry**) CPLRealloc(papoPoly, (nPolys + 1) * sizeof(OGRGeometry*));
+                    papoPoly[nPolys ++] = poPoly;
+                }
                 delete poLS;
                 poLS = new OGRLinearRing();
             }
@@ -1327,21 +1473,26 @@ OGRGeometry* PDFDataset::BuildGeometry(std::vector<double>& oCoords,
                 {
                     poLS->closeRings();
 
-                    OGRPoint* poCenter = NULL;
+                    OGRPoint* poCenter = nullptr;
+
+                   if (nPolys == 0 &&
+                        poLS &&
+                        poLS->getNumPoints() == 1 + BEZIER_STEPS * 4 )
+                   {
+                        // Recognize points as written by GDAL (ogr-sym-3 : circle (filled))
+                        poCenter = PDFGetCircleCenter(poLS);
+                   }
 
                     if (nPolys == 0 &&
+                        poCenter == nullptr &&
                         poLS &&
                         poLS->getNumPoints() == 5)
                     {
-                        // Recognize points as written by GDAL (ogr-sym-3 : circle (filled))
-                        poCenter = PDFGetCircleCenter(poLS);
-
                         // Recognize points as written by GDAL (ogr-sym-5: square (filled))
-                        if (poCenter == NULL)
-                            poCenter = PDFGetSquareCenter(poLS);
+                        poCenter = PDFGetSquareCenter(poLS);
 
                         /* ESRI points */
-                        if (poCenter == NULL &&
+                        if (poCenter == nullptr &&
                             oCoords.size() == 14 &&
                             poLS->getY(0) == poLS->getY(1) &&
                             poLS->getX(1) == poLS->getX(2) &&
@@ -1377,7 +1528,7 @@ OGRGeometry* PDFDataset::BuildGeometry(std::vector<double>& oCoords,
                     {
                         OGRPolygon* poPoly =  new OGRPolygon();
                         poPoly->addRingDirectly(poLS);
-                        poLS = NULL;
+                        poLS = nullptr;
 
                         papoPoly = (OGRGeometry**) CPLRealloc(papoPoly, (nPolys + 1) * sizeof(OGRGeometry*));
                         papoPoly[nPolys ++] = poPoly;
@@ -1385,7 +1536,7 @@ OGRGeometry* PDFDataset::BuildGeometry(std::vector<double>& oCoords,
                     else
                     {
                         delete poLS;
-                        poLS = NULL;
+                        poLS = nullptr;
                     }
                 }
             }
@@ -1405,11 +1556,11 @@ OGRGeometry* PDFDataset::BuildGeometry(std::vector<double>& oCoords,
 
         int bIsValidGeometry;
         if (nPolys == 2 &&
-            ((OGRPolygon*)papoPoly[0])->getNumInteriorRings() == 0 &&
-            ((OGRPolygon*)papoPoly[1])->getNumInteriorRings() == 0)
+            papoPoly[0]->toPolygon()->getNumInteriorRings() == 0 &&
+            papoPoly[1]->toPolygon()->getNumInteriorRings() == 0)
         {
-            OGRLinearRing* poRing0 = ((OGRPolygon*)papoPoly[0])->getExteriorRing();
-            OGRLinearRing* poRing1 = ((OGRPolygon*)papoPoly[1])->getExteriorRing();
+            OGRLinearRing* poRing0 = papoPoly[0]->toPolygon()->getExteriorRing();
+            OGRLinearRing* poRing1 = papoPoly[1]->toPolygon()->getExteriorRing();
             if (poRing0->getNumPoints() == poRing1->getNumPoints())
             {
                 int bSameRing = TRUE;
@@ -1438,7 +1589,7 @@ OGRGeometry* PDFDataset::BuildGeometry(std::vector<double>& oCoords,
         if (nPolys)
         {
             poGeom = OGRGeometryFactory::organizePolygons(
-                    papoPoly, nPolys, &bIsValidGeometry, NULL);
+                    papoPoly, nPolys, &bIsValidGeometry, nullptr);
         }
         CPLFree(papoPoly);
     }
@@ -1459,7 +1610,13 @@ void PDFDataset::ExploreContents(GDALPDFObject* poObj,
     {
         GDALPDFArray* poArray = poObj->GetArray();
         for(int i=0;i<poArray->GetLength();i++)
-            ExploreContents(poArray->Get(i), poResources);
+        {
+            GDALPDFObject* poSubObj = poArray->Get(i);
+            if( poSubObj )
+            {
+                ExploreContents(poSubObj, poResources);
+            }
+        }
     }
 
     if (poObj->GetType() != PDFObjectType_Dictionary)
@@ -1474,7 +1631,7 @@ void PDFDataset::ExploreContents(GDALPDFObject* poObj,
         return;
 
     const char* pszMCID = (const char*) pszStr;
-    while((pszMCID = strstr(pszMCID, "/MCID")) != NULL)
+    while((pszMCID = strstr(pszMCID, "/MCID")) != nullptr)
     {
         const char* pszBDC = strstr(pszMCID, "BDC");
         if (pszBDC)
@@ -1502,11 +1659,11 @@ void PDFDataset::ExploreContents(GDALPDFObject* poObj,
             }
 
             int nMCID = atoi(pszMCID + 6);
-            if (GetGeometryFromMCID(nMCID) == NULL)
+            if (GetGeometryFromMCID(nMCID) == nullptr)
             {
                 OGRGeometry* poGeom = ParseContent(pszStartParsing, poResources,
-                                                   !bMatchQ, bMatchQ, oMapPropertyToLayer, NULL);
-                if( poGeom != NULL )
+                                                   !bMatchQ, bMatchQ, oMapPropertyToLayer, nullptr);
+                if( poGeom != nullptr )
                 {
                     /* Save geometry in map */
                     oMapMCID[nMCID] = poGeom;
@@ -1523,18 +1680,19 @@ void PDFDataset::ExploreContents(GDALPDFObject* poObj,
 /************************************************************************/
 
 void PDFDataset::ExploreContentsNonStructuredInternal(GDALPDFObject* poContents,
-                                                            GDALPDFObject* poResources,
-                                                            std::map<CPLString, OGRPDFLayer*>& oMapPropertyToLayer)
+                                                      GDALPDFObject* poResources,
+                                                      std::map<CPLString, OGRPDFLayer*>& oMapPropertyToLayer,
+                                                      OGRPDFLayer* poSingleLayer)
 {
     if (poContents->GetType() == PDFObjectType_Array)
     {
         GDALPDFArray* poArray = poContents->GetArray();
-        char* pszConcatStr = NULL;
+        char* pszConcatStr = nullptr;
         int nConcatLen = 0;
         for(int i=0;i<poArray->GetLength();i++)
         {
             GDALPDFObject* poObj = poArray->Get(i);
-            if( poObj->GetType() != PDFObjectType_Dictionary)
+            if( poObj == nullptr || poObj->GetType() != PDFObjectType_Dictionary)
                 break;
             GDALPDFStream* poStream = poObj->GetStream();
             if (!poStream)
@@ -1544,7 +1702,7 @@ void PDFDataset::ExploreContentsNonStructuredInternal(GDALPDFObject* poContents,
                 break;
             int nLen = (int)strlen(pszStr);
             char* pszConcatStrNew = (char*)CPLRealloc(pszConcatStr, nConcatLen + nLen + 1);
-            if( pszConcatStrNew == NULL )
+            if( pszConcatStrNew == nullptr )
             {
                 CPLFree(pszStr);
                 break;
@@ -1555,7 +1713,7 @@ void PDFDataset::ExploreContentsNonStructuredInternal(GDALPDFObject* poContents,
             CPLFree(pszStr);
         }
         if( pszConcatStr )
-            ParseContent(pszConcatStr, poResources, FALSE, FALSE, oMapPropertyToLayer, NULL);
+            ParseContent(pszConcatStr, poResources, FALSE, FALSE, oMapPropertyToLayer, poSingleLayer);
         CPLFree(pszConcatStr);
         return;
     }
@@ -1570,7 +1728,7 @@ void PDFDataset::ExploreContentsNonStructuredInternal(GDALPDFObject* poContents,
     char* pszStr = poStream->GetBytes();
     if( !pszStr )
         return;
-    ParseContent(pszStr, poResources, FALSE, FALSE, oMapPropertyToLayer, NULL);
+    ParseContent(pszStr, poResources, FALSE, FALSE, oMapPropertyToLayer, poSingleLayer);
     CPLFree(pszStr);
 }
 
@@ -1578,12 +1736,12 @@ void PDFDataset::ExploreContentsNonStructured(GDALPDFObject* poContents,
                                                     GDALPDFObject* poResources)
 {
     std::map<CPLString, OGRPDFLayer*> oMapPropertyToLayer;
-    if (poResources != NULL &&
+    if (poResources != nullptr &&
         poResources->GetType() == PDFObjectType_Dictionary)
     {
         GDALPDFObject* poProperties =
             poResources->GetDictionary()->Get("Properties");
-        if (poProperties != NULL &&
+        if (poProperties != nullptr &&
             poProperties->GetType() == PDFObjectType_Dictionary)
         {
             char** papszLayersWithRef = osLayerWithRefList.List();
@@ -1607,14 +1765,14 @@ void PDFDataset::ExploreContentsNonStructured(GDALPDFObject* poContents,
                 CPLString osSanitizedName(PDFSanitizeLayerName(pszLayerName));
 
                 OGRPDFLayer* poLayer = (OGRPDFLayer*) GetLayerByName(osSanitizedName.c_str());
-                if (poLayer == NULL)
+                if (poLayer == nullptr)
                 {
                     const char* l_pszWKT = GetProjectionRef();
-                    OGRSpatialReference* poSRS = NULL;
+                    OGRSpatialReference* poSRS = nullptr;
                     if (l_pszWKT && l_pszWKT[0] != '\0')
                     {
                         poSRS = new OGRSpatialReference();
-                        poSRS->importFromWkt((char**) &l_pszWKT);
+                        poSRS->importFromWkt(l_pszWKT);
                     }
 
                     poLayer =
@@ -1656,12 +1814,29 @@ void PDFDataset::ExploreContentsNonStructured(GDALPDFObject* poContents,
         }
     }
 
+    OGRPDFLayer* poSingleLayer = nullptr;
     if( nLayers == 0 )
-        return;
+    {
+        if( CPLTestBool(CPLGetConfigOption("OGR_PDF_READ_NON_STRUCTURED", "NO")) )
+        {
+            OGRPDFLayer *poLayer =
+                new OGRPDFLayer(this, "content", nullptr, wkbUnknown);
+            papoLayers = (OGRLayer**)
+                CPLRealloc(papoLayers, (nLayers + 1) * sizeof(OGRLayer*));
+            papoLayers[nLayers] = poLayer;
+            nLayers ++;
+            poSingleLayer = poLayer;
+        }
+        else
+        {
+            return;
+        }
+    }
 
     ExploreContentsNonStructuredInternal(poContents,
                                          poResources,
-                                         oMapPropertyToLayer);
+                                         oMapPropertyToLayer,
+                                         poSingleLayer);
 
     /* Remove empty layers */
     int i = 0;

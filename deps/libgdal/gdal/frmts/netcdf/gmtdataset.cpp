@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: gmtdataset.cpp 33794 2016-03-26 13:19:07Z goatbar $
  *
  * Project:  netCDF read/write Driver
  * Purpose:  GDAL bindings over netCDF library for GMT Grids.
@@ -28,18 +27,30 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
+
+#include <cstddef>
+#include <cstring>
+#include <algorithm>
+
+#include "cpl_conv.h"
+#include "cpl_error.h"
 #include "cpl_multiproc.h"
+#include "cpl_progress.h"
+#include "gdal.h"
 #include "gdal_frmts.h"
 #include "gdal_pam.h"
+#include "gdal_priv.h"
 #include "netcdf.h"
+#include "ogr_core.h"
 
-CPL_CVSID("$Id: gmtdataset.cpp 33794 2016-03-26 13:19:07Z goatbar $");
+CPL_CVSID("$Id: gmtdataset.cpp be09f0a95a554cc61b240f5c4e5c85150489d2a9 2018-01-17 15:58:09Z Even Rouault $")
 
 extern CPLMutex *hNCMutex; /* shared with netcdf. See netcdfdataset.cpp */
 
 /************************************************************************/
 /* ==================================================================== */
-/*			     GMTDataset				        */
+/*                           GMTDataset                                 */
 /* ==================================================================== */
 /************************************************************************/
 
@@ -53,12 +64,17 @@ class GMTDataset : public GDALPamDataset
   public:
     int         cdfid;
 
-                GMTDataset() : z_id(0), cdfid(0) { }
-		~GMTDataset();
+    GMTDataset() :
+        z_id(0),
+        cdfid(0)
+    {
+        std::fill_n(adfGeoTransform, CPL_ARRAYSIZE(adfGeoTransform), 0);
+    }
+    ~GMTDataset();
 
     static GDALDataset *Open( GDALOpenInfo * );
 
-    CPLErr 	GetGeoTransform( double * padfTransform );
+    CPLErr      GetGeoTransform( double * padfTransform ) override;
 };
 
 /************************************************************************/
@@ -77,20 +93,19 @@ class GMTRasterBand : public GDALPamRasterBand
     GMTRasterBand( GMTDataset *poDS, int nZId, int nBand );
     virtual ~GMTRasterBand() {}
 
-    virtual CPLErr IReadBlock( int, int, void * );
+    virtual CPLErr IReadBlock( int, int, void * ) override;
 };
-
 
 /************************************************************************/
 /*                           GMTRasterBand()                            */
 /************************************************************************/
 
-GMTRasterBand::GMTRasterBand( GMTDataset *poDSIn, int nZIdIn, int nBandIn )
-
+GMTRasterBand::GMTRasterBand( GMTDataset *poDSIn, int nZIdIn, int nBandIn ) :
+    nc_datatype(NC_NAT),
+    nZId(nZIdIn)
 {
-    this->poDS = poDSIn;
-    this->nBand = nBandIn;
-    this->nZId = nZIdIn;
+    poDS = poDSIn;
+    nBand = nBandIn;
 
     nBlockXSize = poDS->GetRasterXSize();
     nBlockYSize = 1;
@@ -98,8 +113,8 @@ GMTRasterBand::GMTRasterBand( GMTDataset *poDSIn, int nZIdIn, int nBandIn )
 /* -------------------------------------------------------------------- */
 /*      Get the type of the "z" variable, our target raster array.      */
 /* -------------------------------------------------------------------- */
-    if( nc_inq_var( poDSIn->cdfid, nZId, NULL, &nc_datatype, NULL, NULL,
-                    NULL ) != NC_NOERR )
+    if( nc_inq_var( poDSIn->cdfid, nZId, nullptr, &nc_datatype, nullptr, nullptr,
+                    nullptr ) != NC_NOERR )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Error in nc_var_inq() on 'z'." );
@@ -133,7 +148,6 @@ GMTRasterBand::GMTRasterBand( GMTDataset *poDSIn, int nZIdIn, int nBandIn )
 CPLErr GMTRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                   void * pImage )
 {
-
     CPLMutexHolderD(&hNCMutex);
 
     size_t start[2] = {static_cast<size_t>(nBlockYOff * nBlockXSize), 0};
@@ -149,12 +163,13 @@ CPLErr GMTRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
                                   (short int *) pImage );
     else if( eDataType == GDT_Int32 )
     {
-        if( sizeof(long) == 4 )
+#if SIZEOF_UNSIGNED_LONG == 4
             nErr = nc_get_vara_long( cdfid, nZId, start, edge,
                                      (long *) pImage );
-        else
+#else
             nErr = nc_get_vara_int( cdfid, nZId, start, edge,
                                     (int *) pImage );
+#endif
     }
     else if( eDataType == GDT_Float32 )
         nErr = nc_get_vara_float( cdfid, nZId, start, edge,
@@ -176,7 +191,7 @@ CPLErr GMTRasterBand::IReadBlock( CPL_UNUSED int nBlockXOff, int nBlockYOff,
 
 /************************************************************************/
 /* ==================================================================== */
-/*				GMTDataset				*/
+/*                              GMTDataset                              */
 /* ==================================================================== */
 /************************************************************************/
 
@@ -213,43 +228,51 @@ GDALDataset *GMTDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Does this file have the GMT magic number?                    */
 /* -------------------------------------------------------------------- */
-    if( poOpenInfo->fpL == NULL || poOpenInfo->nHeaderBytes < 50 )
-        return NULL;
+    if( poOpenInfo->fpL == nullptr || poOpenInfo->nHeaderBytes < 50 )
+        return nullptr;
 
     if( poOpenInfo->pabyHeader[0] != 'C'
         || poOpenInfo->pabyHeader[1] != 'D'
         || poOpenInfo->pabyHeader[2] != 'F'
         || poOpenInfo->pabyHeader[3] != 1 )
-        return NULL;
+        return nullptr;
+
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    // We don't necessarily want to catch bugs in libnetcdf ...
+    if( CPLGetConfigOption("DISABLE_OPEN_REAL_NETCDF_FILES", nullptr) )
+    {
+        return nullptr;
+    }
+#endif
 
     CPLMutexHolderD(&hNCMutex);
 
 /* -------------------------------------------------------------------- */
 /*      Try opening the dataset.                                        */
 /* -------------------------------------------------------------------- */
-    int cdfid;
+    int cdfid = 0;
     if( nc_open( poOpenInfo->pszFilename, NC_NOWRITE, &cdfid ) != NC_NOERR )
-        return NULL;
+        return nullptr;
 
-    int nm_id;
-    int z_id;
+    int nm_id = 0;
+    int z_id = 0;
     if( nc_inq_varid( cdfid, "dimension", &nm_id ) != NC_NOERR
         || nc_inq_varid( cdfid, "z", &z_id ) != NC_NOERR )
     {
-#ifdef notdef
+#if DEBUG_VERBOSE
         CPLError( CE_Warning, CPLE_AppDefined,
                   "%s is a GMT file, but not in GMT configuration.",
                   poOpenInfo->pszFilename );
 #endif
         nc_close( cdfid );
-        return NULL;
+        return nullptr;
     }
 
-    int dim_count;
+    int dim_count = 0;
     if( nc_inq_ndims( cdfid, &dim_count ) != NC_NOERR || dim_count < 2 )
     {
         nc_close( cdfid );
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -261,30 +284,31 @@ GDALDataset *GMTDataset::Open( GDALOpenInfo * poOpenInfo )
         CPLError( CE_Failure, CPLE_NotSupported,
                   "The GMT driver does not support update access to existing"
                   " datasets.\n" );
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
 /*      Get dimensions.  If we can't find this, then this is a          */
 /*      GMT file, but not a normal grid product.                     */
 /* -------------------------------------------------------------------- */
-    int    nm[2];
-    size_t start[2] = {0, 0};
-    size_t edge[2] = {2, 0};
+    int nm[2] = { 0, 0 };
+    size_t start[2] = { 0, 0 };
+    size_t edge[2] = { 2, 0 };
 
     nc_get_vara_int(cdfid, nm_id, start, edge, nm);
     if( !GDALCheckDatasetDimensions(nm[0], nm[1]) )
     {
         nc_close( cdfid );
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
 /*      Create a corresponding GDALDataset.                             */
 /* -------------------------------------------------------------------- */
-    CPLReleaseMutex(hNCMutex);  // Release mutex otherwise we'll deadlock with GDALDataset own mutex
+    // Release mutex otherwise we'll deadlock with GDALDataset own mutex
+    CPLReleaseMutex(hNCMutex);
 
-    GMTDataset 	*poDS = new GMTDataset();
+    GMTDataset *poDS = new GMTDataset();
     CPLAcquireMutex(hNCMutex, 1000.0);
 
     poDS->cdfid = cdfid;
@@ -297,10 +321,10 @@ GDALDataset *GMTDataset::Open( GDALOpenInfo * poOpenInfo )
 /*      Fetch "z" attributes scale_factor, add_offset, and              */
 /*      node_offset.                                                    */
 /* -------------------------------------------------------------------- */
-    double scale_factor=1.0;
+    double scale_factor = 1.0;
     nc_get_att_double( cdfid, z_id, "scale_factor", &scale_factor );
 
-    double add_offset=0.0;
+    double add_offset = 0.0;
     nc_get_att_double( cdfid, z_id, "add_offset", &add_offset );
 
     int node_offset = 1;
@@ -309,7 +333,8 @@ GDALDataset *GMTDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
 /*      Get x/y range information.                                      */
 /* -------------------------------------------------------------------- */
-    int x_range_id, y_range_id;
+    int x_range_id = 0;
+    int y_range_id = 0;
 
     if( nc_inq_varid (cdfid, "x_range", &x_range_id) == NC_NOERR
         && nc_inq_varid (cdfid, "y_range", &y_range_id) == NC_NOERR )
@@ -375,16 +400,18 @@ GDALDataset *GMTDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
     poDS->SetDescription( poOpenInfo->pszFilename );
 
-    CPLReleaseMutex(hNCMutex); // Release mutex otherwise we'll deadlock with GDALDataset own mutex
+    // Release mutex otherwise we'll deadlock with GDALDataset own mutex.
+    CPLReleaseMutex(hNCMutex);
     poDS->TryLoadXML();
 
 /* -------------------------------------------------------------------- */
 /*      Check for external overviews.                                   */
 /* -------------------------------------------------------------------- */
-    poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename, poOpenInfo->GetSiblingFiles() );
+    poDS->oOvManager.Initialize(
+        poDS, poOpenInfo->pszFilename, poOpenInfo->GetSiblingFiles() );
     CPLAcquireMutex(hNCMutex, 1000.0);
 
-    return( poDS );
+    return poDS;
 }
 
 /************************************************************************/
@@ -409,7 +436,7 @@ GMTCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Currently GMT export only supports 1 band datasets." );
-        return NULL;
+        return nullptr;
     }
 
     GDALRasterBand *poBand = poSrcDS->GetRasterBand(1);
@@ -432,7 +459,7 @@ GMTCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Band data type %s not supported in GMT, giving up.",
                   GDALGetDataTypeName( poBand->GetRasterDataType() ) );
-        return NULL;
+        return nullptr;
     }
     else if( poBand->GetRasterDataType() == GDT_Byte )
         nc_datatype = NC_SHORT;
@@ -446,7 +473,7 @@ GMTCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
 /* -------------------------------------------------------------------- */
 /*      Establish bounds from geotransform.                             */
 /* -------------------------------------------------------------------- */
-    double adfGeoTransform[6];
+    double adfGeoTransform[6] = {};
 
     poSrcDS->GetGeoTransform( adfGeoTransform );
 
@@ -455,7 +482,7 @@ GMTCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
         CPLError( bStrict ? CE_Failure : CE_Warning, CPLE_AppDefined,
                   "Geotransform has rotational coefficients not supported in GMT." );
         if( bStrict )
-            return NULL;
+            return nullptr;
     }
 
     const double dfXMax = adfGeoTransform[0] + adfGeoTransform[1] * nXSize;
@@ -464,7 +491,7 @@ GMTCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
 /* -------------------------------------------------------------------- */
 /*      Create base file.                                               */
 /* -------------------------------------------------------------------- */
-    int cdfid;
+    int cdfid = 0;
 
     int err = nc_create (pszFilename, NC_CLOBBER, &cdfid);
     if( err != NC_NOERR )
@@ -472,13 +499,14 @@ GMTCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
         CPLError( CE_Failure, CPLE_AppDefined,
                   "nc_create(%s): %s",
                   pszFilename, nc_strerror( err ) );
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
 /*      Define the dimensions and so forth.                             */
 /* -------------------------------------------------------------------- */
-    int side_dim, xysize_dim;
+    int side_dim = 0;
+    int xysize_dim = 0;
 
     CPL_IGNORE_RET_VAL(nc_def_dim(cdfid, "side", 2, &side_dim));
     CPL_IGNORE_RET_VAL(nc_def_dim(cdfid, "xysize", (int) (nXSize * nYSize), &xysize_dim));
@@ -494,7 +522,7 @@ GMTCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     CPL_IGNORE_RET_VAL(nc_def_var (cdfid, "spacing", NC_DOUBLE, 1, dims, &inc_id));
     CPL_IGNORE_RET_VAL(nc_def_var (cdfid, "dimension", NC_LONG, 1, dims, &nm_id));
 
-    dims[0]		= xysize_dim;
+    dims[0] = xysize_dim;
     CPL_IGNORE_RET_VAL(nc_def_var (cdfid, "z", nc_datatype, 1, dims, &z_id));
 
 /* -------------------------------------------------------------------- */
@@ -523,15 +551,15 @@ GMTCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
 /* -------------------------------------------------------------------- */
 /*      Get raster min/max.                                             */
 /* -------------------------------------------------------------------- */
-    double adfMinMax[2];
+    double adfMinMax[2] = { 0.0, 0.0 };
     GDALComputeRasterMinMax( (GDALRasterBandH) poBand, FALSE, adfMinMax );
 
 /* -------------------------------------------------------------------- */
 /*      Set range variables.                                            */
 /* -------------------------------------------------------------------- */
-    size_t start[2] = {0, 0};
-    size_t edge[2] = {2, 0};
-    double dummy[2] = {adfGeoTransform[0], dfXMax};
+    size_t start[2] = { 0, 0 };
+    size_t edge[2] = { 2, 0 };
+    double dummy[2] = { adfGeoTransform[0], dfXMax };
     nc_put_vara_double(cdfid, x_range_id, start, edge, dummy);
 
     dummy[0] = dfYMin;
@@ -557,11 +585,11 @@ GMTCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     {
         start[0] = iLine * nXSize;
         if( poBand->RasterIO( GF_Read, 0, iLine, nXSize, 1,
-                          padfData, nXSize, 1, GDT_Float64, 0, 0, NULL ) != CE_None )
+                          padfData, nXSize, 1, GDT_Float64, 0, 0, nullptr ) != CE_None )
         {
             nc_close (cdfid);
             CPLFree( padfData );
-            return( NULL );
+            return nullptr;
         }
         err = nc_put_vara_double( cdfid, z_id, start, edge, padfData );
         if( err != NC_NOERR )
@@ -571,7 +599,7 @@ GMTCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
                       pszFilename, nc_strerror( err ) );
             nc_close (cdfid);
             CPLFree( padfData );
-            return( NULL );
+            return nullptr;
         }
     }
 
@@ -604,7 +632,7 @@ void GDALRegister_GMT()
     if( !GDAL_CHECK_VERSION( "GMT driver" ) )
         return;
 
-    if( GDALGetDriverByName( "GMT" ) != NULL )
+    if( GDALGetDriverByName( "GMT" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

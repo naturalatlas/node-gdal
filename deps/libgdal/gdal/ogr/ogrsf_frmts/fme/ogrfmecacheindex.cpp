@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrfmecacheindex.cpp 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  FMEObjects Translator
  * Purpose:  Implement the OGRFMECacheIndex class, a mechanism to manage a
@@ -35,7 +34,7 @@
 #include "cpl_string.h"
 #include <time.h>
 
-CPL_CVSID("$Id: ogrfmecacheindex.cpp 33714 2016-03-13 05:42:13Z goatbar $");
+CPL_CVSID("$Id: ogrfmecacheindex.cpp 002b050d9a9ef403a732c1210784736ef97216d4 2018-04-09 21:34:55 +0200 Even Rouault $")
 
 /************************************************************************/
 /*                          OGRFMECacheIndex()                          */
@@ -322,13 +321,18 @@ void OGRFMECacheIndex::Dereference( CPLXMLNode *psDSNode )
 void OGRFMECacheIndex::Add( CPLXMLNode *psDSNode )
 
 {
-    CPLAssert( psTree != NULL );
+    if( psTree == NULL )
+    {
+        CPLAssert( false );
+        return;
+    }
+
+    if( psDSNode == NULL || !EQUAL(psDSNode->pszValue,"DataSource") )
+        return;
 
     psDSNode->psNext = psTree->psChild;
     psTree->psChild = psDSNode;
 
-    if( psDSNode == NULL || !EQUAL(psDSNode->pszValue,"DataSource") )
-        return;
 
 /* -------------------------------------------------------------------- */
 /*      Prepare the creation time value to use.                         */
@@ -352,7 +356,7 @@ void OGRFMECacheIndex::Add( CPLXMLNode *psDSNode )
 /*      different timeouts apply.  One is for layers with a RefCount    */
 /*      of 0 and the other (longer time) is for those with a            */
 /*      non-zero refcount.  Even if the RefCount is non-zero we         */
-/*      assume this may because a program crashed during it's run.      */
+/*      assume this may because a program crashed during its run.       */
 /************************************************************************/
 
 int OGRFMECacheIndex::ExpireOldCaches( IFMESession *poSession )

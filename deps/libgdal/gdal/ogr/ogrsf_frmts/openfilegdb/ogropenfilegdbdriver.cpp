@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogropenfilegdbdriver.cpp 33031 2016-01-17 19:21:44Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements Open FileGDB OGR driver.
@@ -27,16 +26,25 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
 #include "ogr_openfilegdb.h"
 
-CPL_CVSID("$Id");
+#include <cstddef>
+#include <cstring>
+
+#include "cpl_conv.h"
+#include "cpl_vsi.h"
+#include "gdal.h"
+#include "gdal_priv.h"
+#include "ogr_core.h"
+
+CPL_CVSID("$Id: ogropenfilegdbdriver.cpp 33445df4503c0fb7a0c45ec0cbd4d2f8afa26085 2018-02-16 06:05:00Z Kurt Schwehr $")
 
 // g++ -O2 -Wall -Wextra -g -shared -fPIC ogr/ogrsf_frmts/openfilegdb/*.cpp
 // -o ogr_OpenFileGDB.so -Iport -Igcore -Iogr -Iogr/ogrsf_frmts
 // -Iogr/ogrsf_frmts/mem -Iogr/ogrsf_frmts/openfilegdb -L. -lgdal
 
 extern "C" void RegisterOGROpenFileGDB();
-
 
 #define ENDS_WITH(str, strLen, end) \
     (strLen >= strlen(end) && EQUAL(str + strLen - strlen(end), end))
@@ -83,8 +91,8 @@ static GDALIdentifyEnum OGROpenFileGDBDriverIdentifyInternal( GDALOpenInfo* poOp
              ENDS_WITH(pszFilename, nLen, ".gdb.tar") ||
                 /* Canvec GBs */
              (ENDS_WITH(pszFilename, nLen, ".zip") &&
-              (strstr(pszFilename, "_gdb") != NULL ||
-               strstr(pszFilename, "_GDB") != NULL)) )
+              (strstr(pszFilename, "_gdb") != nullptr ||
+               strstr(pszFilename, "_GDB") != nullptr)) )
     {
         return GDAL_IDENTIFY_TRUE;
     }
@@ -124,6 +132,19 @@ static GDALIdentifyEnum OGROpenFileGDBDriverIdentifyInternal( GDALOpenInfo* poOp
     }
 #endif
 
+    else if( EQUAL(pszFilename, ".") )
+    {
+        GDALIdentifyEnum eRet = GDAL_IDENTIFY_FALSE;
+        char* pszCurrentDir = CPLGetCurrentDir();
+        if( pszCurrentDir )
+        {
+            const char* pszTmp = pszCurrentDir;
+            eRet = OGROpenFileGDBDriverIdentifyInternal(poOpenInfo, pszTmp);
+            CPLFree(pszCurrentDir);
+        }
+        return eRet;
+    }
+
     else
     {
         return GDAL_IDENTIFY_FALSE;
@@ -144,14 +165,14 @@ static GDALDataset* OGROpenFileGDBDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
     if( poOpenInfo->eAccess == GA_Update )
-        return NULL;
+        return nullptr;
 
     const char* pszFilename = poOpenInfo->pszFilename;
 #ifdef FOR_FUSIL
     CPLString osOrigFilename(pszFilename);
 #endif
     if( OGROpenFileGDBDriverIdentifyInternal( poOpenInfo, pszFilename ) == GDAL_IDENTIFY_FALSE )
-        return NULL;
+        return nullptr;
 
 #ifdef FOR_FUSIL
     const char* pszSrcDir = CPLGetConfigOption("FUSIL_SRC_DIR", NULL);
@@ -179,7 +200,7 @@ static GDALDataset* OGROpenFileGDBDriverOpen( GDALOpenInfo* poOpenInfo )
 
 #ifdef DEBUG
     /* For AFL, so that .cur_input is detected as the archive filename */
-    if( poOpenInfo->fpL != NULL &&
+    if( poOpenInfo->fpL != nullptr &&
         !STARTS_WITH(poOpenInfo->pszFilename, "/vsitar/") &&
         EQUAL(CPLGetFilename(poOpenInfo->pszFilename), ".cur_input") )
     {
@@ -198,7 +219,7 @@ static GDALDataset* OGROpenFileGDBDriverOpen( GDALOpenInfo* poOpenInfo )
     }
 
     delete poDS;
-    return NULL;
+    return nullptr;
 }
 
 /***********************************************************************/
@@ -211,7 +232,7 @@ void RegisterOGROpenFileGDB()
     if( !GDAL_CHECK_VERSION("OGR OpenFileGDB") )
         return;
 
-    if( GDALGetDriverByName( "OpenFileGDB" ) != NULL )
+    if( GDALGetDriverByName( "OpenFileGDB" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

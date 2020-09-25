@@ -1,5 +1,5 @@
 /*****************************************************************************
- * $Id:  $
+ * $Id: JpegHelper.h 1a0073ad9b5797992025beb07f707b05eadb4186 2016-07-02 21:26:43Z Kurt Schwehr $
  *
  * Project:  Project:  Creates a jpeg header
  * Purpose:  Abbreviated JPEG support

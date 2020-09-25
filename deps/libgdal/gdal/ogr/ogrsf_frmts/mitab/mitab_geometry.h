@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: mitab_geometry.h,v 1.2 2004-06-30 20:29:04 dmorissette Exp $
+ * $Id: mitab_geometry.h 1b6ddf05f3ceee1fde40bbd56f44a2d462af0856 2017-02-09 14:29:57Z Kurt Schwehr $
  *
  * Name:     mitab_geometry.cpp
  * Project:  MapInfo TAB Read/Write library
@@ -28,15 +28,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
- **********************************************************************
- *
- * $Log: mitab_geometry.h,v $
- * Revision 1.2  2004-06-30 20:29:04  dmorissette
- * Fixed refs to old address danmo@videotron.ca
- *
- * Revision 1.1  2000/09/19 17:19:40  daniel
- * Initial Revision
- *
  **********************************************************************/
 
 #ifndef MITAB_GEOMETRY_H_INCLUDED

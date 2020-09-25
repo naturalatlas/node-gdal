@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: reader_digital_globe.cpp 33720 2016-03-15 00:39:53Z goatbar $
  *
  * Project:  GDAL Core
  * Purpose:  Read metadata from DigitalGlobe imagery.
@@ -28,30 +27,39 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
 #include "reader_digital_globe.h"
 
-CPL_CVSID("$Id: reader_digital_globe.cpp 33720 2016-03-15 00:39:53Z goatbar $");
+#include <ctime>
+
+#include "cpl_conv.h"
+#include "cpl_error.h"
+#include "cpl_minixml.h"
+#include "cpl_string.h"
+#include "gdal_priv.h"
+
+CPL_CVSID("$Id: reader_digital_globe.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /**
  * GDALMDReaderDigitalGlobe()
  */
 GDALMDReaderDigitalGlobe::GDALMDReaderDigitalGlobe(const char *pszPath,
-        char **papszSiblingFiles) : GDALMDReaderBase(pszPath, papszSiblingFiles)
+                                                   char **papszSiblingFiles) :
+    GDALMDReaderBase(pszPath, papszSiblingFiles),
+    m_osXMLSourceFilename ( GDALFindAssociatedFile( pszPath, "XML",
+                                                         papszSiblingFiles, 0 ) ),
+    m_osIMDSourceFilename ( GDALFindAssociatedFile( pszPath, "IMD",
+                                                         papszSiblingFiles, 0 ) ),
+    m_osRPBSourceFilename ( GDALFindAssociatedFile( pszPath, "RPB",
+                                                         papszSiblingFiles, 0 ) )
 {
-    m_osIMDSourceFilename = GDALFindAssociatedFile( pszPath, "IMD",
-                                                         papszSiblingFiles, 0 );
-    m_osRPBSourceFilename = GDALFindAssociatedFile( pszPath, "RPB",
-                                                         papszSiblingFiles, 0 );
-    m_osXMLSourceFilename = GDALFindAssociatedFile( pszPath, "XML",
-                                                         papszSiblingFiles, 0 );
-
-    if( m_osIMDSourceFilename.size() )
+    if( !m_osIMDSourceFilename.empty() )
         CPLDebug( "MDReaderDigitalGlobe", "IMD Filename: %s",
                   m_osIMDSourceFilename.c_str() );
-    if( m_osRPBSourceFilename.size() )
+    if( !m_osRPBSourceFilename.empty() )
         CPLDebug( "MDReaderDigitalGlobe", "RPB Filename: %s",
                   m_osRPBSourceFilename.c_str() );
-    if( m_osXMLSourceFilename.size() )
+    if( !m_osXMLSourceFilename.empty() )
         CPLDebug( "MDReaderDigitalGlobe", "XML Filename: %s",
                   m_osXMLSourceFilename.c_str() );
 }
@@ -97,19 +105,19 @@ void GDALMDReaderDigitalGlobe::LoadMetadata()
         m_papszRPCMD = GDALLoadRPBFile( m_osRPBSourceFilename );
     }
 
-    if((NULL == m_papszIMDMD || NULL == m_papszRPCMD) && !m_osXMLSourceFilename.empty())
+    if((nullptr == m_papszIMDMD || nullptr == m_papszRPCMD) && !m_osXMLSourceFilename.empty())
     {
         CPLXMLNode* psNode = CPLParseXMLFile(m_osXMLSourceFilename);
 
-        if(psNode != NULL)
+        if(psNode != nullptr)
         {
             CPLXMLNode* psisdNode = psNode->psNext;
-            if(psisdNode != NULL)
+            if(psisdNode != nullptr)
             {
-                if( m_papszIMDMD == NULL )
+                if( m_papszIMDMD == nullptr )
                     m_papszIMDMD = LoadIMDXmlNode( CPLSearchXMLNode(psisdNode,
                                                                         "IMD") );
-                if( m_papszRPCMD == NULL )
+                if( m_papszRPCMD == nullptr )
                     m_papszRPCMD = LoadRPBXmlNode( CPLSearchXMLNode(psisdNode,
                                                                         "RPB") );
             }
@@ -121,13 +129,13 @@ void GDALMDReaderDigitalGlobe::LoadMetadata()
 
     m_bIsMetadataLoad = true;
 
-    if(NULL == m_papszIMDMD)
+    if(nullptr == m_papszIMDMD)
     {
         return;
     }
     //extract imagery metadata
     const char* pszSatId = CSLFetchNameValue(m_papszIMDMD, "IMAGE.SATID");
-    if(NULL != pszSatId)
+    if(nullptr != pszSatId)
     {
         m_papszIMAGERYMD = CSLAddNameValue(m_papszIMAGERYMD,
                                            MD_NAME_SATELLITE,
@@ -136,7 +144,7 @@ void GDALMDReaderDigitalGlobe::LoadMetadata()
     else
     {
         pszSatId = CSLFetchNameValue(m_papszIMDMD, "IMAGE_1.SATID");
-        if(NULL != pszSatId)
+        if(nullptr != pszSatId)
         {
             m_papszIMAGERYMD = CSLAddNameValue(m_papszIMAGERYMD,
                                                MD_NAME_SATELLITE,
@@ -146,7 +154,7 @@ void GDALMDReaderDigitalGlobe::LoadMetadata()
 
     const char* pszCloudCover = CSLFetchNameValue(m_papszIMDMD,
                                                   "IMAGE.CLOUDCOVER");
-    if(NULL != pszCloudCover)
+    if(nullptr != pszCloudCover)
     {
         double fCC = CPLAtofM(pszCloudCover);
         if(fCC < 0)
@@ -163,7 +171,7 @@ void GDALMDReaderDigitalGlobe::LoadMetadata()
     else
     {
         pszCloudCover = CSLFetchNameValue(m_papszIMDMD, "IMAGE_1.cloudCover");
-        if(NULL != pszCloudCover)
+        if(nullptr != pszCloudCover)
         {
             double fCC = CPLAtofM(pszCloudCover);
             if(fCC < 0)
@@ -181,7 +189,7 @@ void GDALMDReaderDigitalGlobe::LoadMetadata()
 
     const char* pszDateTime = CSLFetchNameValue(m_papszIMDMD,
                                        "IMAGE.FIRSTLINETIME");
-    if(NULL != pszDateTime)
+    if(nullptr != pszDateTime)
     {
         time_t timeStart = GetAcquisitionTimeFromString(pszDateTime);
         char szMidDateTime[80];
@@ -194,7 +202,7 @@ void GDALMDReaderDigitalGlobe::LoadMetadata()
     else
     {
         pszDateTime = CSLFetchNameValue(m_papszIMDMD, "IMAGE_1.firstLineTime");
-        if(NULL != pszDateTime)
+        if(nullptr != pszDateTime)
         {
             time_t timeStart = GetAcquisitionTimeFromString(pszDateTime);
             char szMidDateTime[80];
@@ -212,7 +220,7 @@ void GDALMDReaderDigitalGlobe::LoadMetadata()
  */
 char** GDALMDReaderDigitalGlobe::GetMetadataFiles() const
 {
-    char **papszFileList = NULL;
+    char **papszFileList = nullptr;
     if(!m_osIMDSourceFilename.empty())
         papszFileList = CSLAddString( papszFileList, m_osIMDSourceFilename );
     if(!m_osRPBSourceFilename.empty())
@@ -228,9 +236,9 @@ char** GDALMDReaderDigitalGlobe::GetMetadataFiles() const
  */
 char** GDALMDReaderDigitalGlobe::LoadIMDXmlNode(CPLXMLNode* psNode)
 {
-    if(NULL == psNode)
-        return NULL;
-    char** papszList = NULL;
+    if(nullptr == psNode)
+        return nullptr;
+    char** papszList = nullptr;
     return ReadXMLToList(psNode->psChild, papszList);
 }
 
@@ -252,20 +260,20 @@ static const char * const apszRPBMap[] = {
     RPC_LINE_DEN_COEFF, "image.lineDenCoefList.lineDenCoef",
     RPC_SAMP_NUM_COEFF, "image.sampNumCoefList.sampNumCoef",
     RPC_SAMP_DEN_COEFF, "image.sampDenCoefList.sampDenCoef",
-    NULL,             NULL };
+    nullptr,             nullptr };
 
 char** GDALMDReaderDigitalGlobe::LoadRPBXmlNode(CPLXMLNode* psNode)
 {
-    if(NULL == psNode)
-        return NULL;
-    char** papszList = NULL;
+    if(nullptr == psNode)
+        return nullptr;
+    char** papszList = nullptr;
     papszList = ReadXMLToList(psNode->psChild, papszList);
 
-    if(NULL == papszList)
-        return NULL;
+    if(nullptr == papszList)
+        return nullptr;
 
-    char** papszRPB = NULL;
-    for( int i = 0; apszRPBMap[i] != NULL; i += 2 )
+    char** papszRPB = nullptr;
+    for( int i = 0; apszRPBMap[i] != nullptr; i += 2 )
     {
         papszRPB = CSLAddNameValue(papszRPB, apszRPBMap[i],
                                CSLFetchNameValue(papszList, apszRPBMap[i + 1]));

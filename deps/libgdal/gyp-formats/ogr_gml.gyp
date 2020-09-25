@@ -21,8 +21,7 @@
 				"../gdal/ogr/ogrsf_frmts/gml/ogrgmldriver.cpp",
 				"../gdal/ogr/ogrsf_frmts/gml/ogrgmllayer.cpp",
 				"../gdal/ogr/ogrsf_frmts/gml/parsexsd.cpp",
-				"../gdal/ogr/ogrsf_frmts/gml/resolvexlinks.cpp",
-				"../gdal/ogr/ogrsf_frmts/gml/trstring.cpp"
+				"../gdal/ogr/ogrsf_frmts/gml/resolvexlinks.cpp"
 			],
 			"include_dirs": [
 				"../gdal/ogr/ogrsf_frmts/gml"

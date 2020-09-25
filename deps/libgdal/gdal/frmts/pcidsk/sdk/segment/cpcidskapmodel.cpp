@@ -212,9 +212,9 @@ CPCIDSKAPModelSegment::CPCIDSKAPModelSegment(PCIDSKFile *fileIn, int segmentIn, 
     CPCIDSKSegment(fileIn, segmentIn, segment_pointer)
 {
     filled_ = false;
-    io_params_ = NULL;
-    eo_params_ = NULL;
-    misc_params_ = NULL;
+    io_params_ = nullptr;
+    eo_params_ = nullptr;
+    misc_params_ = nullptr;
     UpdateFromDisk();
 }
  
@@ -252,7 +252,7 @@ unsigned int CPCIDSKAPModelSegment::GetDownsampleFactor(void) const
 // Interior Orientation Parameters
 PCIDSKAPModelIOParams const& CPCIDSKAPModelSegment::GetInteriorOrientationParams(void) const
 {
-    if (io_params_ == NULL) {
+    if (io_params_ == nullptr) {
         throw PCIDSKException("There was a failure in reading the APModel IO params.");
     }
     return *io_params_;
@@ -261,7 +261,7 @@ PCIDSKAPModelIOParams const& CPCIDSKAPModelSegment::GetInteriorOrientationParams
 // Exterior Orientation Parameters
 PCIDSKAPModelEOParams const& CPCIDSKAPModelSegment::GetExteriorOrientationParams(void) const
 {
-    if (eo_params_ == NULL) {
+    if (eo_params_ == nullptr) {
         throw PCIDSKException("There was a failure in reading the APModel EO params.");
     }
     return *eo_params_;
@@ -269,7 +269,7 @@ PCIDSKAPModelEOParams const& CPCIDSKAPModelSegment::GetExteriorOrientationParams
 
 PCIDSKAPModelMiscParams const& CPCIDSKAPModelSegment::GetAdditionalParams(void) const
 {
-    if (misc_params_ == NULL) {
+    if (misc_params_ == nullptr) {
         throw PCIDSKException("There was a failure in reading the APModel camera params.");
     }
     return *misc_params_;
@@ -291,8 +291,11 @@ std::vector<double> const& CPCIDSKAPModelSegment::GetProjParams(void) const
 }
 
 /************************************************************************/
-/*                        BinaryToAPInfo()                          	*/
+/*                        BinaryToAPInfo()                              */
 /************************************************************************/
+
+namespace {
+  
 /**
   * Convert the contents of the PCIDSKBuffer buf to a set of APModel
   * params
@@ -307,7 +310,6 @@ std::vector<double> const& CPCIDSKAPModelSegment::GetProjParams(void) const
   * @param map_units the map units/geosys string
   * @param utm_units the UTM units string
   */
-namespace {
     void BinaryToAPInfo(PCIDSKBuffer& buf,
                         PCIDSKAPModelEOParams*& eo_params,
                         PCIDSKAPModelIOParams*& io_params,
@@ -324,7 +326,7 @@ namespace {
         map_units.clear();
         utm_units.clear();
     /* -------------------------------------------------------------------- */
-    /*	Read the header block						    */
+    /*  Read the header block                                               */
     /* -------------------------------------------------------------------- */
     
         if(!STARTS_WITH(buf.buffer,"APMODEL "))
@@ -339,10 +341,9 @@ namespace {
     /* -------------------------------------------------------------------- */
 
         downsample = buf.GetInt(24, 3);
-        if (0 >= downsample) downsample = 0;
 
     /* -------------------------------------------------------------------- */
-    /*      Read the values					            */
+    /*      Read the values                                                 */
     /* -------------------------------------------------------------------- */
         pixels = buf.GetInt(0 * 22 + 512, 22);
         lines = buf.GetInt(1 * 22 + 512, 22);
@@ -462,7 +463,7 @@ namespace {
 
 
     /* -------------------------------------------------------------------- */
-    /*      Read the projection required					*/
+    /*      Read the projection required                                    */
     /* -------------------------------------------------------------------- */
         buf.Get(512 * 4, 16, map_units);
     

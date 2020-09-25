@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrgeopackageselectlayer.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  GeoPackage Translator
  * Purpose:  Implements OGRGeoPackageSelectLayer class
@@ -29,6 +28,8 @@
 
 #include "ogr_geopackage.h"
 
+CPL_CVSID("$Id: ogrgeopackageselectlayer.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
+
 /************************************************************************/
 /*                        OGRGeoPackageSelectLayer()                    */
 /************************************************************************/
@@ -37,19 +38,23 @@ OGRGeoPackageSelectLayer::OGRGeoPackageSelectLayer( GDALGeoPackageDataset *poDS,
                                             CPLString osSQLIn,
                                             sqlite3_stmt *hStmtIn,
                                             int bUseStatementForGetNextFeature,
-                                            int bEmptyLayer ) : OGRGeoPackageLayer(poDS)
-
+                                            int bEmptyLayer ) :
+    OGRGeoPackageLayer(poDS)
 {
+    // Cannot be moved to initializer list because of use of this, which MSVC 2008 doesn't like
     poBehaviour = new OGRSQLiteSelectLayerCommonBehaviour(poDS, this, osSQLIn, bEmptyLayer);
+
     BuildFeatureDefn( "SELECT", hStmtIn );
 
     if( bUseStatementForGetNextFeature )
     {
         m_poQueryStatement = hStmtIn;
-        bDoStep = FALSE;
+        bDoStep = false;
     }
     else
+    {
         sqlite3_finalize( hStmtIn );
+    }
 }
 
 /************************************************************************/
@@ -95,20 +100,19 @@ GIntBig OGRGeoPackageSelectLayer::GetFeatureCount( int bForce )
 OGRErr OGRGeoPackageSelectLayer::ResetStatement()
 
 {
-    int rc;
-
     ClearStatement();
 
     iNextShapeId = 0;
-    bDoStep = TRUE;
+    bDoStep = true;
 
 #ifdef DEBUG
-    CPLDebug( "OGR_GPKG", "prepare(%s)", poBehaviour->osSQLCurrent.c_str() );
+    CPLDebug( "OGR_GPKG", "prepare_v2(%s)", poBehaviour->osSQLCurrent.c_str() );
 #endif
 
-    rc = sqlite3_prepare( m_poDS->GetDB(), poBehaviour->osSQLCurrent,
-                          static_cast<int>(poBehaviour->osSQLCurrent.size()),
-                          &m_poQueryStatement, NULL );
+    const int rc =
+        sqlite3_prepare_v2( m_poDS->GetDB(), poBehaviour->osSQLCurrent,
+                         static_cast<int>(poBehaviour->osSQLCurrent.size()),
+                         &m_poQueryStatement, nullptr );
 
     if( rc == SQLITE_OK )
     {
@@ -117,9 +121,9 @@ OGRErr OGRGeoPackageSelectLayer::ResetStatement()
     else
     {
         CPLError( CE_Failure, CPLE_AppDefined,
-                  "In ResetStatement(): sqlite3_prepare(%s):\n  %s",
+                  "In ResetStatement(): sqlite3_prepare_v2(%s):\n  %s",
                   poBehaviour->osSQLCurrent.c_str(), sqlite3_errmsg(m_poDS->GetDB()) );
-        m_poQueryStatement = NULL;
+        m_poQueryStatement = nullptr;
         return OGRERR_FAILURE;
     }
 }

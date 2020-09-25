@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: tigerpolygon.cpp 33706 2016-03-11 13:33:27Z goatbar $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements TigerPolygon, providing access to .RTA files.
@@ -31,7 +30,7 @@
 #include "ogr_tiger.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: tigerpolygon.cpp 33706 2016-03-11 13:33:27Z goatbar $");
+CPL_CVSID("$Id: tigerpolygon.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 static const TigerFieldInfo rtA_2002_fields[] = {
   // fieldname    fmt  type OFTType      beg  end  len  bDefine bSet bWrite
@@ -89,7 +88,6 @@ static const TigerRecordInfo rtA_2002_info =
     sizeof(rtA_2002_fields) / sizeof(TigerFieldInfo),
     210
   };
-
 
 static const TigerFieldInfo rtA_2003_fields[] = {
   // fieldname    fmt  type OFTType      beg  end  len  bDefine bSet bWrite
@@ -150,7 +148,6 @@ static const TigerRecordInfo rtA_2003_info =
     210
   };
 
-
 static const TigerFieldInfo rtA_2004_fields[] = {
   // fieldname    fmt  type OFTType      beg  end  len  bDefine bSet bWrite
   { "MODULE",     ' ', ' ', OFTString,     0,   0,   8,       1,   0,     0 },
@@ -210,7 +207,6 @@ static const TigerRecordInfo rtA_2004_info =
     210
   };
 
-
 static const TigerFieldInfo rtA_fields[] = {
   // fieldname    fmt  type OFTType      beg  end  len  bDefine bSet bWrite
   { "MODULE",     ' ', ' ', OFTString,     0,   0,   8,       1,   0,     0 },
@@ -244,7 +240,6 @@ static const TigerRecordInfo rtA_info =
     sizeof(rtA_fields) / sizeof(TigerFieldInfo),
     98
   };
-
 
 static const TigerFieldInfo rtS_2002_fields[] = {
   // fieldname    fmt  type OFTType      beg  end  len  bDefine bSet bWrite
@@ -296,7 +291,6 @@ static const TigerRecordInfo rtS_2002_info =
     168
   };
 
-
 static const TigerFieldInfo rtS_2000_Redistricting_fields[] = {
   { "FILE",       'L', 'N', OFTString,     6,  10,   5,       0,   0,     1 },
   { "STATE",      'L', 'N', OFTInteger,    6,   7,   2,       0,   0,     1 },
@@ -331,7 +325,6 @@ static const TigerFieldInfo rtS_2000_Redistricting_fields[] = {
   { "BLOCKCOL",   'R', 'N', OFTInteger,  108, 112,   5,       1,   1,     1 },
   { "BLKSUFCOL",  'L', 'A', OFTString,   113, 113,   1,       1,   1,     1 },
   { "ZCTA5",      'L', 'A', OFTString,   114, 118,   5,       1,   1,     1 }
-
 };
 
 static const TigerRecordInfo rtS_2000_Redistricting_info =
@@ -382,16 +375,17 @@ static const TigerRecordInfo rtS_info =
 /************************************************************************/
 
 TigerPolygon::TigerPolygon( OGRTigerDataSource * poDSIn,
-                            CPL_UNUSED const char * pszPrototypeModule ) :
-    fpRTS(NULL),
-    bUsingRTS(TRUE),
+                            const char * /* pszPrototypeModule */ ) :
+    psRTAInfo(nullptr),
+    psRTSInfo(nullptr),
+    fpRTS(nullptr),
+    bUsingRTS(true),
     nRTSRecLen(0)
 {
     poDS = poDSIn;
     poFeatureDefn = new OGRFeatureDefn( "Polygon" );
     poFeatureDefn->Reference();
     poFeatureDefn->SetGeomType( wkbNone );
-
 
     if( poDS->GetVersion() >= TIGER_2004 ) {
         psRTAInfo = &rtA_2004_info;
@@ -414,13 +408,11 @@ TigerPolygon::TigerPolygon( OGRTigerDataSource * poDSIn,
     /* -------------------------------------------------------------------- */
     /*      Fields from type A record.                                      */
     /* -------------------------------------------------------------------- */
-
     AddFieldDefns(psRTAInfo, poFeatureDefn);
 
     /* -------------------------------------------------------------------- */
     /*      Add the RTS records if it is available.                         */
     /* -------------------------------------------------------------------- */
-
     if( bUsingRTS ) {
       AddFieldDefns(psRTSInfo, poFeatureDefn);
     }
@@ -433,7 +425,7 @@ TigerPolygon::TigerPolygon( OGRTigerDataSource * poDSIn,
 TigerPolygon::~TigerPolygon()
 
 {
-    if( fpRTS != NULL )
+    if( fpRTS != nullptr )
         VSIFCloseL( fpRTS );
 }
 
@@ -441,11 +433,11 @@ TigerPolygon::~TigerPolygon()
 /*                             SetModule()                              */
 /************************************************************************/
 
-int TigerPolygon::SetModule( const char * pszModuleIn )
+bool TigerPolygon::SetModule( const char * pszModuleIn )
 
 {
     if( !OpenFile( pszModuleIn, "A" ) )
-        return FALSE;
+        return false;
 
     EstablishFeatureCount();
 
@@ -454,17 +446,15 @@ int TigerPolygon::SetModule( const char * pszModuleIn )
 /* -------------------------------------------------------------------- */
     if( bUsingRTS )
     {
-        if( fpRTS != NULL )
+        if( fpRTS != nullptr )
         {
             VSIFCloseL( fpRTS );
-            fpRTS = NULL;
+            fpRTS = nullptr;
         }
 
         if( pszModuleIn )
         {
-            char        *pszFilename;
-
-            pszFilename = poDS->BuildFilename( pszModuleIn, "S" );
+            char *pszFilename = poDS->BuildFilename( pszModuleIn, "S" );
 
             fpRTS = VSIFOpenL( pszFilename, "rb" );
 
@@ -474,7 +464,7 @@ int TigerPolygon::SetModule( const char * pszModuleIn )
         }
     }
 
-    return TRUE;
+    return true;
 }
 
 /************************************************************************/
@@ -484,28 +474,35 @@ int TigerPolygon::SetModule( const char * pszModuleIn )
 OGRFeature *TigerPolygon::GetFeature( int nRecordId )
 
 {
-  char        achRecord[OGR_TIGER_RECBUF_LEN];
+    char        achRecord[OGR_TIGER_RECBUF_LEN];
 
     if( nRecordId < 0 || nRecordId >= nFeatures )
     {
         CPLError( CE_Failure, CPLE_FileIO,
                   "Request for out-of-range feature %d of %sA",
                   nRecordId, pszModule );
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
 /*      Read the raw record data from the file.                         */
 /* -------------------------------------------------------------------- */
-    if( fpPrimary == NULL )
-        return NULL;
+    if( fpPrimary == nullptr )
+        return nullptr;
+
+    if( nRecordLength > static_cast<int>(sizeof(achRecord)) )
+    {
+        CPLError( CE_Failure, CPLE_AppDefined,
+                  "Record length too large" );
+        return nullptr;
+    }
 
     if( VSIFSeekL( fpPrimary, nRecordId * nRecordLength, SEEK_SET ) != 0 )
     {
         CPLError( CE_Failure, CPLE_FileIO,
                   "Failed to seek to %d of %sA",
                   nRecordId * nRecordLength, pszModule );
-        return NULL;
+        return nullptr;
     }
 
     if( VSIFReadL( achRecord, nRecordLength, 1, fpPrimary ) != 1 )
@@ -513,7 +510,7 @@ OGRFeature *TigerPolygon::GetFeature( int nRecordId )
         CPLError( CE_Failure, CPLE_FileIO,
                   "Failed to read record %d of %sA",
                   nRecordId, pszModule );
-        return NULL;
+        return nullptr;
     }
 
     /* -------------------------------------------------------------------- */
@@ -528,7 +525,7 @@ OGRFeature *TigerPolygon::GetFeature( int nRecordId )
     /*      Read RTS record, and apply fields.                              */
     /* -------------------------------------------------------------------- */
 
-    if( fpRTS != NULL )
+    if( fpRTS != nullptr )
     {
         char    achRTSRec[OGR_TIGER_RECBUF_LEN];
 
@@ -537,19 +534,22 @@ OGRFeature *TigerPolygon::GetFeature( int nRecordId )
             CPLError( CE_Failure, CPLE_FileIO,
                       "Failed to seek to %d of %sS",
                       nRecordId * nRTSRecLen, pszModule );
-            return NULL;
+            delete poFeature;
+            return nullptr;
         }
 
+        // Overflow cannot happen since psRTInfo->nRecordLength is unsigned
+        // char and sizeof(achRecord) == OGR_TIGER_RECBUF_LEN > 255
         if( VSIFReadL( achRTSRec, psRTSInfo->nRecordLength, 1, fpRTS ) != 1 )
         {
             CPLError( CE_Failure, CPLE_FileIO,
                       "Failed to read record %d of %sS",
                       nRecordId, pszModule );
-            return NULL;
+            delete poFeature;
+            return nullptr;
         }
 
         SetFields( psRTSInfo, poFeature, achRTSRec );
-
     }
 
     return poFeature;
@@ -559,13 +559,12 @@ OGRFeature *TigerPolygon::GetFeature( int nRecordId )
 /*                           SetWriteModule()                           */
 /************************************************************************/
 
-int TigerPolygon::SetWriteModule( const char *pszFileCode, int nRecLen,
-                                  OGRFeature *poFeature )
+bool TigerPolygon::SetWriteModule( const char *pszFileCode, int nRecLen,
+                                   OGRFeature *poFeature )
 
 {
-    int bSuccess;
-
-    bSuccess = TigerFileBase::SetWriteModule( pszFileCode, nRecLen, poFeature);
+    const bool bSuccess =
+        TigerFileBase::SetWriteModule( pszFileCode, nRecLen, poFeature);
     if( !bSuccess )
         return bSuccess;
 
@@ -574,17 +573,15 @@ int TigerPolygon::SetWriteModule( const char *pszFileCode, int nRecLen,
 /* -------------------------------------------------------------------- */
     if( bUsingRTS )
     {
-        if( fpRTS != NULL )
+        if( fpRTS != nullptr )
         {
             VSIFCloseL( fpRTS );
-            fpRTS = NULL;
+            fpRTS = nullptr;
         }
 
         if( pszModule )
         {
-            char        *pszFilename;
-
-            pszFilename = poDS->BuildFilename( pszModule, "S" );
+            char *pszFilename = poDS->BuildFilename( pszModule, "S" );
 
             fpRTS = VSIFOpenL( pszFilename, "ab" );
 
@@ -592,7 +589,7 @@ int TigerPolygon::SetWriteModule( const char *pszFileCode, int nRecLen,
         }
     }
 
-    return TRUE;
+    return true;
 }
 
 /************************************************************************/
@@ -624,7 +621,6 @@ OGRErr TigerPolygon::CreateFeature( OGRFeature *poFeature )
 
     WriteFields( psRTSInfo, poFeature, szRecord );
     WriteRecord( szRecord, psRTSInfo->nRecordLength, "S", fpRTS );
-
 
     return OGRERR_NONE;
 }

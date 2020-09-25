@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrmysqldriver.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMySQLDriver class.
@@ -31,9 +30,9 @@
 #include "cpl_conv.h"
 #include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: ogrmysqldriver.cpp 33713 2016-03-12 17:41:57Z goatbar $");
+CPL_CVSID("$Id: ogrmysqldriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
-static CPLMutex* hMutex = NULL;
+static CPLMutex* hMutex = nullptr;
 static int   bInitialized = FALSE;
 
 /************************************************************************/
@@ -47,10 +46,10 @@ static void OGRMySQLDriverUnload( CPL_UNUSED GDALDriver* poDriver )
         mysql_library_end();
         bInitialized = FALSE;
     }
-    if( hMutex != NULL )
+    if( hMutex != nullptr )
     {
         CPLDestroyMutex(hMutex);
-        hMutex = NULL;
+        hMutex = nullptr;
     }
 }
 
@@ -74,16 +73,16 @@ static GDALDataset *OGRMySQLDriverOpen( GDALOpenInfo* poOpenInfo )
     OGRMySQLDataSource     *poDS;
 
     if( !OGRMySQLDriverIdentify(poOpenInfo) )
-        return NULL;
+        return nullptr;
 
     {
         CPLMutexHolderD(&hMutex);
         if( !bInitialized )
         {
-            if ( mysql_library_init( 0, NULL, NULL ) )
+            if ( mysql_library_init( 0, nullptr, nullptr ) )
             {
                 CPLError( CE_Failure, CPLE_AppDefined, "Could not initialize MySQL library" );
-                return NULL;
+                return nullptr;
             }
             bInitialized = TRUE;
         }
@@ -95,12 +94,11 @@ static GDALDataset *OGRMySQLDriverOpen( GDALOpenInfo* poOpenInfo )
                      poOpenInfo->eAccess == GA_Update ) )
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
     else
         return poDS;
 }
-
 
 /************************************************************************/
 /*                               Create()                               */
@@ -117,14 +115,13 @@ static GDALDataset *OGRMySQLDriverCreate( const char * pszName,
 
     poDS = new OGRMySQLDataSource();
 
-
-    if( !poDS->Open( pszName, NULL, TRUE ) )
+    if( !poDS->Open( pszName, nullptr, TRUE ) )
     {
         delete poDS;
         CPLError( CE_Failure, CPLE_AppDefined,
          "MySQL driver doesn't currently support database creation.\n"
                   "Please create database before using." );
-        return NULL;
+        return nullptr;
     }
 
     return poDS;
@@ -140,7 +137,7 @@ void RegisterOGRMySQL()
     if (! GDAL_CHECK_VERSION("MySQL driver"))
         return;
 
-    if( GDALGetDriverByName( "MySQL" ) != NULL )
+    if( GDALGetDriverByName( "MySQL" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

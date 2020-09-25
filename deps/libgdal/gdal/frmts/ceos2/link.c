@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: link.c 10645 2007-01-18 02:22:39Z warmerdam $
+ * $Id: link.c 3b0bbf7a8a012d69a783ee1f9cfeb5c52b370021 2017-06-27 20:57:02Z Even Rouault $
  *
  * Project:  ASI CEOS Translator
  * Purpose:  Link list function replacements.
@@ -29,7 +29,7 @@
 
 #include "ceos.h"
 
-CPL_CVSID("$Id: link.c 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: link.c 3b0bbf7a8a012d69a783ee1f9cfeb5c52b370021 2017-06-27 20:57:02Z Even Rouault $")
 
 
 /************************************************************************/

@@ -33,7 +33,7 @@
 #include "ogr_geometry.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: mapdataset.cpp 33720 2016-03-15 00:39:53Z goatbar $");
+CPL_CVSID("$Id: mapdataset.cpp 6574497e5ddfd7c08c094a76756a0ef477cef6a1 2018-04-04 22:15:20 +0200 Even Rouault $")
 
 /************************************************************************/
 /* ==================================================================== */
@@ -41,15 +41,15 @@ CPL_CVSID("$Id: mapdataset.cpp 33720 2016-03-15 00:39:53Z goatbar $");
 /* ==================================================================== */
 /************************************************************************/
 
-class CPL_DLL MAPDataset : public GDALDataset
+class MAPDataset : public GDALDataset
 {
     GDALDataset *poImageDS;
 
     char        *pszWKT;
-    int	        bGeoTransformValid;
+    int         bGeoTransformValid;
     double      adfGeoTransform[6];
     int         nGCPCount;
-    GDAL_GCP	*pasGCPList;
+    GDAL_GCP    *pasGCPList;
     OGRPolygon  *poNeatLine;
     CPLString   osImgFilename;
 
@@ -57,14 +57,14 @@ class CPL_DLL MAPDataset : public GDALDataset
     MAPDataset();
     virtual ~MAPDataset();
 
-    virtual const char* GetProjectionRef();
-    virtual CPLErr      GetGeoTransform( double * );
-    virtual int GetGCPCount();
-    virtual const char *GetGCPProjection();
-    virtual const GDAL_GCP *GetGCPs();
-    virtual char **GetFileList();
+    virtual const char* GetProjectionRef() override;
+    virtual CPLErr      GetGeoTransform( double * ) override;
+    virtual int GetGCPCount() override;
+    virtual const char *GetGCPProjection() override;
+    virtual const GDAL_GCP *GetGCPs() override;
+    virtual char **GetFileList() override;
 
-    virtual int         CloseDependentDatasets();
+    virtual int         CloseDependentDatasets() override;
 
     static GDALDataset *Open( GDALOpenInfo * );
     static int Identify( GDALOpenInfo *poOpenInfo );
@@ -80,7 +80,7 @@ class MAPWrapperRasterBand : public GDALProxyRasterBand
   GDALRasterBand* poBaseBand;
 
   protected:
-    virtual GDALRasterBand* RefUnderlyingRasterBand() { return poBaseBand; }
+    virtual GDALRasterBand* RefUnderlyingRasterBand() override { return poBaseBand; }
 
   public:
     explicit MAPWrapperRasterBand( GDALRasterBand* poBaseBandIn )
@@ -99,12 +99,12 @@ class MAPWrapperRasterBand : public GDALProxyRasterBand
 /************************************************************************/
 
 MAPDataset::MAPDataset() :
-    poImageDS(NULL),
-    pszWKT(NULL),
+    poImageDS(nullptr),
+    pszWKT(nullptr),
     bGeoTransformValid(false),
     nGCPCount(0),
-    pasGCPList(NULL),
-    poNeatLine(NULL)
+    pasGCPList(nullptr),
+    poNeatLine(nullptr)
 {
     adfGeoTransform[0] = 0.0;
     adfGeoTransform[1] = 1.0;
@@ -121,10 +121,10 @@ MAPDataset::MAPDataset() :
 MAPDataset::~MAPDataset()
 
 {
-    if (poImageDS != NULL)
+    if (poImageDS != nullptr)
     {
         GDALClose( poImageDS );
-        poImageDS = NULL;
+        poImageDS = nullptr;
     }
 
     CPLFree(pszWKT);
@@ -135,10 +135,10 @@ MAPDataset::~MAPDataset()
         CPLFree(pasGCPList);
     }
 
-    if ( poNeatLine != NULL )
+    if ( poNeatLine != nullptr )
     {
         delete poNeatLine;
-        poNeatLine = NULL;
+        poNeatLine = nullptr;
     }
 }
 
@@ -149,10 +149,10 @@ MAPDataset::~MAPDataset()
 int MAPDataset::CloseDependentDatasets()
 {
     int bRet = GDALDataset::CloseDependentDatasets();
-    if (poImageDS != NULL)
+    if (poImageDS != nullptr)
     {
         GDALClose( poImageDS );
-        poImageDS = NULL;
+        poImageDS = nullptr;
         bRet = TRUE;
     }
     return bRet;
@@ -170,7 +170,7 @@ int MAPDataset::Identify( GDALOpenInfo *poOpenInfo )
         return FALSE;
 
     if( strstr(reinterpret_cast<const char *>( poOpenInfo->pabyHeader ),
-               "OziExplorer Map Data File") == NULL )
+               "OziExplorer Map Data File") == nullptr )
         return FALSE;
 
     return TRUE;
@@ -183,7 +183,7 @@ int MAPDataset::Identify( GDALOpenInfo *poOpenInfo )
 GDALDataset *MAPDataset::Open( GDALOpenInfo * poOpenInfo )
 {
     if( !Identify( poOpenInfo ) )
-        return NULL;
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Confirm the requested access is supported.                      */
@@ -193,7 +193,7 @@ GDALDataset *MAPDataset::Open( GDALOpenInfo * poOpenInfo )
         CPLError( CE_Failure, CPLE_NotSupported,
                   "The MAP driver does not support update access to existing"
                   " datasets.\n" );
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -218,12 +218,12 @@ GDALDataset *MAPDataset::Open( GDALOpenInfo * poOpenInfo )
     /* We need to read again the .map file because the GDALLoadOziMapFile function
        does not returns all required data . An API change is necessary : maybe in GDAL 2.0 ? */
 
-    char **papszLines = CSLLoad2( poOpenInfo->pszFilename, 200, 200, NULL );
+    char **papszLines = CSLLoad2( poOpenInfo->pszFilename, 200, 200, nullptr );
 
     if ( !papszLines )
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     const int nLines = CSLCount( papszLines );
@@ -231,7 +231,7 @@ GDALDataset *MAPDataset::Open( GDALOpenInfo * poOpenInfo )
     {
         delete poDS;
         CSLDestroy(papszLines);
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -239,18 +239,19 @@ GDALDataset *MAPDataset::Open( GDALOpenInfo * poOpenInfo )
 /*      details like the band count and types.                          */
 /* -------------------------------------------------------------------- */
     poDS->osImgFilename = papszLines[2];
-    VSIStatBufL sStat;
-    if (VSIStatL(poDS->osImgFilename, &sStat) != 0)
+
+    const CPLString osPath = CPLGetPath(poOpenInfo->pszFilename);
+    if (CPLIsFilenameRelative(poDS->osImgFilename))
     {
-        const CPLString osPath = CPLGetPath(poOpenInfo->pszFilename);
-        if (CPLIsFilenameRelative(poDS->osImgFilename))
-        {
-            poDS->osImgFilename = CPLFormCIFilename(osPath, poDS->osImgFilename, NULL);
-        }
-        else
+        poDS->osImgFilename = CPLFormCIFilename(osPath, poDS->osImgFilename, nullptr);
+    }
+    else
+    {
+        VSIStatBufL sStat;
+        if (VSIStatL(poDS->osImgFilename, &sStat) != 0)
         {
             poDS->osImgFilename = CPLGetFilename(poDS->osImgFilename);
-            poDS->osImgFilename = CPLFormCIFilename(osPath, poDS->osImgFilename, NULL);
+            poDS->osImgFilename = CPLFormCIFilename(osPath, poDS->osImgFilename, nullptr);
         }
     }
 
@@ -259,11 +260,11 @@ GDALDataset *MAPDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
     poDS->poImageDS = reinterpret_cast<GDALDataset *>(
         GDALOpen(poDS->osImgFilename, GA_ReadOnly ) );
-    if( poDS->poImageDS == NULL || poDS->poImageDS->GetRasterCount() == 0)
+    if( poDS->poImageDS == nullptr || poDS->poImageDS->GetRasterCount() == 0)
     {
         CSLDestroy(papszLines);
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -275,7 +276,7 @@ GDALDataset *MAPDataset::Open( GDALOpenInfo * poOpenInfo )
     {
         GDALClose( poDS->poImageDS );
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     for( int iBand = 1; iBand <= poDS->poImageDS->GetRasterCount(); iBand++ )
@@ -318,7 +319,7 @@ GDALDataset *MAPDataset::Open( GDALOpenInfo * poOpenInfo )
     /* Create and fill the neatline polygon */
     if (bNeatLine)
     {
-        poDS->poNeatLine = new OGRPolygon();	/* Create a polygon to store the neatline */
+        poDS->poNeatLine = new OGRPolygon();   /* Create a polygon to store the neatline */
         OGRLinearRing* poRing = new OGRLinearRing();
 
         if ( poDS->bGeoTransformValid )        /* Compute the projected coordinates of the corners */
@@ -352,14 +353,14 @@ GDALDataset *MAPDataset::Open( GDALOpenInfo * poOpenInfo )
         }
         else /* Convert the geographic coordinates to projected coordinates */
         {
-            OGRCoordinateTransformation *poTransform = NULL;
-            char *pszWKT = poDS->pszWKT;
+            OGRCoordinateTransformation *poTransform = nullptr;
+            const char *pszWKT = poDS->pszWKT;
 
-            if ( pszWKT != NULL )
+            if ( pszWKT != nullptr )
             {
                 OGRSpatialReference oSRS;
-                OGRSpatialReference *poLatLong = NULL;
-                if ( OGRERR_NONE == oSRS.importFromWkt ( &pszWKT ))
+                OGRSpatialReference *poLatLong = nullptr;
+                if ( OGRERR_NONE == oSRS.importFromWkt ( pszWKT ))
                     poLatLong = oSRS.CloneGeogCS();
                 if ( poLatLong )
                     poTransform = OGRCreateCoordinateTransformation( poLatLong, &oSRS );
@@ -372,9 +373,8 @@ GDALDataset *MAPDataset::Open( GDALOpenInfo * poOpenInfo )
                 if ( STARTS_WITH_CI(papszLines[iLine], "MMPLL,") )
                 {
                     CPLDebug( "MMPLL", "%s", papszLines[iLine] );
-                    char **papszTok = NULL;
 
-                    papszTok = CSLTokenizeString2( papszLines[iLine], ",",
+                    char** papszTok = CSLTokenizeString2( papszLines[iLine], ",",
                                                    CSLT_STRIPLEADSPACES
                                                    | CSLT_STRIPENDSPACES );
 
@@ -401,7 +401,7 @@ GDALDataset *MAPDataset::Open( GDALOpenInfo * poOpenInfo )
         poRing->closeRings();
         poDS->poNeatLine->addRingDirectly(poRing);
 
-        char* pszNeatLineWkt = NULL;
+        char* pszNeatLineWkt = nullptr;
         poDS->poNeatLine->exportToWkt(&pszNeatLineWkt);
         CPLDebug( "NEATLINE", "%s", pszNeatLineWkt);
         poDS->SetMetadataItem("NEATLINE", pszNeatLineWkt);
@@ -410,7 +410,7 @@ GDALDataset *MAPDataset::Open( GDALOpenInfo * poOpenInfo )
 
     CSLDestroy(papszLines);
 
-    return( poDS );
+    return poDS;
 }
 
 /************************************************************************/
@@ -433,7 +433,6 @@ CPLErr MAPDataset::GetGeoTransform( double * padfTransform )
 
     return (nGCPCount == 0) ? CE_None : CE_Failure;
 }
-
 
 /************************************************************************/
 /*                           GetGCPCount()                              */
@@ -482,7 +481,7 @@ char** MAPDataset::GetFileList()
 void GDALRegister_MAP()
 
 {
-    if( GDALGetDriverByName( "MAP" ) != NULL )
+    if( GDALGetDriverByName( "MAP" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

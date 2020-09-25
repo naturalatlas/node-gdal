@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id$
  *
  * Project:  GDAL Core
  * Purpose:  Read metadata from EROS imagery.
@@ -28,7 +27,18 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
 #include "reader_eros.h"
+
+#include <cstddef>
+#include <cstdio>
+#include <cstdlib>
+
+#include "cpl_conv.h"
+#include "cpl_error.h"
+#include "cpl_string.h"
+
+CPL_CVSID("$Id: reader_eros.cpp ec7b85e6bb8f9737693a31f0bf7166e31e10992e 2018-04-16 00:08:36 +0200 Even Rouault $")
 
 /**
  * GDALMDReaderEROS()
@@ -39,7 +49,6 @@ GDALMDReaderEROS::GDALMDReaderEROS(const char *pszPath,
     CPLString osBaseName = CPLGetBasename(pszPath);
     CPLString osDirName = CPLGetDirname(pszPath);
     char szMetadataName[512] = {0};
-    const char* pszPassFileName;
     size_t i;
     if( osBaseName.size() > 511 )
         return;
@@ -47,20 +56,20 @@ GDALMDReaderEROS::GDALMDReaderEROS(const char *pszPath,
     {
         if(STARTS_WITH_CI(osBaseName + i, "."))
         {
-            pszPassFileName = CPLFormFilename( osDirName, szMetadataName,
+            CPLString osPassFileName = CPLFormFilename( osDirName, szMetadataName,
                                                "pass" );
-            if (CPLCheckForFile((char*)pszPassFileName, papszSiblingFiles))
+            if (CPLCheckForFile(&osPassFileName[0], papszSiblingFiles))
             {
-                m_osIMDSourceFilename = pszPassFileName;
+                m_osIMDSourceFilename = osPassFileName;
                 break;
             }
             else
             {
-                pszPassFileName = CPLFormFilename( osDirName, szMetadataName,
+                osPassFileName = CPLFormFilename( osDirName, szMetadataName,
                                                    "PASS" );
-                if (CPLCheckForFile((char*)pszPassFileName, papszSiblingFiles))
+                if (CPLCheckForFile(&osPassFileName[0], papszSiblingFiles))
                 {
-                    m_osIMDSourceFilename = pszPassFileName;
+                    m_osIMDSourceFilename = osPassFileName;
                     break;
                 }
             }
@@ -70,40 +79,40 @@ GDALMDReaderEROS::GDALMDReaderEROS(const char *pszPath,
 
     if(m_osIMDSourceFilename.empty())
     {
-        pszPassFileName = CPLFormFilename( osDirName, szMetadataName, "pass" );
-        if (CPLCheckForFile((char*)pszPassFileName, papszSiblingFiles))
+        CPLString osPassFileName = CPLFormFilename( osDirName, szMetadataName, "pass" );
+        if (CPLCheckForFile(&osPassFileName[0], papszSiblingFiles))
         {
-            m_osIMDSourceFilename = pszPassFileName;
+            m_osIMDSourceFilename = osPassFileName;
         }
         else
         {
-            pszPassFileName = CPLFormFilename( osDirName, szMetadataName, "PASS" );
-            if (CPLCheckForFile((char*)pszPassFileName, papszSiblingFiles))
+            osPassFileName = CPLFormFilename( osDirName, szMetadataName, "PASS" );
+            if (CPLCheckForFile(&osPassFileName[0], papszSiblingFiles))
             {
-                m_osIMDSourceFilename = pszPassFileName;
+                m_osIMDSourceFilename = osPassFileName;
             }
         }
     }
 
-    const char* pszRPCFileName = CPLFormFilename( osDirName, szMetadataName,
+    CPLString osRPCFileName = CPLFormFilename( osDirName, szMetadataName,
                                                   "rpc" );
-    if (CPLCheckForFile((char*)pszRPCFileName, papszSiblingFiles))
+    if (CPLCheckForFile(&osRPCFileName[0], papszSiblingFiles))
     {
-        m_osRPBSourceFilename = pszRPCFileName;
+        m_osRPBSourceFilename = osRPCFileName;
     }
     else
     {
-        pszRPCFileName = CPLFormFilename( osDirName, szMetadataName, "RPC" );
-        if (CPLCheckForFile((char*)pszRPCFileName, papszSiblingFiles))
+        osRPCFileName = CPLFormFilename( osDirName, szMetadataName, "RPC" );
+        if (CPLCheckForFile(&osRPCFileName[0], papszSiblingFiles))
         {
-            m_osRPBSourceFilename = pszRPCFileName;
+            m_osRPBSourceFilename = osRPCFileName;
         }
     }
 
-    if(m_osIMDSourceFilename.size())
+    if(!m_osIMDSourceFilename.empty() )
         CPLDebug( "MDReaderEROS", "IMD Filename: %s",
               m_osIMDSourceFilename.c_str() );
-    if(m_osRPBSourceFilename.size())
+    if(!m_osRPBSourceFilename.empty() )
         CPLDebug( "MDReaderEROS", "RPB Filename: %s",
               m_osRPBSourceFilename.c_str() );
 }
@@ -133,7 +142,7 @@ bool GDALMDReaderEROS::HasRequiredFiles() const
  */
 char** GDALMDReaderEROS::GetMetadataFiles() const
 {
-    char **papszFileList = NULL;
+    char **papszFileList = nullptr;
     if(!m_osIMDSourceFilename.empty())
         papszFileList= CSLAddString( papszFileList, m_osIMDSourceFilename );
     if(!m_osRPBSourceFilename.empty())
@@ -165,19 +174,19 @@ void GDALMDReaderEROS::LoadMetadata()
 
     const char* pszSatId1 = CSLFetchNameValue(m_papszIMDMD, "satellite");
     const char* pszSatId2 = CSLFetchNameValue(m_papszIMDMD, "camera");
-    if(NULL != pszSatId1 && NULL != pszSatId2)
+    if(nullptr != pszSatId1 && nullptr != pszSatId2)
     {
         m_papszIMAGERYMD = CSLAddNameValue(m_papszIMAGERYMD,
                            MD_NAME_SATELLITE, CPLSPrintf( "%s %s",
                            CPLStripQuotes(pszSatId1).c_str(),
                            CPLStripQuotes(pszSatId2).c_str()));
     }
-    else if(NULL != pszSatId1 && NULL == pszSatId2)
+    else if(nullptr != pszSatId1 && nullptr == pszSatId2)
     {
         m_papszIMAGERYMD = CSLAddNameValue(m_papszIMAGERYMD,
                                 MD_NAME_SATELLITE, CPLStripQuotes(pszSatId1));
     }
-    else if(NULL == pszSatId1 && NULL != pszSatId2)
+    else if(nullptr == pszSatId1 && nullptr != pszSatId2)
     {
         m_papszIMAGERYMD = CSLAddNameValue(m_papszIMAGERYMD,
                                 MD_NAME_SATELLITE, CPLStripQuotes(pszSatId2));
@@ -185,7 +194,7 @@ void GDALMDReaderEROS::LoadMetadata()
 
     const char* pszCloudCover = CSLFetchNameValue(m_papszIMDMD,
                                                  "overall_cc");
-    if(NULL != pszCloudCover)
+    if(nullptr != pszCloudCover)
     {
         int nCC = atoi(pszCloudCover);
         if(nCC > 100 || nCC < 0)
@@ -201,7 +210,7 @@ void GDALMDReaderEROS::LoadMetadata()
     }
 
     const char* pszDate = CSLFetchNameValue(m_papszIMDMD, "sweep_start_utc");
-    if(NULL != pszDate)
+    if(nullptr != pszDate)
     {
         char buffer[80];
         time_t timeMid = GetAcquisitionTimeFromString(CPLStripQuotes(pszDate));
@@ -209,7 +218,6 @@ void GDALMDReaderEROS::LoadMetadata()
         m_papszIMAGERYMD = CSLAddNameValue(m_papszIMAGERYMD,
                                            MD_NAME_ACQDATETIME, buffer);
     }
-
 }
 
 /**
@@ -218,29 +226,32 @@ void GDALMDReaderEROS::LoadMetadata()
 char** GDALMDReaderEROS::LoadImdTxtFile()
 {
     char** papszLines = CSLLoad(m_osIMDSourceFilename);
-    if(NULL == papszLines)
-        return NULL;
+    if(nullptr == papszLines)
+        return nullptr;
 
-    char** papszIMD = NULL;
+    char** papszIMD = nullptr;
     char szName[22];
     int i, j;
 
-    for(i = 0; papszLines[i] != NULL; i++)
+    for(i = 0; papszLines[i] != nullptr; i++)
     {
         const char *pszLine = papszLines[i];
-        for(j = 0; j < 21; j++)
+        if( CPLStrnlen(pszLine, 21) >= 21 )
         {
-            if(pszLine[j] == ' ')
+            for(j = 0; j < 21; j++)
             {
-                break;
+                if(pszLine[j] == ' ' )
+                {
+                    break;
+                }
+                szName[j] = pszLine[j];
             }
-            szName[j] = pszLine[j];
-        }
 
-        if(j > 0)
-        {
-            szName[j] = 0;
-            papszIMD = CSLAddNameValue(papszIMD, szName, pszLine + 20);
+            if(j > 0)
+            {
+                szName[j] = 0;
+                papszIMD = CSLAddNameValue(papszIMD, szName, pszLine + 20);
+            }
         }
     }
 
@@ -255,7 +266,7 @@ char** GDALMDReaderEROS::LoadImdTxtFile()
 time_t GDALMDReaderEROS::GetAcquisitionTimeFromString(
         const char* pszDateTime)
 {
-    if(NULL == pszDateTime)
+    if(nullptr == pszDateTime)
         return 0;
 
     int iYear;

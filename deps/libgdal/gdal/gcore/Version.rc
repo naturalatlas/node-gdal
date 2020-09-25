@@ -1,11 +1,11 @@
 /******************************************************************************
- * $Id: Version.rc 13360 2007-12-18 03:47:06Z mloskot $
+ * $Id$
  *
  * Project:  GDAL Core
- * Purpose:  GDAL DLL registration information. 
+ * Purpose:  GDAL DLL registration information.
  * Author:   Martin Daly (Cadcorp)
  *
- * Copyright assignment provided by Martin Daly by email, "Be my guest.  Fame!  
+ * Copyright assignment provided by Martin Daly by email, "Be my guest.  Fame!
  * At last!  Best not let it go to my head, eh?"
  *
  ******************************************************************************

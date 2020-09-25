@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: aigrid.h 33901 2016-04-06 16:31:31Z goatbar $
+ * $Id: aigrid.h 202f8010aba43611725e3e6ba2ddb5971bc9fdb0 2018-02-25 22:13:32Z Even Rouault $
  *
  * Project:  Arc/Info Binary Grid Translator
  * Purpose:  Grid file access include file.
@@ -57,6 +57,7 @@ typedef struct {
     AIGTileInfo *pasTileInfo;
 
     int         bHasWarned;
+    int         nFailedOpenings;
 
     /* public information */
 

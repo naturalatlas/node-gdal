@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: pcrastermisc.cpp 32215 2015-12-18 06:30:54Z goatbar $
  *
  * Project:  PCRaster Integration
  * Purpose:  PCRaster driver support functions.
@@ -31,12 +30,14 @@
 #include "gdal_pam.h"
 #include "pcrasterdataset.h"
 
+CPL_CVSID("$Id: pcrastermisc.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
+
 void GDALRegister_PCRaster()
 {
     if( !GDAL_CHECK_VERSION( "PCRaster driver" ) )
         return;
 
-    if( GDALGetDriverByName( "PCRaster" ) != NULL )
+    if( GDALGetDriverByName( "PCRaster" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

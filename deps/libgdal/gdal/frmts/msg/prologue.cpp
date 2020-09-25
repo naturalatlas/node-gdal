@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: prologue.cpp 32179 2015-12-14 16:22:34Z goatbar $
  *
  * Purpose:  Implementation of Prologue class. Parse the prologue of one
  *           repeat cycle and keep the interesting info.
@@ -27,11 +26,16 @@
  * DEALINGS IN THE SOFTWARE.
  ******************************************************************************/
 
+ #include "cpl_port.h"  // Must be first.
+
 #include "prologue.h"
 
+CPL_CVSID("$Id: prologue.cpp 005da33513859a66dce5bc7a938ecffa93386460 2018-03-17 15:54:12Z Even Rouault $")
+
+static
 int size_SatelliteStatus()
 {
-  int iSizePrimary = 1+4+1+1+4+4+1+1+4+4+1;;
+  int iSizePrimary = 1+4+1+1+4+4+1+1+4+4+1;
 
   int iSizeOrbitCoef = 4 + 4 + 8*8 + 8*8 + 8*8 + 8*8 + 8*8 + 8*8;
   int iSizeOrbit = 4 + 4 + 100*iSizeOrbitCoef;
@@ -45,6 +49,7 @@ int size_SatelliteStatus()
   return iTotalSize;
 }
 
+static
 int size_ImageAcquisition()
 {
   // up to  DHSSSynchSelection
@@ -59,6 +64,7 @@ int size_ImageAcquisition()
   return iTotalSize;
 }
 
+static
 int size_CelestialEvents()
 {
   int iSizeCelestialBodies = 2 + 2 + 4 + 4 + 3*100*(2 + 2 + 8*8 + 8*8) + 100*(20*(2 + 2 + 2 + 8*8 + 8*8));
@@ -70,11 +76,13 @@ int size_CelestialEvents()
   return iTotalSize;
 }
 
+static
 int size_Correction()
 {
   return 19229;
 }
 
+static
 double iReadDouble(std::ifstream & ifile)
 {
   // will use 8 bytes from the file to read a DOUBLE (according to the MSG definition of DOUBLE)
@@ -94,6 +102,7 @@ double iReadDouble(std::ifstream & ifile)
     return rVal;
 }
 
+static
 double iReadReal(std::ifstream & ifile)
 {
   // will use 4 bytes from the file to read a REAL (according to the MSG definition of REAL)
@@ -109,6 +118,7 @@ double iReadReal(std::ifstream & ifile)
     return rVal;
 }
 
+static
 int iReadInt(std::ifstream & ifile)
 {
   // will use 4 bytes from the file to read an int (according to the MSG definition of int)
@@ -120,6 +130,7 @@ int iReadInt(std::ifstream & ifile)
     return iResult;
 }
 
+static
 unsigned char iReadByte (std::ifstream & ifile)
 {
   // will read 1 byte from the file
@@ -158,7 +169,6 @@ PlannedCoverageHRVRecord::PlannedCoverageHRVRecord(std::ifstream & ifile)
     UpperEastColumnPlanned = iReadInt(ifile);
     UpperWestColumnPlanned = iReadInt(ifile);
 }
-
 
 ImageDescriptionRecord::ImageDescriptionRecord(std::ifstream & ifile)
 {
@@ -201,12 +211,10 @@ RadiometricProcessingRecord::RadiometricProcessingRecord(std::ifstream & ifile)
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-Prologue::Prologue()
-: m_idr(0)
-, m_rpr(0)
-{
-
-}
+Prologue::Prologue() :
+    m_idr(nullptr),
+    m_rpr(nullptr)
+{}
 
 Prologue::~Prologue()
 {
@@ -218,15 +226,11 @@ Prologue::~Prologue()
 
 void Prologue::read(std::ifstream & ifile)
 {
-  unsigned char version = iReadByte(ifile);
+  /*unsigned char version = */iReadByte(ifile);
 
   int iSkipHeadersSize = size_SatelliteStatus() + size_ImageAcquisition() + size_CelestialEvents() + size_Correction();
 
-#if _MSC_VER > 1000 && _MSC_VER < 1300
-  ifile.seekg(iSkipHeadersSize, std::ios_base::seekdir::cur);
-#else
   ifile.seekg(iSkipHeadersSize, std::ios_base::cur);
-#endif
 
   m_idr = new ImageDescriptionRecord(ifile);
 

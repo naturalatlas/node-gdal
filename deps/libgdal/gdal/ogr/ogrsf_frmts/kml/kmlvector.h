@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: kmlvector.h 23978 2012-02-14 20:42:34Z rouault $
+ * $Id: kmlvector.h f2eb8781ae5db589bee4dcdb93a5be1e36e986a1 2018-02-19 13:28:36Z Even Rouault $
  *
  * Project:  KML Driver
  * Purpose:  Specialization of the kml class, only for vectors in kml files.
@@ -29,6 +29,8 @@
 #ifndef OGR_KMLVECTOR_H_INCLUDED
 #define OGR_KMLVECTOR_H_INCLUDED
 
+#ifdef HAVE_EXPAT
+
 #include "kml.h"
 #include "kmlnode.h"
 // std
@@ -40,13 +42,15 @@ public:
     ~KMLVector();
 
     // Container - FeatureContainer - Feature
-    bool isFeature(std::string const& sIn) const;
-    bool isFeatureContainer(std::string const& sIn) const;
-    bool isContainer(std::string const& sIn) const;
-    bool isLeaf(std::string const& sIn) const;
-    bool isRest(std::string const& sIn) const;
-    void findLayers(KMLNode* poNode, int bKeepEmptyContainers);
+    bool isFeature(std::string const& sIn) const override;
+    bool isFeatureContainer(std::string const& sIn) const override;
+    bool isContainer(std::string const& sIn) const override;
+    bool isLeaf(std::string const& sIn) const override;
+    bool isRest(std::string const& sIn) const override;
+    void findLayers(KMLNode* poNode, int bKeepEmptyContainers) override;
 };
+
+#endif // HAVE_EXPAT
 
 #endif /* OGR_KMLVECTOR_H_INCLUDED */
 

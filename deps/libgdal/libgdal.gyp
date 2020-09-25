@@ -9,6 +9,8 @@
 			"type": "static_library",
 			"sources": [
 				"gdal/apps/ogr2ogr_lib.cpp",
+				"gdal/apps/gdalbuildvrt_lib.cpp",
+				"gdal/apps/commonutils.cpp",
 				"gdal/frmts/gdalallregister.cpp",
 
 				"gdal/ogr/osr_cs_wkt.c",
@@ -68,6 +70,11 @@
 				"gdal/ogr/ogrcurvepolygon.cpp",
 				"gdal/ogr/ogrmulticurve.cpp",
 				"gdal/ogr/ogrmultisurface.cpp",
+				"gdal/ogr/ogr_geo_utils.cpp",
+				"gdal/ogr/ogr_xerces.cpp",
+				"gdal/ogr/ogrpolyhedralsurface.cpp",
+				"gdal/ogr/ogrtriangle.cpp",
+				"gdal/ogr/ogrtriangulatedsurface.cpp",
 				"gdal/ogr/ogrsf_frmts/generic/ogreditablelayer.cpp",
 				"gdal/ogr/ogrsf_frmts/generic/ogremulatedtransaction.cpp",
 				"gdal/ogr/ogrsf_frmts/generic/ogr_attrind.cpp",
@@ -118,7 +125,9 @@
 				"gdal/alg/thinplatespline.cpp",
 				"gdal/alg/gdal_crs.c",
 				# "gdal/alg/gdal_nrgcrs.c",
-				"gdal/alg/gdalwarpkernel_opencl.c",
+				"gdal/alg/gdalwarpkernel_opencl.cpp",
+				"gdal/alg/gdalapplyverticalshiftgrid.cpp",
+				"gdal/alg/gdallinearsystem.cpp",
 
 				"gdal/gcore/gdal_misc.cpp",
 				"gdal/gcore/gdal_rat.cpp",
@@ -134,7 +143,6 @@
 				"gdal/gcore/gdaldrivermanager.cpp",
 				"gdal/gcore/gdalexif.cpp",
 				"gdal/gcore/gdalgeorefpamdataset.cpp",
-				"gdal/gcore/gdalgmlcoverage.cpp",
 				"gdal/gcore/gdaljp2abstractdataset.cpp",
 				"gdal/gcore/gdaljp2box.cpp",
 				"gdal/gcore/gdaljp2structure.cpp",
@@ -159,6 +167,7 @@
 				"gdal/gcore/gdalvirtualmem.cpp",
 				"gdal/gcore/overview.cpp",
 				"gdal/gcore/rasterio.cpp",
+				"gdal/gcore/rasterio_ssse3.cpp",
 				"gdal/gcore/gdaloverviewdataset.cpp",
 				"gdal/gcore/mdreader/reader_alos.cpp",
 				"gdal/gcore/mdreader/reader_digital_globe.cpp",
@@ -220,8 +229,25 @@
 				"gdal/port/cpl_vsil_tar.cpp",
 				"gdal/port/cpl_vsil_unix_stdio_64.cpp",
 				"gdal/port/cpl_vsil_win32.cpp",
+				"gdal/port/cpl_vsil_az.cpp",
+				"gdal/port/cpl_vsil_gs.cpp",
+				"gdal/port/cpl_vsil_hdfs.cpp",
+				"gdal/port/cpl_vsil_oss.cpp",
+				"gdal/port/cpl_vsil_s3.cpp",
+				"gdal/port/cpl_vsil_swift.cpp",
 				"gdal/port/cpl_vsisimple.cpp",
 				"gdal/port/cpl_xml_validate.cpp",
+				"gdal/port/cpl_alibaba_oss.cpp",
+				"gdal/port/cpl_azure.cpp",
+				"gdal/port/cpl_cpu_features.cpp",
+				"gdal/port/cpl_google_cloud.cpp",
+				"gdal/port/cpl_json.cpp",
+				"gdal/port/cpl_json_streaming_parser.cpp",
+				"gdal/port/cpl_md5.cpp",
+				"gdal/port/cpl_sha1.cpp",
+				"gdal/port/cpl_sha256.cpp",
+				"gdal/port/cpl_swift.cpp",
+				"gdal/port/cpl_userfaultfd.cpp",
 				"gdal/port/cplgetsymbol.cpp",
 				"gdal/port/cplkeywordparser.cpp",
 				"gdal/port/cplstring.cpp",
@@ -272,10 +298,19 @@
 				"gdal/frmts/jpeg/libjpeg/jmemmgr.c",
 				"gdal/frmts/jpeg/libjpeg/jquant1.c",
 				"gdal/frmts/jpeg/libjpeg/jquant2.c",
-				"gdal/frmts/jpeg/libjpeg/jutils.c"
+				"gdal/frmts/jpeg/libjpeg/jutils.c",
+
+				"gdal/third_party/LercLib/BitMask.cpp",
+				"gdal/third_party/LercLib/BitStuffer2.cpp",
+				"gdal/third_party/LercLib/Huffman.cpp",
+				"gdal/third_party/LercLib/Lerc.cpp",
+				"gdal/third_party/LercLib/Lerc2.cpp",
+				"gdal/third_party/LercLib/Lerc_c_api_impl.cpp",
+				"gdal/third_party/LercLib/RLE.cpp"
 			],
 			"include_dirs": [
 				"./gdal/alg",
+				"./gdal/alg/marching_squares",
 				"./gdal/gcore",
 				"./gdal/port",
 				"./gdal/frmts",
@@ -322,7 +357,7 @@
 						"include_dirs": ["./arch/unix"]
 					}],
 					[ "OS == 'mac'", {
-					    "libraries": [
+						"libraries": [
 							"-liconv"
 						]
 					}]

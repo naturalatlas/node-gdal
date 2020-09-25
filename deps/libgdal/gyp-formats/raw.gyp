@@ -37,7 +37,10 @@
 				"../gdal/frmts/raw/rawdataset.cpp",
 				"../gdal/frmts/raw/snodasdataset.cpp",
 				"../gdal/frmts/raw/roipacdataset.cpp",
-				"../gdal/frmts/raw/iscedataset.cpp"
+				"../gdal/frmts/raw/iscedataset.cpp",
+				"../gdal/frmts/raw/byndataset.cpp",
+				"../gdal/frmts/raw/ntv1dataset.cpp",
+				"../gdal/frmts/raw/rrasterdataset.cpp"
 			],
 			"include_dirs": [
 				"../gdal/frmts/raw"

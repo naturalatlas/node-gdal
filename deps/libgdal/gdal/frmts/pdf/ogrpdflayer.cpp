@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id$
  *
  * Project:  PDF Translator
  * Purpose:  Implements OGRPDFDataSource class
@@ -29,7 +28,7 @@
 
 #include "gdal_pdf.h"
 
-CPL_CVSID("$Id$");
+CPL_CVSID("$Id: ogrpdflayer.cpp 3b66efc15b7eeaf5e45355df34d7942180d21a6e 2019-08-20 15:22:01 +0200 Even Rouault $")
 
 #if defined(HAVE_POPPLER) || defined(HAVE_PODOFO) || defined(HAVE_PDFIUM)
 
@@ -41,12 +40,11 @@ OGRPDFLayer::OGRPDFLayer( PDFDataset* poDSIn,
                           const char * pszName,
                           OGRSpatialReference *poSRS,
                           OGRwkbGeometryType eGeomType ) :
-                                OGRMemLayer(pszName, poSRS, eGeomType )
-{
-    this->poDS = poDSIn;
-    bGeomTypeSet = FALSE;
-    bGeomTypeMixed = FALSE;
-}
+    OGRMemLayer(pszName, poSRS, eGeomType ),
+    poDS(poDSIn),
+    bGeomTypeSet(FALSE),
+    bGeomTypeMixed(FALSE)
+{}
 
 /************************************************************************/
 /*                              Fill()                                  */
@@ -57,20 +55,21 @@ void OGRPDFLayer::Fill( GDALPDFArray* poArray )
     for(int i=0;i<poArray->GetLength();i++)
     {
         GDALPDFObject* poFeatureObj = poArray->Get(i);
-        if (poFeatureObj->GetType() != PDFObjectType_Dictionary)
+        if (poFeatureObj == nullptr ||
+            poFeatureObj->GetType() != PDFObjectType_Dictionary)
             continue;
 
         GDALPDFObject* poA = poFeatureObj->GetDictionary()->Get("A");
-        if (!(poA != NULL && poA->GetType() == PDFObjectType_Dictionary))
+        if (!(poA != nullptr && poA->GetType() == PDFObjectType_Dictionary))
             continue;
 
         GDALPDFObject* poP = poA->GetDictionary()->Get("P");
-        if (!(poP != NULL && poP->GetType() == PDFObjectType_Array))
+        if (!(poP != nullptr && poP->GetType() == PDFObjectType_Array))
             continue;
 
         GDALPDFObject* poK = poFeatureObj->GetDictionary()->Get("K");
         int nK = -1;
-        if (poK != NULL && poK->GetType() == PDFObjectType_Int)
+        if (poK != nullptr && poK->GetType() == PDFObjectType_Int)
             nK = poK->GetInt();
 
         GDALPDFArray* poPArray = poP->GetArray();
@@ -78,12 +77,12 @@ void OGRPDFLayer::Fill( GDALPDFArray* poArray )
         for(j = 0;j<poPArray->GetLength();j++)
         {
             GDALPDFObject* poKV = poPArray->Get(j);
-            if (poKV->GetType() == PDFObjectType_Dictionary)
+            if (poKV && poKV->GetType() == PDFObjectType_Dictionary)
             {
                 GDALPDFObject* poN = poKV->GetDictionary()->Get("N");
                 GDALPDFObject* poV = poKV->GetDictionary()->Get("V");
-                if (poN != NULL && poN->GetType() == PDFObjectType_String &&
-                    poV != NULL)
+                if (poN != nullptr && poN->GetType() == PDFObjectType_String &&
+                    poV != nullptr)
                 {
                     int nIdx = GetLayerDefn()->GetFieldIndex( poN->GetString().c_str() );
                     OGRFieldType eType = OFTString;
@@ -110,12 +109,12 @@ void OGRPDFLayer::Fill( GDALPDFArray* poArray )
         for(j = 0;j<poPArray->GetLength();j++)
         {
             GDALPDFObject* poKV = poPArray->Get(j);
-            if (poKV->GetType() == PDFObjectType_Dictionary)
+            if (poKV && poKV->GetType() == PDFObjectType_Dictionary)
             {
                 GDALPDFObject* poN = poKV->GetDictionary()->Get("N");
                 GDALPDFObject* poV = poKV->GetDictionary()->Get("V");
-                if (poN != NULL && poN->GetType() == PDFObjectType_String &&
-                    poV != NULL)
+                if (poN != nullptr && poN->GetType() == PDFObjectType_String &&
+                    poV != nullptr)
                 {
                     if (poV->GetType() == PDFObjectType_String)
                         poFeature->SetField(poN->GetString().c_str(), poV->GetString().c_str());
@@ -138,7 +137,7 @@ void OGRPDFLayer::Fill( GDALPDFArray* poArray )
         }
 
         OGRGeometry* poGeom = poFeature->GetGeometryRef();
-        if( !bGeomTypeMixed && poGeom != NULL )
+        if( !bGeomTypeMixed && poGeom != nullptr )
         {
             if (!bGeomTypeSet)
             {
@@ -177,13 +176,12 @@ int OGRPDFLayer::TestCapability( const char * pszCap )
 /************************************************************************/
 
 OGRPDFWritableLayer::OGRPDFWritableLayer( PDFWritableVectorDataset* poDSIn,
-                          const char * pszName,
-                          OGRSpatialReference *poSRS,
-                          OGRwkbGeometryType eGeomType ) :
-                                OGRMemLayer(pszName, poSRS, eGeomType )
-{
-    this->poDS = poDSIn;
-}
+                                          const char * pszName,
+                                          OGRSpatialReference *poSRS,
+                                          OGRwkbGeometryType eGeomType ) :
+    OGRMemLayer(pszName, poSRS, eGeomType ),
+    poDS(poDSIn)
+{}
 
 /************************************************************************/
 /*                           ICreateFeature()                           */

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalpansharpen.h 33715 2016-03-13 08:52:06Z goatbar $
+ * $Id: gdalpansharpen.h fe2d81c8819bf9794bce0210098e637565728350 2018-05-06 00:49:51 +0200 Even Rouault $
  *
  * Project:  GDAL Pansharpening module
  * Purpose:  Prototypes, and definitions for pansharpening related work.
@@ -100,11 +100,13 @@ typedef struct
       * unless the GDAL_NUM_THREADS configuration option is set to an integer or ALL_CPUS. */
     int                  nThreads;
 
+    /** Shift in pixels of multispectral bands w.r.t panchromatic band, in X direction */
     double               dfMSShiftX;
+
+    /** Shift in pixels of multispectral bands w.r.t panchromatic band, in Y direction */
     double               dfMSShiftY;
 
 } GDALPansharpenOptions;
-
 
 GDALPansharpenOptions CPL_DLL * GDALCreatePansharpenOptions(void);
 void CPL_DLL GDALDestroyPansharpenOptions( GDALPansharpenOptions * );
@@ -136,6 +138,7 @@ CPL_C_END
 
 class GDALPansharpenOperation;
 
+//! @cond Doxygen_Suppress
 typedef struct
 {
     GDALPansharpenOperation* poPansharpenOperation;
@@ -178,18 +181,21 @@ typedef struct
     struct timeval* ptv;
 #endif
 } GDALPansharpenResampleJob;
+//! @endcond
 
 /** Pansharpening operation class.
  */
 class GDALPansharpenOperation
 {
-        GDALPansharpenOptions* psOptions;
-        std::vector<int> anInputBands;
-        std::vector<GDALDataset*> aVDS; // to destroy
-        std::vector<GDALRasterBand*> aMSBands; // original multispectral bands potentially warped into a VRT
-        int bPositiveWeights;
-        CPLWorkerThreadPool* poThreadPool;
-        int nKernelRadius;
+        CPL_DISALLOW_COPY_ASSIGN(GDALPansharpenOperation)
+
+        GDALPansharpenOptions* psOptions = nullptr;
+        std::vector<int> anInputBands{};
+        std::vector<GDALDataset*> aVDS{}; // to destroy
+        std::vector<GDALRasterBand*> aMSBands{}; // original multispectral bands potentially warped into a VRT
+        int bPositiveWeights = TRUE;
+        CPLWorkerThreadPool* poThreadPool = nullptr;
+        int nKernelRadius = 0;
 
         static void PansharpenJobThreadFunc(void* pUserData);
         static void PansharpenResampleJobThreadFunc(void* pUserData);
@@ -208,6 +214,8 @@ class GDALPansharpenOperation
                                                      int nValues,
                                                      int nBandValues,
                                                      WorkDataType nMaxValue) const;
+
+        // cppcheck-suppress functionStatic
         template<class WorkDataType, class OutDataType> void WeightedBrovey(
                                                      const WorkDataType* pPanBuffer,
                                                      const WorkDataType* pUpsampledSpectralBuffer,
@@ -223,6 +231,8 @@ class GDALPansharpenOperation
                                                      int nValues,
                                                      int nBandValues,
                                                      WorkDataType nMaxValue) const;
+
+        // cppcheck-suppress functionStatic
         template<class WorkDataType> CPLErr WeightedBrovey(
                                                      const WorkDataType* pPanBuffer,
                                                      const WorkDataType* pUpsampledSpectralBuffer,
@@ -230,21 +240,30 @@ class GDALPansharpenOperation
                                                      GDALDataType eBufDataType,
                                                      int nValues,
                                                      int nBandValues) const;
-        void WeightedBroveyPositiveWeights(
-                                                     const GUInt16* pPanBuffer,
-                                                     const GUInt16* pUpsampledSpectralBuffer,
-                                                     GUInt16* pDataBuf,
+        template<class T> void WeightedBroveyPositiveWeights(
+                                                     const T* pPanBuffer,
+                                                     const T* pUpsampledSpectralBuffer,
+                                                     T* pDataBuf,
                                                      int nValues,
                                                      int nBandValues,
-                                                     GUInt16 nMaxValue) const;
+                                                     T nMaxValue) const;
 
-        template<int NINPUT, int NOUTPUT> int WeightedBroveyPositiveWeightsInternal(
-                                                     const GUInt16* pPanBuffer,
-                                                     const GUInt16* pUpsampledSpectralBuffer,
-                                                     GUInt16* pDataBuf,
+        template<class T, int NINPUT, int NOUTPUT> int WeightedBroveyPositiveWeightsInternal(
+                                                     const T* pPanBuffer,
+                                                     const T* pUpsampledSpectralBuffer,
+                                                     T* pDataBuf,
                                                      int nValues,
                                                      int nBandValues,
-                                                     GUInt16 nMaxValue) const;
+                                                     T nMaxValue) const;
+
+        // cppcheck-suppress unusedPrivateFunction
+        template<class T> void WeightedBroveyGByteOrUInt16(
+                                                     const T* pPanBuffer,
+                                                     const T* pUpsampledSpectralBuffer,
+                                                     T* pDataBuf,
+                                                     int nValues,
+                                                     int nBandValues,
+                                                     T nMaxValue ) const;
 
         CPLErr PansharpenChunk( GDALDataType eWorkDataType, GDALDataType eBufDataType,
                                                      const void* pPanBuffer,

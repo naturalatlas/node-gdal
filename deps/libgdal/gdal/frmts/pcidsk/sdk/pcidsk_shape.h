@@ -108,8 +108,8 @@ namespace PCIDSK
 
         union
         {
-            float	float_val;
-            double	double_val;
+            float       float_val;
+            double      double_val;
             char       *string_val;
             int32       integer_val;
             int32      *integer_list_val;
@@ -118,11 +118,11 @@ namespace PCIDSK
       public:
         //! Simple constructor.
         ShapeField() 
-            { v.string_val = NULL; type = FieldTypeNone; }
+            { v.string_val = nullptr; type = FieldTypeNone; }
 
         //! Copy constructor.
         ShapeField( const ShapeField &src )
-            { v.string_val = NULL; type = FieldTypeNone; *this = src; }
+            { v.string_val = nullptr; type = FieldTypeNone; *this = src; }
 
         ~ShapeField() 
             { Clear(); }
@@ -183,10 +183,10 @@ namespace PCIDSK
         void Clear()
             { 
                 if( (type == FieldTypeString || type == FieldTypeCountedInt)
-                    && v.string_val != NULL ) 
+                    && v.string_val != nullptr ) 
                 {
                     free( v.string_val );
-                    v.string_val = NULL;
+                    v.string_val = nullptr;
                 }
                 type = FieldTypeNone;
             }
@@ -211,7 +211,7 @@ namespace PCIDSK
                 v.integer_list_val = (int32*)
                     malloc(sizeof(int32) * (val.size()+1) );
                 v.integer_list_val[0] = static_cast<int>(val.size());
-                if( val.size() > 0 )
+                if( !val.empty() )
                     memcpy( v.integer_list_val+1, &(val[0]), 
                             sizeof(int32) * val.size() ); 
             }

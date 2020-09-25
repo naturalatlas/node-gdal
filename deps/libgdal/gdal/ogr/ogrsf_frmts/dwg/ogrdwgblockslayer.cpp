@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrdwglayer.cpp 19643 2010-05-08 21:56:18Z rouault $
  *
  * Project:  DWG Translator
  * Purpose:  Implements OGRDWGBlocksLayer class.
@@ -30,7 +29,7 @@
 #include "ogr_dwg.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrdwglayer.cpp 19643 2010-05-08 21:56:18Z rouault $");
+CPL_CVSID("$Id: ogrdwgblockslayer.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                         OGRDWGBlocksLayer()                          */
@@ -38,7 +37,7 @@ CPL_CVSID("$Id: ogrdwglayer.cpp 19643 2010-05-08 21:56:18Z rouault $");
 
 OGRDWGBlocksLayer::OGRDWGBlocksLayer( OGRDWGDataSource *poDSIn ) :
     poDS(poDSIn),
-    poFeatureDefn(new OGRFeatureDefn( "blocks" )),
+    poFeatureDefn(new OGRFeatureDefn( "blocks" ))
 {
     ResetReading();
 
@@ -54,7 +53,7 @@ OGRDWGBlocksLayer::OGRDWGBlocksLayer( OGRDWGDataSource *poDSIn ) :
 OGRDWGBlocksLayer::~OGRDWGBlocksLayer()
 
 {
-    if( m_nFeaturesRead > 0 && poFeatureDefn != NULL )
+    if( m_nFeaturesRead > 0 && poFeatureDefn != nullptr )
     {
         CPLDebug( "DWG", "%d features read on layer '%s'.",
                   (int) m_nFeaturesRead,
@@ -84,31 +83,32 @@ void OGRDWGBlocksLayer::ResetReading()
 OGRFeature *OGRDWGBlocksLayer::GetNextUnfilteredFeature()
 
 {
-    OGRFeature *poFeature = NULL;
+    OGRFeature *poFeature = nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Are we out of features?                                         */
 /* -------------------------------------------------------------------- */
     if( oIt == poDS->GetBlockMap().end() )
-        return NULL;
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Are we done reading the current blocks features?                */
 /* -------------------------------------------------------------------- */
     DWGBlockDefinition *psBlock = &(oIt->second);
-    unsigned int nSubFeatureCount = psBlock->apoFeatures.size();
+    unsigned int nSubFeatureCount = static_cast<unsigned int>(
+        psBlock->apoFeatures.size());
 
-    if( psBlock->poGeometry != NULL )
+    if( psBlock->poGeometry != nullptr )
         nSubFeatureCount++;
 
     if( iNextSubFeature >= nSubFeatureCount )
     {
-        oIt++;
+        ++oIt;
 
         iNextSubFeature = 0;
 
         if( oIt == poDS->GetBlockMap().end() )
-            return NULL;
+            return nullptr;
 
         psBlock = &(oIt->second);
     }
@@ -116,7 +116,7 @@ OGRFeature *OGRDWGBlocksLayer::GetNextUnfilteredFeature()
 /* -------------------------------------------------------------------- */
 /*      Is this a geometry based block?                                 */
 /* -------------------------------------------------------------------- */
-    if( psBlock->poGeometry != NULL
+    if( psBlock->poGeometry != nullptr
         && iNextSubFeature == psBlock->apoFeatures.size() )
     {
         poFeature = new OGRFeature( poFeatureDefn );
@@ -157,12 +157,12 @@ OGRFeature *OGRDWGBlocksLayer::GetNextFeature()
     {
         OGRFeature *poFeature = GetNextUnfilteredFeature();
 
-        if( poFeature == NULL )
-            return NULL;
+        if( poFeature == nullptr )
+            return nullptr;
 
-        if( (m_poFilterGeom == NULL
+        if( (m_poFilterGeom == nullptr
              || FilterGeometry( poFeature->GetGeometryRef() ) )
-            && (m_poAttrQuery == NULL
+            && (m_poAttrQuery == nullptr
                 || m_poAttrQuery->Evaluate( poFeature ) ) )
         {
             return poFeature;

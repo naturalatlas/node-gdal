@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: dgnlib.h 33713 2016-03-12 17:41:57Z goatbar $
+ * $Id: dgnlib.h 59ac0f6876270b8fc7508be94297ab7d94aac470 2017-05-22 15:27:41Z Even Rouault $
  *
  * Project:  Microstation DGN Access Library
  * Purpose:  Definitions of public structures and API of DGN Library.
@@ -70,7 +70,7 @@ typedef struct {
     unsigned char       type;    /*!< Element type (DGNT_*) */
     unsigned char       stype;   /*!< Structure type (DGNST_*) */
     unsigned char       flags;   /*!< Other flags */
-    long                offset;  /*!< Offset within file (private) */
+    vsi_l_offset        offset;  /*!< Offset within file (private) */
 } DGNElementInfo;
 
 /**
@@ -121,7 +121,10 @@ typedef struct {
   DGNElemCore   core;
 
   int           num_vertices;  /*!< Number of vertices in "vertices" */
-  DGNPoint      vertices[2];   /*!< Array of two or more vertices */
+  DGNPoint      vertices[1];   /*!< Array of two or more vertices */
+                               // Note: We set [1] to please clang UBSAN
+                               // regarding structures that are extended at
+                               // malloc time
 
 } DGNElemMultiPoint;
 
@@ -405,7 +408,6 @@ typedef struct {
 
 } DGNElemCone;
 
-
 /**
  * Text Node Header.
  *
@@ -419,22 +421,21 @@ typedef struct {
 typedef struct {
   DGNElemCore core;   /* must be at first position ! */
 
-  int       totlength; 	 	/*!<  Total length of the node
-				      (bytes = totlength * 2 + 38) */
-  int       numelems;    	/*!<  Number of text strings */
-  int       node_number; 	/*!<  text node number */
-  short     max_length;  	/*!<  maximum length allowed, characters */
-  short     max_used;    	/*!<  maximum length used */
-  short	    font_id;     	/*!<  text font used */
-  short     justification; 	/*!<  justification type, see DGNJ_ */
-  long      line_spacing; 	/*!<  spacing between text strings */
-  double    length_mult; 	/*!<  length multiplier */
-  double    height_mult; 	/*!<  height multiplier */
-  double    rotation;    	/*!<  rotation angle (2d)*/
-  DGNPoint  origin;       	/*!<  Snap origin (as defined by user) */
+  int       totlength;          /*!<  Total length of the node
+                                      (bytes = totlength * 2 + 38) */
+  int       numelems;           /*!<  Number of text strings */
+  int       node_number;        /*!<  text node number */
+  short     max_length;         /*!<  maximum length allowed, characters */
+  short     max_used;           /*!<  maximum length used */
+  short     font_id;            /*!<  text font used */
+  short     justification;      /*!<  justification type, see DGNJ_ */
+  long      line_spacing;       /*!<  spacing between text strings */
+  double    length_mult;        /*!<  length multiplier */
+  double    height_mult;        /*!<  height multiplier */
+  double    rotation;           /*!<  rotation angle (2d)*/
+  DGNPoint  origin;             /*!<  Snap origin (as defined by user) */
 
 } DGNElemTextNode;
-
 
 /**
  * B-Spline Surface Header element
@@ -518,7 +519,6 @@ typedef struct {
                              header. */
 } DGNElemKnotWeight;
 
-
 /* -------------------------------------------------------------------- */
 /*      Structure types                                                 */
 /* -------------------------------------------------------------------- */
@@ -576,7 +576,6 @@ typedef struct {
 
 /** DGNElemCore style: Element uses DGNElemSharedCellDefn structure */
 #define DGNST_SHARED_CELL_DEFN         18
-
 
 /* -------------------------------------------------------------------- */
 /*      Element types                                                   */
@@ -644,7 +643,6 @@ typedef struct {
 #define DGNSOT_VOLUME_OF_PROJECTION     0
 #define DGNSOT_VOLUME_OF_REVOLUTION     1
 #define DGNSOT_BOUNDED_VOLUME           2
-
 
 /* -------------------------------------------------------------------- */
 /*      Class                                                           */

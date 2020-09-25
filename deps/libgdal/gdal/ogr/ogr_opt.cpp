@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogr_opt.cpp 33631 2016-03-04 06:28:09Z goatbar $
  *
  * Project:  OpenGIS Simple Features
  * Purpose:  Functions for getting list of projection types, and their parms.
@@ -28,10 +27,15 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
 #include "ogr_srs_api.h"
+
+#include <cstddef>
+
+#include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogr_opt.cpp 33631 2016-03-04 06:28:09Z goatbar $");
+CPL_CVSID("$Id: ogr_opt.cpp 82bd5a1323fdb712eb5f052b3f5ea56440e4307f 2018-05-06 20:12:16 +0200 Even Rouault $")
 
 static const char * const papszParameterDefinitions[] = {
     SRS_PP_CENTRAL_MERIDIAN,    "Central Meridian",     "Long",  "0.0",
@@ -57,11 +61,15 @@ static const char * const papszParameterDefinitions[] = {
     SRS_PP_PEG_POINT_LONGITUDE, "Peg Point Longitude",  "Long",  "0.0",
     SRS_PP_PEG_POINT_HEADING,   "Peg Point Heading",    "Angle", "0.0",
     SRS_PP_PEG_POINT_HEIGHT,    "Peg Point Height",     "m",     "0.0",
-    NULL
+    SRS_PP_PSEUDO_STD_PARALLEL_1, "Pseudo standard parallel 1", "Lat", "0.0",
+    SRS_PP_LATITUDE_OF_1ST_POINT, "Latitude of 1st point", "Lat", "0.0",
+    SRS_PP_LATITUDE_OF_2ND_POINT, "Latitude of 2nd point", "Lat", "0.0",
+    SRS_PP_LONGITUDE_OF_1ST_POINT, "Longitude of 1st point", "Lat", "0.0",
+    SRS_PP_LONGITUDE_OF_2ND_POINT, "Longitude of 2nd point", "Long", "0.0",
+    nullptr
 };
 
 static const char * const papszProjectionDefinitions[] = {
-
     "*",
     SRS_PT_TRANSVERSE_MERCATOR,
     "Transverse Mercator",
@@ -383,7 +391,7 @@ static const char * const papszProjectionDefinitions[] = {
     SRS_PP_FALSE_EASTING,
     SRS_PP_FALSE_NORTHING,
 
-    "*"
+    "*",
     SRS_PT_STEREOGRAPHIC,
     "Stereographic",
     SRS_PP_LATITUDE_OF_ORIGIN,
@@ -392,7 +400,7 @@ static const char * const papszProjectionDefinitions[] = {
     SRS_PP_FALSE_EASTING,
     SRS_PP_FALSE_NORTHING,
 
-    "*"
+    "*",
     SRS_PT_TWO_POINT_EQUIDISTANT,
     "Two Point Equidistant",
     SRS_PP_LATITUDE_OF_1ST_POINT,
@@ -409,7 +417,7 @@ static const char * const papszProjectionDefinitions[] = {
     SRS_PP_FALSE_EASTING,
     SRS_PP_FALSE_NORTHING,
 
-    "*"
+    "*",
     SRS_PT_KROVAK,
     "Krovak",
     SRS_PP_LATITUDE_OF_CENTER,
@@ -486,11 +494,8 @@ static const char * const papszProjectionDefinitions[] = {
     SRS_PP_PEG_POINT_HEADING,
     SRS_PP_PEG_POINT_HEIGHT,
 
-    NULL
+    nullptr
 };
-
-
-
 
 /************************************************************************/
 /*                      OPTGetProjectionMethods()                       */
@@ -506,13 +511,12 @@ static const char * const papszProjectionDefinitions[] = {
 char **OPTGetProjectionMethods()
 
 {
-    int         i;
-    char        **papszList = NULL;
+    char **papszList = nullptr;
 
-    for( i = 1; papszProjectionDefinitions[i] != NULL; i++ )
+    for( int i = 1; papszProjectionDefinitions[i] != nullptr; ++i )
     {
-        if( EQUAL(papszProjectionDefinitions[i-1],"*") )
-            papszList = CSLAddString(papszList,papszProjectionDefinitions[i]);
+        if( EQUAL(papszProjectionDefinitions[i-1], "*") )
+            papszList = CSLAddString(papszList, papszProjectionDefinitions[i]);
     }
 
     return papszList;
@@ -542,34 +546,34 @@ char **OPTGetParameterList( const char *pszProjectionMethod,
                             char ** ppszUserName )
 
 {
-    char **papszList = NULL;
-    int  i;
+    char **papszList = nullptr;
 
-    for( i = 1; papszProjectionDefinitions[i] != NULL; i++ )
+    for( int i = 1; papszProjectionDefinitions[i] != nullptr; ++i )
     {
         if( papszProjectionDefinitions[i-1][0] == '*'
-            && EQUAL(papszProjectionDefinitions[i],pszProjectionMethod) )
+            && EQUAL(papszProjectionDefinitions[i], pszProjectionMethod) )
         {
-            i++;
+            ++i;
 
-            if( ppszUserName != NULL )
-                *ppszUserName = (char *)papszProjectionDefinitions[i];
+            if( ppszUserName != nullptr )
+                *ppszUserName = const_cast<char *>(papszProjectionDefinitions[i]);
 
-            i++;
-            while( papszProjectionDefinitions[i] != NULL
+            ++i;
+            while( papszProjectionDefinitions[i] != nullptr
                    && papszProjectionDefinitions[i][0] != '*' )
             {
                 papszList = CSLAddString( papszList,
                                           papszProjectionDefinitions[i] );
-                i++;
+                ++i;
             }
-            if( papszList == NULL) /* IGH has no parameter, so return an empty list instead of NULL */
-                papszList = (char**) CPLCalloc(1, sizeof(char*));
+            // IGH has no parameter, so return an empty list instead of NULL.
+            if( papszList == nullptr)
+                papszList = static_cast<char**>( CPLCalloc(1, sizeof(char*)) );
             return papszList;
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
@@ -592,7 +596,7 @@ char **OPTGetParameterList( const char *pszProjectionMethod,
  * returned name should not be modified or freed.
  *
  * @param ppszType location at which to return the parameter type for
- * the parameter.  This pointer may be NULL to skip.  The  returned type
+ * the parameter.  This pointer may be NULL to skip.  The returned type
  * should not be modified or freed.  The type values are described above.
  *
  * @param pdfDefaultValue location at which to put the default value for
@@ -601,26 +605,23 @@ char **OPTGetParameterList( const char *pszProjectionMethod,
  * @return TRUE if parameter found, or FALSE otherwise.
  */
 
-int OPTGetParameterInfo( const char * pszProjectionMethod,
+int OPTGetParameterInfo( CPL_UNUSED const char * pszProjectionMethod,
                          const char * pszParameterName,
                          char ** ppszUserName,
                          char ** ppszType,
                          double *pdfDefaultValue )
 
 {
-    int         i;
-
-    (void) pszProjectionMethod;
-
-    for( i = 0; papszParameterDefinitions[i] != NULL; i += 4 )
+    for( int i = 0; papszParameterDefinitions[i] != nullptr; i += 4 )
     {
-        if( EQUAL(papszParameterDefinitions[i],pszParameterName) )
+        if( EQUAL(papszParameterDefinitions[i], pszParameterName) )
         {
-            if( ppszUserName != NULL )
-                *ppszUserName = (char *)papszParameterDefinitions[i+1];
-            if( ppszType != NULL )
-                *ppszType = (char *)papszParameterDefinitions[i+2];
-            if( pdfDefaultValue != NULL )
+            if( ppszUserName != nullptr )
+                *ppszUserName =
+                    const_cast<char *>(papszParameterDefinitions[i+1]);
+            if( ppszType != nullptr )
+                *ppszType = const_cast<char *>(papszParameterDefinitions[i+2]);
+            if( pdfDefaultValue != nullptr )
                 *pdfDefaultValue = CPLAtof(papszParameterDefinitions[i+3]);
 
             return TRUE;

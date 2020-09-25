@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: bsb_read.h 33717 2016-03-14 06:29:14Z goatbar $
+ * $Id: bsb_read.h 05ec2ff9cd43cabf721a161bbc295f6c827eaedd 2016-10-24 06:23:09Z Kurt Schwehr $
  *
  * Project:  BSB Reader
  * Purpose:  non-GDAL BSB API Declarations
@@ -38,14 +38,13 @@ CPL_C_START
 typedef struct {
     VSILFILE   *fp;
 
-
     GByte       *pabyBuffer;
     int         nBufferOffset;
     int         nBufferSize;
     int         nBufferAllocation;
     int         nSavedCharacter;
 
-    int		nXSize;
+    int         nXSize;
     int         nYSize;
 
     int         nPCTSize;
@@ -53,11 +52,11 @@ typedef struct {
 
     char        **papszHeader;
 
-    int		*panLineOffset;
+    int         *panLineOffset;
 
     int         nColorSize;
 
-    int		nVersion; /* times 100 */
+    int         nVersion; /* times 100 */
 
     int         bNO1;
 

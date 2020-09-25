@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: tigercompletechain.cpp 33706 2016-03-11 13:33:27Z goatbar $
  *
  * Project:  TIGER/Line Translator
  * Purpose:  Implements TigerCompleteChain, providing access to RT1 and
@@ -31,7 +30,7 @@
 #include "ogr_tiger.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: tigercompletechain.cpp 33706 2016-03-11 13:33:27Z goatbar $");
+CPL_CVSID("$Id: tigercompletechain.cpp 98dfb4b4012c5ae4621e246e8eb393b3c05a3f48 2018-04-02 22:09:55 +0200 Even Rouault $")
 
 static const TigerFieldInfo rt1_2002_fields[] = {
   // fieldname    fmt  type OFTType      beg  end  len  bDefine bSet bWrite
@@ -135,11 +134,10 @@ static const TigerRecordInfo rt1_info =
 
 static const TigerRecordInfo rt2_info =
   {
-    NULL,       // RT2 is handled specially in the code below; the only
+    nullptr,       // RT2 is handled specially in the code below; the only
     0,          // thing from this structure that is used is:
     208         // <--- nRecordLength
   };
-
 
 static const TigerFieldInfo rt3_2000_Redistricting_fields[] = {
   // fieldname    fmt  type OFTType       beg  end  len  bDefine bSet bWrite
@@ -201,8 +199,8 @@ static const TigerFieldInfo rt3_fields[] = {
 
   { "VTDL",       'L', 'A', OFTString,    104, 107,   4,       1,   1,     1 },
   { "VTDR",       'L', 'A', OFTString,    108, 111,   4,       1,   1,     1 }
-
 };
+
 static const TigerRecordInfo rt3_info =
   {
     rt3_fields,
@@ -214,21 +212,28 @@ static const TigerRecordInfo rt3_info =
 /*                         TigerCompleteChain()                         */
 /************************************************************************/
 
-TigerCompleteChain::TigerCompleteChain( OGRTigerDataSource * poDSIn,
-                                        CPL_UNUSED const char * pszPrototypeModule )
+TigerCompleteChain::TigerCompleteChain(
+    OGRTigerDataSource * poDSIn,
+    const char * /* pszPrototypeModule */ ) :
+    fpShape(nullptr),
+    panShapeRecordId(nullptr),
+    fpRT3(nullptr),
+    bUsingRT3(false),
+    psRT1Info(nullptr),
+    psRT2Info(nullptr),
+    psRT3Info(nullptr)
 {
     poDS = poDSIn;
     poFeatureDefn = new OGRFeatureDefn( "CompleteChain" );
     poFeatureDefn->Reference();
     poFeatureDefn->SetGeomType( wkbLineString );
 
-
     if (poDS->GetVersion() >= TIGER_2002) {
       psRT1Info = &rt1_2002_info;
-      bUsingRT3 = FALSE;
+      // bUsingRT3 = false;
     } else {
       psRT1Info = &rt1_info;
-      bUsingRT3 = TRUE;
+      bUsingRT3 = true;
     }
 
     psRT2Info = &rt2_info;
@@ -241,11 +246,6 @@ TigerCompleteChain::TigerCompleteChain( OGRTigerDataSource * poDSIn,
       psRT3Info = &rt3_info;
     }
 
-    fpRT3 = NULL;
-
-    panShapeRecordId = NULL;
-    fpShape = NULL;
-
     /* -------------------------------------------------------------------- */
     /*      Fields from type 1 record.                                      */
     /* -------------------------------------------------------------------- */
@@ -256,7 +256,8 @@ TigerCompleteChain::TigerCompleteChain( OGRTigerDataSource * poDSIn,
     /*      Fields from type 3 record.  Eventually we should verify that    */
     /*      a .RT3 file is available before adding these fields.            */
     /* -------------------------------------------------------------------- */
-    if( bUsingRT3 ) {
+    if( bUsingRT3 )
+    {
       AddFieldDefns( psRT3Info, poFeatureDefn );
     }
 }
@@ -270,10 +271,10 @@ TigerCompleteChain::~TigerCompleteChain()
 {
     CPLFree( panShapeRecordId );
 
-    if( fpRT3 != NULL )
+    if( fpRT3 != nullptr )
         VSIFCloseL( fpRT3 );
 
-    if( fpShape != NULL )
+    if( fpShape != nullptr )
         VSIFCloseL( fpShape );
 }
 
@@ -281,11 +282,11 @@ TigerCompleteChain::~TigerCompleteChain()
 /*                             SetModule()                              */
 /************************************************************************/
 
-int TigerCompleteChain::SetModule( const char * pszModuleIn )
+bool TigerCompleteChain::SetModule( const char * pszModuleIn )
 
 {
     if( !OpenFile( pszModuleIn, "1" ) )
-        return FALSE;
+        return false;
 
     EstablishFeatureCount();
 
@@ -314,17 +315,15 @@ int TigerCompleteChain::SetModule( const char * pszModuleIn )
 /* -------------------------------------------------------------------- */
     if( bUsingRT3 )
     {
-        if( fpRT3 != NULL )
+        if( fpRT3 != nullptr )
         {
             VSIFCloseL( fpRT3 );
-            fpRT3 = NULL;
+            fpRT3 = nullptr;
         }
 
         if( pszModuleIn )
         {
-            char        *pszFilename;
-
-            pszFilename = poDS->BuildFilename( pszModuleIn, "3" );
+            char *pszFilename = poDS->BuildFilename( pszModuleIn, "3" );
 
             fpRT3 = VSIFOpenL( pszFilename, "rb" );
 
@@ -336,27 +335,25 @@ int TigerCompleteChain::SetModule( const char * pszModuleIn )
 /*      Close the shape point file, if open and free the list of        */
 /*      record ids.                                                     */
 /* -------------------------------------------------------------------- */
-    if( fpShape != NULL )
+    if( fpShape != nullptr )
     {
         VSIFCloseL( fpShape );
-        fpShape = NULL;
+        fpShape = nullptr;
     }
 
     CPLFree( panShapeRecordId );
-    panShapeRecordId = NULL;
+    panShapeRecordId = nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Try to open the RT2 file corresponding to this RT1 file.        */
 /* -------------------------------------------------------------------- */
-    if( pszModuleIn != NULL )
+    if( pszModuleIn != nullptr )
     {
-        char    *pszFilename;
-
-        pszFilename = poDS->BuildFilename( pszModuleIn, "2" );
+        char *pszFilename = poDS->BuildFilename( pszModuleIn, "2" );
 
         fpShape = VSIFOpenL( pszFilename, "rb" );
 
-        if( fpShape == NULL )
+        if( fpShape == nullptr )
         {
             if( nRT1RecOffset == 0 )
                 CPLError( CE_Warning, CPLE_OpenFailed,
@@ -369,7 +366,7 @@ int TigerCompleteChain::SetModule( const char * pszModuleIn )
         CPLFree( pszFilename );
     }
 
-    return TRUE;
+    return true;
 }
 
 /************************************************************************/
@@ -386,14 +383,14 @@ OGRFeature *TigerCompleteChain::GetFeature( int nRecordId )
         CPLError( CE_Failure, CPLE_FileIO,
                   "Request for out-of-range feature %d of %s1",
                   nRecordId, pszModule );
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
 /*      Read the raw record data from the file.                         */
 /* -------------------------------------------------------------------- */
-    if( fpPrimary == NULL )
-        return NULL;
+    if( fpPrimary == nullptr )
+        return nullptr;
 
     if( VSIFSeekL( fpPrimary, (nRecordId+nRT1RecOffset) * nRecordLength,
                   SEEK_SET ) != 0 )
@@ -401,16 +398,18 @@ OGRFeature *TigerCompleteChain::GetFeature( int nRecordId )
         CPLError( CE_Failure, CPLE_FileIO,
                   "Failed to seek to %d of %s1",
                   nRecordId * nRecordLength, pszModule );
-        return NULL;
+        return nullptr;
     }
 
+    // Overflow cannot happen since psRTInfo->nRecordLength is unsigned
+    // char and sizeof(achRecord) == OGR_TIGER_RECBUF_LEN > 255
     if( VSIFReadL( achRecord, psRT1Info->nRecordLength, 1, fpPrimary ) != 1 )
     {
         CPLError( CE_Failure, CPLE_FileIO,
                   "Failed to read %d bytes of record %d of %s1 at offset %d",
                   psRT1Info->nRecordLength, nRecordId, pszModule,
                   (nRecordId+nRT1RecOffset) * nRecordLength );
-        return NULL;
+        return nullptr;
     }
 
     /* -------------------------------------------------------------------- */
@@ -425,7 +424,7 @@ OGRFeature *TigerCompleteChain::GetFeature( int nRecordId )
     /*      Read RT3 record, and apply fields.                              */
     /* -------------------------------------------------------------------- */
 
-    if( fpRT3 != NULL )
+    if( fpRT3 != nullptr )
     {
         char    achRT3Rec[OGR_TIGER_RECBUF_LEN];
         int     nRT3RecLen = psRT3Info->nRecordLength + nRecordLength - psRT1Info->nRecordLength;
@@ -435,19 +434,22 @@ OGRFeature *TigerCompleteChain::GetFeature( int nRecordId )
             CPLError( CE_Failure, CPLE_FileIO,
                       "Failed to seek to %d of %s3",
                       nRecordId * nRT3RecLen, pszModule );
-            return NULL;
+            delete poFeature;
+            return nullptr;
         }
 
+        // Overflow cannot happen since psRTInfo->nRecordLength is unsigned
+        // char and sizeof(achRecord) == OGR_TIGER_RECBUF_LEN > 255
         if( VSIFReadL( achRT3Rec, psRT3Info->nRecordLength, 1, fpRT3 ) != 1 )
         {
             CPLError( CE_Failure, CPLE_FileIO,
                       "Failed to read record %d of %s3",
                       nRecordId, pszModule );
-            return NULL;
+            delete poFeature;
+            return nullptr;
         }
 
         SetFields( psRT3Info, poFeature, achRT3Rec );
-
     }
 
 /* -------------------------------------------------------------------- */
@@ -463,7 +465,8 @@ OGRFeature *TigerCompleteChain::GetFeature( int nRecordId )
                          poLine, 0 ) )
     {
         delete poFeature;
-        return NULL;
+        delete poLine;
+        return nullptr;
     }
 
     poLine->addPoint(atoi(GetField(achRecord, 210, 219)) / 1000000.0,
@@ -481,27 +484,26 @@ OGRFeature *TigerCompleteChain::GetFeature( int nRecordId )
 /*      and add the points to the passed line geometry.                 */
 /************************************************************************/
 
-int TigerCompleteChain::AddShapePoints( int nTLID, int nRecordId,
+bool TigerCompleteChain::AddShapePoints( int nTLID, int nRecordId,
                                         OGRLineString * poLine,
                                         CPL_UNUSED int nSeqNum )
 {
-    int         nShapeRecId;
-
-    nShapeRecId = GetShapeRecordId( nRecordId, nTLID );
+    int nShapeRecId = GetShapeRecordId( nRecordId, nTLID );
 
     // -2 means an error occurred.
     if( nShapeRecId == -2 )
-        return FALSE;
+        return false;
 
     // -1 means there are no extra shape vertices, but things worked fine.
     if( nShapeRecId == -1 )
-        return TRUE;
+        return true;
 
 /* -------------------------------------------------------------------- */
 /*      Read all the sequential records with the same TLID.             */
 /* -------------------------------------------------------------------- */
-    char        achShapeRec[OGR_TIGER_RECBUF_LEN];
-    int         nShapeRecLen = psRT2Info->nRecordLength + nRecordLength - psRT1Info->nRecordLength;
+    char achShapeRec[OGR_TIGER_RECBUF_LEN];
+    const int nShapeRecLen =
+        psRT2Info->nRecordLength + nRecordLength - psRT1Info->nRecordLength;
 
     for( ; true; nShapeRecId++ )
     {
@@ -513,7 +515,7 @@ int TigerCompleteChain::AddShapePoints( int nTLID, int nRecordId,
             CPLError( CE_Failure, CPLE_FileIO,
                       "Failed to seek to %d of %s2",
                       (nShapeRecId-1) * nShapeRecLen, pszModule );
-            return FALSE;
+            return false;
         }
 
         nBytesRead = static_cast<int>(VSIFReadL( achShapeRec, 1, psRT2Info->nRecordLength,
@@ -534,7 +536,7 @@ int TigerCompleteChain::AddShapePoints( int nTLID, int nRecordId,
                       "Failed to read %d bytes of record %d of %s2 at offset %d",
                       psRT2Info->nRecordLength, nShapeRecId, pszModule,
                       (nShapeRecId-1) * nShapeRecLen );
-            return FALSE;
+            return false;
         }
 
         if( atoi(GetField(achShapeRec,6,15)) != nTLID )
@@ -543,13 +545,13 @@ int TigerCompleteChain::AddShapePoints( int nTLID, int nRecordId,
 /* -------------------------------------------------------------------- */
 /*      Translate the locations into OGRLineString vertices.            */
 /* -------------------------------------------------------------------- */
-        int     iVertex;
+        int iVertex = 0;  // Used after for.
 
-        for( iVertex = 0; iVertex < 10; iVertex++ )
+        for( ; iVertex < 10; iVertex++ )
         {
-            int         iStart = 19 + 19*iVertex;
-            int         nX = atoi(GetField(achShapeRec,iStart,iStart+9));
-            int         nY = atoi(GetField(achShapeRec,iStart+10,iStart+18));
+            const int iStart = 19 + 19*iVertex;
+            const int nX = atoi(GetField(achShapeRec,iStart,iStart+9));
+            const int nY = atoi(GetField(achShapeRec,iStart+10,iStart+18));
 
             if( nX == 0 && nY == 0 )
                 break;
@@ -564,7 +566,7 @@ int TigerCompleteChain::AddShapePoints( int nTLID, int nRecordId,
             break;
     }
 
-    return TRUE;
+    return true;
 }
 
 /************************************************************************/
@@ -579,7 +581,7 @@ int TigerCompleteChain::GetShapeRecordId( int nChainId, int nTLID )
 {
     CPLAssert( nChainId >= 0 && nChainId < GetFeatureCount() );
 
-    if( fpShape == NULL || panShapeRecordId == NULL )
+    if( fpShape == nullptr || panShapeRecordId == nullptr )
         return -1;
 
 /* -------------------------------------------------------------------- */
@@ -625,6 +627,11 @@ int TigerCompleteChain::GetShapeRecordId( int nChainId, int nTLID )
     int         nChainsRead = 0;
     char        achShapeRec[OGR_TIGER_RECBUF_LEN];
     int         nShapeRecLen = psRT2Info->nRecordLength + nRecordLength - psRT1Info->nRecordLength;
+
+    if( nShapeRecLen <= 0 )
+    {
+        return -2;
+    }
 
     while( nChainsRead < nMaxChainToRead )
     {
@@ -673,13 +680,12 @@ int TigerCompleteChain::GetShapeRecordId( int nChainId, int nTLID )
 /************************************************************************/
 /*                           SetWriteModule()                           */
 /************************************************************************/
-int TigerCompleteChain::SetWriteModule( const char *pszFileCode, int nRecLen,
-                                        OGRFeature *poFeature )
+bool TigerCompleteChain::SetWriteModule( const char *pszFileCode, int nRecLen,
+                                         OGRFeature *poFeature )
 
 {
-    int bSuccess;
-
-    bSuccess = TigerFileBase::SetWriteModule( pszFileCode, nRecLen, poFeature);
+    const bool bSuccess =
+        TigerFileBase::SetWriteModule( pszFileCode, nRecLen, poFeature);
     if( !bSuccess )
         return bSuccess;
 
@@ -688,17 +694,15 @@ int TigerCompleteChain::SetWriteModule( const char *pszFileCode, int nRecLen,
 /* -------------------------------------------------------------------- */
     if( bUsingRT3 )
     {
-        if( fpRT3 != NULL )
+        if( fpRT3 != nullptr )
         {
             VSIFCloseL( fpRT3 );
-            fpRT3 = NULL;
+            fpRT3 = nullptr;
         }
 
         if( pszModule )
         {
-            char        *pszFilename;
-
-            pszFilename = poDS->BuildFilename( pszModule, "3" );
+            char *pszFilename = poDS->BuildFilename( pszModule, "3" );
 
             fpRT3 = VSIFOpenL( pszFilename, "ab" );
 
@@ -710,24 +714,22 @@ int TigerCompleteChain::SetWriteModule( const char *pszFileCode, int nRecLen,
 /*      Close the shape point file, if open and free the list of        */
 /*      record ids.                                                     */
 /* -------------------------------------------------------------------- */
-    if( fpShape != NULL )
+    if( fpShape != nullptr )
     {
         VSIFCloseL( fpShape );
-        fpShape = NULL;
+        fpShape = nullptr;
     }
 
     if( pszModule )
     {
-        char        *pszFilename;
-
-        pszFilename = poDS->BuildFilename( pszModule, "2" );
+        char *pszFilename = poDS->BuildFilename( pszModule, "2" );
 
         fpShape = VSIFOpenL( pszFilename, "ab" );
 
         CPLFree( pszFilename );
     }
 
-    return TRUE;
+    return true;
 }
 
 /************************************************************************/
@@ -738,12 +740,13 @@ OGRErr TigerCompleteChain::CreateFeature( OGRFeature *poFeature )
 
 {
     char        szRecord[OGR_TIGER_RECBUF_LEN];
-    OGRLineString *poLine = (OGRLineString *) poFeature->GetGeometryRef();
+    OGRGeometry *poGeom = poFeature->GetGeometryRef();
 
-    if( poLine == NULL
-        || (poLine->getGeometryType() != wkbLineString
-            && poLine->getGeometryType() != wkbLineString25D) )
+    if( poGeom == nullptr
+        || (poGeom->getGeometryType() != wkbLineString
+            && poGeom->getGeometryType() != wkbLineString25D) )
         return OGRERR_FAILURE;
+    OGRLineString* poLine = poGeom->toLineString();
 
     /* -------------------------------------------------------------------- */
     /*      Write basic data record ("RT1")                                 */
@@ -761,7 +764,8 @@ OGRErr TigerCompleteChain::CreateFeature( OGRFeature *poFeature )
     /* -------------------------------------------------------------------- */
     /*      Write geographic entity codes (RT3)                             */
     /* -------------------------------------------------------------------- */
-    if (bUsingRT3) {
+    if( bUsingRT3 )
+    {
       memset( szRecord, ' ', psRT3Info->nRecordLength );
       WriteFields( psRT3Info, poFeature, szRecord );
       WriteRecord( szRecord, psRT3Info->nRecordLength, "3", fpRT3 );
@@ -772,22 +776,20 @@ OGRErr TigerCompleteChain::CreateFeature( OGRFeature *poFeature )
     /* -------------------------------------------------------------------- */
     if( poLine->getNumPoints() > 2 )
     {
-        int     nPoints = poLine->getNumPoints();
-        int     iPoint, nRTSQ = 1;
+        const int nPoints = poLine->getNumPoints();
 
-        for( iPoint = 1; iPoint < nPoints-1; )
+        for( int iPoint = 1, nRTSQ = 1; iPoint < nPoints-1; )
         {
-            int         i;
-            char        szTemp[5];
+            char szTemp[5] = {};
 
             memset( szRecord, ' ', psRT2Info->nRecordLength );
 
             WriteField( poFeature, "TLID", szRecord, 6, 15, 'R', 'N' );
 
-            snprintf( szTemp, sizeof(szTemp), "%3d", nRTSQ );
-            strncpy( ((char *)szRecord) + 15, szTemp, 4 );
+            CPLsnprintf( szTemp, sizeof(szTemp), "%3d", nRTSQ );
+            memcpy( ((char *)szRecord) + 15, szTemp, 4 );
 
-            for( i = 0; i < 10; i++ )
+            for( int i = 0; i < 10; i++ )
             {
                 if( iPoint < nPoints-1 )
                     WritePoint( szRecord, 19+19*i,

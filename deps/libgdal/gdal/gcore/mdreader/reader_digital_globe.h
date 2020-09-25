@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: reader_digital_globe.h 33720 2016-03-15 00:39:53Z goatbar $
+ * $Id: reader_digital_globe.h e37e476c4cf8f4b0df8995e0d95d5d672fca1a9b 2018-05-05 16:54:18 +0200 Even Rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Read metadata from DigitalGlobe imagery.
@@ -59,16 +59,16 @@ class GDALMDReaderDigitalGlobe: public GDALMDReaderBase
 public:
     GDALMDReaderDigitalGlobe(const char *pszPath, char **papszSiblingFiles);
     virtual ~GDALMDReaderDigitalGlobe();
-    virtual bool HasRequiredFiles() const;
-    virtual char** GetMetadataFiles() const;
+    virtual bool HasRequiredFiles() const override;
+    virtual char** GetMetadataFiles() const override;
 protected:
-    virtual void LoadMetadata();
+    virtual void LoadMetadata() override;
     char** LoadRPBXmlNode(CPLXMLNode* psNode);
     char** LoadIMDXmlNode(CPLXMLNode* psNode);
 protected:
-    CPLString m_osXMLSourceFilename;
-    CPLString m_osIMDSourceFilename;
-    CPLString m_osRPBSourceFilename;
+    CPLString m_osXMLSourceFilename{};
+    CPLString m_osIMDSourceFilename{};
+    CPLString m_osRPBSourceFilename{};
 };
 
 #endif //READER_DIGITAL_GLOBE_H_INCLUDED

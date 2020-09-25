@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: rpftocfile.cpp 33717 2016-03-14 06:29:14Z goatbar $
  *
  * Project:  RPF A.TOC read Library
  * Purpose:  Module responsible for opening a RPF TOC file, populating RPFToc
@@ -44,12 +43,22 @@
  ******************************************************************************
  */
 
+#include "cpl_port.h"
 #include "rpftoclib.h"
-#include "cpl_vsi.h"
-#include "cpl_conv.h"
-#include "cpl_string.h"
 
-CPL_CVSID("$Id: rpftocfile.cpp 33717 2016-03-14 06:29:14Z goatbar $");
+#include <climits>
+#include <cstring>
+#if HAVE_FCNTL_H
+#  include <fcntl.h>
+#endif
+
+#include "cpl_conv.h"
+#include "cpl_error.h"
+#include "cpl_string.h"
+#include "cpl_vsi.h"
+#include "nitflib.h"
+
+CPL_CVSID("$Id: rpftocfile.cpp e84a845def3054cbbe4b8de95ad4576c0d6f630c 2018-03-17 11:38:24Z Even Rouault $")
 
 /************************************************************************/
 /*                        RPFTOCTrim()                                    */
@@ -58,7 +67,7 @@ CPL_CVSID("$Id: rpftocfile.cpp 33717 2016-03-14 06:29:14Z goatbar $");
 static void RPFTOCTrim(char* str)
 {
     char* c = str;
-    if (str == NULL || *str == 0)
+    if (str == nullptr || *str == 0)
         return;
 
     while(*c == ' ')
@@ -87,23 +96,22 @@ RPFToc* RPFTOCRead(const char* pszFilename, NITFFile* psFile)
     int nTRESize;
     const char* pachTRE = NITFFindTRE( psFile->pachTRE, psFile->nTREBytes,
                            "RPFHDR", &nTRESize );
-    if (pachTRE == NULL)
+    if (pachTRE == nullptr)
     {
         CPLError( CE_Failure, CPLE_NotSupported,
                   "Invalid TOC file. Can't find RPFHDR." );
-        return NULL;
+        return nullptr;
     }
 
     if (nTRESize != 48)
     {
         CPLError( CE_Failure, CPLE_NotSupported,
                   "RPFHDR TRE wrong size." );
-        return NULL;
+        return nullptr;
     }
 
     return  RPFTOCReadFromBuffer(pszFilename, psFile->fp, pachTRE);
 }
-
 
 /* This function is directly inspired by function parse_toc coming from ogdi/driver/rpf/utils.c */
 
@@ -128,7 +136,7 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
         CPLError( CE_Failure, CPLE_NotSupported,
                   "Invalid TOC file. Unable to seek to locationSectionPhysicalLocation at offset %d.",
                    locationSectionPhysicalLocation );
-        return NULL;
+        return nullptr;
     }
 
     int nSections;
@@ -165,25 +173,25 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
     {
         CPLError( CE_Failure, CPLE_NotSupported,
                   "Invalid TOC file. Can't find LID_BoundaryRectangleSectionSubheader." );
-        return NULL;
+        return nullptr;
     }
     if (boundaryRectangleTablePhysIndex == 0)
     {
         CPLError( CE_Failure, CPLE_NotSupported,
                   "Invalid TOC file. Can't find LID_BoundaryRectangleTable." );
-        return NULL;
+        return nullptr;
     }
     if (frameFileIndexSectionSubHeaderPhysIndex == 0)
     {
         CPLError( CE_Failure, CPLE_NotSupported,
                   "Invalid TOC file. Can't find LID_FrameFileIndexSectionSubHeader." );
-        return NULL;
+        return nullptr;
     }
     if (frameFileIndexSubsectionPhysIndex == 0)
     {
         CPLError( CE_Failure, CPLE_NotSupported,
                   "Invalid TOC file. Can't find LID_FrameFileIndexSubsection." );
-        return NULL;
+        return nullptr;
     }
 
     if( VSIFSeekL( fp, boundaryRectangleSectionSubHeaderPhysIndex, SEEK_SET ) != 0)
@@ -191,7 +199,7 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
         CPLError( CE_Failure, CPLE_NotSupported,
                   "Invalid TOC file. Unable to seek to boundaryRectangleSectionSubHeaderPhysIndex at offset %d.",
                    boundaryRectangleSectionSubHeaderPhysIndex );
-        return NULL;
+        return nullptr;
     }
 
     unsigned int boundaryRectangleTableOffset;
@@ -207,7 +215,7 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
         CPLError( CE_Failure, CPLE_NotSupported,
                   "Invalid TOC file. Unable to seek to boundaryRectangleTablePhysIndex at offset %d.",
                    boundaryRectangleTablePhysIndex );
-        return NULL;
+        return nullptr;
     }
 
     RPFToc* toc = reinterpret_cast<RPFToc *>( CPLMalloc( sizeof( RPFToc ) ) );
@@ -295,14 +303,44 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
             toc->entries[i].nVertFrames = 0;
             toc->entries[i].nHorizFrames = 0;
             RPFTOCFree(toc);
-            return NULL;
+            return nullptr;
         }
 
-        if( toc->entries[i].nHorizFrames == 0 ||
+        if( toc->entries[i].vertInterval <= 1e-10 ||
+            !CPLIsFinite(toc->entries[i].vertInterval) ||
+            toc->entries[i].horizInterval <= 1e-10 ||
+            !CPLIsFinite(toc->entries[i].horizInterval) ||
+            !(fabs(toc->entries[i].seLong) <= 360.0) ||
+            !(fabs(toc->entries[i].nwLong) <= 360.0) ||
+            !(fabs(toc->entries[i].nwLat) <= 90.0) ||
+            !(fabs(toc->entries[i].seLat) <= 90.0) ||
+            toc->entries[i].seLong < toc->entries[i].nwLong ||
+            toc->entries[i].nwLat < toc->entries[i].seLat ||
+            toc->entries[i].nHorizFrames == 0 ||
             toc->entries[i].nVertFrames == 0 ||
             toc->entries[i].nHorizFrames > INT_MAX / toc->entries[i].nVertFrames )
         {
-            toc->entries[i].frameEntries = NULL;
+            CPLError(CE_Failure, CPLE_FileIO, "Invalid TOC entry");
+            toc->entries[i].nVertFrames = 0;
+            toc->entries[i].nHorizFrames = 0;
+            RPFTOCFree(toc);
+            return nullptr;
+        }
+
+        // TODO: We could probably use another data structure, like a list,
+        // instead of an array referenced by the frame coordinate...
+        if( static_cast<int>(toc->entries[i].nHorizFrames *
+                                  toc->entries[i].nVertFrames) >
+                 atoi(CPLGetConfigOption("RPFTOC_MAX_FRAME_COUNT", "1000000")) )
+        {
+            CPLError(CE_Failure, CPLE_AppDefined,
+                     "nHorizFrames=%d x nVertFrames=%d > %d. Please raise "
+                     "the value of the RPFTOC_MAX_FRAME_COUNT configuration "
+                     "option to more than %d if this dataset is legitimate.",
+                     toc->entries[i].nHorizFrames, toc->entries[i].nVertFrames,
+                     atoi(CPLGetConfigOption("RPFTOC_MAX_FRAME_COUNT", "1000000")),
+                     toc->entries[i].nHorizFrames * toc->entries[i].nVertFrames );
+            toc->entries[i].frameEntries = nullptr;
         }
         else
         {
@@ -310,12 +348,12 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
                 VSI_CALLOC_VERBOSE( toc->entries[i].nVertFrames * toc->entries[i].nHorizFrames,
                                     sizeof(RPFTocFrameEntry) ) );
         }
-        if (toc->entries[i].frameEntries == NULL)
+        if (toc->entries[i].frameEntries == nullptr)
         {
             toc->entries[i].nVertFrames = 0;
             toc->entries[i].nHorizFrames = 0;
             RPFTOCFree(toc);
-            return NULL;
+            return nullptr;
         }
 
         CPLDebug("RPFTOC", "[%d] type=%s, compression=%s, scale=%s, zone=%s, producer=%s, nVertFrames=%d, nHorizFrames=%d",
@@ -329,7 +367,7 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
                   "Invalid TOC file. Unable to seek to frameFileIndexSectionSubHeaderPhysIndex at offset %d.",
                    frameFileIndexSectionSubHeaderPhysIndex );
         RPFTOCFree(toc);
-        return NULL;
+        return nullptr;
     }
 
     /* Skip 1 byte security classification */
@@ -350,12 +388,18 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
     unsigned short frameFileIndexRecordLength;
     bOK &= VSIFReadL( &frameFileIndexRecordLength, sizeof(frameFileIndexRecordLength), 1, fp) == 1;
     CPL_MSBPTR16( &frameFileIndexRecordLength );
+    if( frameFileIndexRecordLength < 3 * sizeof(short) )
+    {
+        CPLError(CE_Failure, CPLE_FileIO, "Invalid file");
+        RPFTOCFree(toc);
+        return nullptr;
+    }
 
     if( !bOK )
     {
         CPLError(CE_Failure, CPLE_FileIO, "I/O error");
         RPFTOCFree(toc);
-        return NULL;
+        return nullptr;
     }
 
     int newBoundaryId = 0;
@@ -368,7 +412,7 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
                     "Invalid TOC file. Unable to seek to frameFileIndexSubsectionPhysIndex(%d) at offset %d.",
                      i, frameFileIndexSubsectionPhysIndex + frameFileIndexRecordLength * i);
             RPFTOCFree(toc);
-            return NULL;
+            return nullptr;
         }
 
         unsigned short boundaryId;
@@ -376,7 +420,7 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
         {
             CPLError(CE_Failure, CPLE_FileIO, "I/O error");
             RPFTOCFree(toc);
-            return NULL;
+            return nullptr;
         }
         CPL_MSBPTR16( &boundaryId );
 
@@ -391,7 +435,7 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
                     "Invalid TOC file. Bad boundary id (%d) for frame file index %d.",
                      boundaryId, i);
             RPFTOCFree(toc);
-            return NULL;
+            return nullptr;
         }
 
         RPFTocEntry* entry = &toc->entries[boundaryId];
@@ -408,7 +452,7 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
         {
             CPLError(CE_Failure, CPLE_FileIO, "I/O error");
             RPFTOCFree(toc);
-            return NULL;
+            return nullptr;
         }
 
         if (newBoundaryId == 0)
@@ -428,7 +472,7 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
                         "Invalid TOC file. Bad row num (%d) for frame file index %d.",
                         frameRow, i);
             RPFTOCFree(toc);
-            return NULL;
+            return nullptr;
         }
 
         if (frameCol >= entry->nHorizFrames)
@@ -437,7 +481,7 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
                         "Invalid TOC file. Bad col num (%d) for frame file index %d.",
                         frameCol, i);
             RPFTOCFree(toc);
-            return NULL;
+            return nullptr;
         }
 
         RPFTocFrameEntry* frameEntry
@@ -451,9 +495,9 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
                       "Frame entry(%d,%d) for frame file index %d was already found.",
                       frameRow, frameCol, i);
             CPLFree(frameEntry->directory);
-            frameEntry->directory = NULL;
+            frameEntry->directory = nullptr;
             CPLFree(frameEntry->fullFilePath);
-            frameEntry->fullFilePath = NULL;
+            frameEntry->fullFilePath = nullptr;
             frameEntry->exists = 0;
         }
 
@@ -466,9 +510,10 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
         {
             CPLError(CE_Failure, CPLE_FileIO, "I/O error");
             RPFTOCFree(toc);
-            return NULL;
+            return nullptr;
         }
         frameEntry->filename[12] = '\0';
+        bOK &= strlen(frameEntry->filename) > 0;
 
         /* Check if the filename is an overview or legend */
         for( int j = 0; j < 12; j++ )
@@ -484,7 +529,7 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
         }
 
         /* Extract series code */
-        if (entry->seriesAbbreviation == NULL)
+        if (entry->seriesAbbreviation == nullptr)
         {
             const NITFSeries* series = NITFGetSeriesInfo(frameEntry->filename);
             if (series)
@@ -509,7 +554,7 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
                       "offsetFrameFilePathName(%d) at offset %d.",
                      i, frameFileIndexSubsectionPhysIndex + offsetFrameFilePathName);
             RPFTOCFree(toc);
-            return NULL;
+            return nullptr;
         }
 
         unsigned short pathLength;
@@ -518,13 +563,13 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
 
         /* if nFrameFileIndexRecords == 65535 and pathLength == 65535 for each record,
            this leads to 4 GB allocation... Protect against this case */
-        if (!bOK || pathLength > 256)
+        if (!bOK || pathLength == 0 || pathLength > 256)
         {
             CPLError( CE_Failure, CPLE_NotSupported,
-                      "Path length is big : %d. Probably corrupted TOC file.",
+                      "Path length is invalid : %d. Probably corrupted TOC file.",
                       static_cast<int>( pathLength ) );
             RPFTOCFree(toc);
-            return NULL;
+            return nullptr;
         }
 
         frameEntry->directory = reinterpret_cast<char *>( CPLMalloc(pathLength+1) );
@@ -533,7 +578,7 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
         {
             CPLError(CE_Failure, CPLE_FileIO, "I/O error");
             RPFTOCFree(toc);
-            return NULL;
+            return nullptr;
         }
         frameEntry->directory[pathLength] = 0;
         if (pathLength > 0 && frameEntry->directory[pathLength-1] == '/')
@@ -547,7 +592,7 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
             // Check if it was not intended to be "./X/" instead.
             VSIStatBufL sStatBuf;
             if( frameEntry->directory[0] == '/' &&
-                VSIStatL(CPLFormFilename(CPLGetDirname(pszFilename), frameEntry->directory+1, NULL), &sStatBuf) == 0 &&
+                VSIStatL(CPLFormFilename(CPLGetDirname(pszFilename), frameEntry->directory+1, nullptr), &sStatBuf) == 0 &&
                 VSI_ISDIR(sStatBuf.st_mode) )
             {
                 memmove(frameEntry->directory, frameEntry->directory+1, strlen(frameEntry->directory+1)+1);
@@ -557,13 +602,13 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
         {
             char* baseDir = CPLStrdup(CPLGetDirname(pszFilename));
             VSIStatBufL sStatBuf;
-            char* subdir;
+            char* subdir = nullptr;
             if (CPLIsFilenameRelative(frameEntry->directory) == FALSE)
                 subdir = CPLStrdup(frameEntry->directory);
             else if (frameEntry->directory[0] == '.' && frameEntry->directory[1] == 0)
                 subdir = CPLStrdup(baseDir);
             else
-                subdir = CPLStrdup(CPLFormFilename(baseDir, frameEntry->directory, NULL));
+                subdir = CPLStrdup(CPLFormFilename(baseDir, frameEntry->directory, nullptr));
 #if !defined(_WIN32) && !defined(_WIN32_CE)
             if( VSIStatL( subdir, &sStatBuf ) != 0 && strlen(subdir) > strlen(baseDir) && subdir[strlen(baseDir)] != 0)
             {
@@ -578,16 +623,19 @@ RPFToc* RPFTOCReadFromBuffer(const char* pszFilename, VSILFILE* fp, const char* 
 #endif
             frameEntry->fullFilePath = CPLStrdup(CPLFormFilename(
                     subdir,
-                    frameEntry->filename, NULL));
+                    frameEntry->filename, nullptr));
             if( VSIStatL( frameEntry->fullFilePath, &sStatBuf ) != 0 )
             {
 #if !defined(_WIN32) && !defined(_WIN32_CE)
-                char* c = frameEntry->fullFilePath + strlen(subdir)+1;
-                while(*c)
+                if( strlen(frameEntry->fullFilePath) > strlen(subdir) )
                 {
-                    if (*c >= 'A' && *c <= 'Z')
-                        *c += 'a' - 'A';
-                    c++;
+                    char* c = frameEntry->fullFilePath + strlen(subdir)+1;
+                    while(*c)
+                    {
+                        if (*c >= 'A' && *c <= 'Z')
+                            *c += 'a' - 'A';
+                        c++;
+                    }
                 }
                 if( VSIStatL( frameEntry->fullFilePath, &sStatBuf ) != 0 )
 #endif

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id$
  *
  * Project:  Interlis 1/2 Translator
  * Purpose:  IlisMeta model reader.
@@ -29,7 +28,6 @@
 
 // IlisMeta model: http://www.interlis.ch/models/core/IlisMeta07-20111222.ili
 
-
 #include "cpl_minixml.h"
 #include "imdreader.h"
 
@@ -37,8 +35,7 @@
 #include <vector>
 #include <algorithm>
 
-
-CPL_CVSID("$Id$");
+CPL_CVSID("$Id: imdreader.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 typedef std::map<CPLString,CPLXMLNode*> StrNodeMap;
 typedef std::vector<CPLXMLNode*> NodeVector;
@@ -74,16 +71,18 @@ public:
         poTableDefn = new OGRFeatureDefn(layerName);
         poTableDefn->Reference();
         CPLFree(layerName);
-    };
+    }
+
     ~IliClass()
     {
         poTableDefn->Release();
-    };
+    }
+
     const char* GetName() {
         return poTableDefn->GetName();
     }
     const char* GetIliName() {
-        return CPLGetXMLValue( node, "TID", NULL );
+        return CPLGetXMLValue( node, "TID", nullptr );
     }
     char* LayerName() {
         const char* psClassTID = GetIliName();
@@ -94,7 +93,7 @@ public:
                 CSLTokenizeString2( psClassTID, ".", CSLT_ALLOWEMPTYTOKENS );
 
             CPLString layername;
-            for(int i = 1; papszTokens != NULL && papszTokens[i] != NULL; i++)
+            for(int i = 1; papszTokens != nullptr && papszTokens[i] != nullptr; i++)
             {
                 if (i>1) layername += "__";
                 layername += papszTokens[i];
@@ -104,7 +103,7 @@ public:
         }
 
         return CPLStrdup(psClassTID);
-    };
+    }
     void AddFieldNode(CPLXMLNode* nodeIn, int iOrderPos)
     {
         if (iOrderPos >= (int)oFields.size())
@@ -127,7 +126,7 @@ public:
                  it != oFields.end();
                  ++it )
             {
-                if (*it == NULL) continue;
+                if (*it == nullptr) continue;
                 if( CPLTestBool(
                         CPLGetXMLValue( *it, "EmbeddedTransfer", "FALSE" ) ) )
                     return true;
@@ -183,7 +182,7 @@ public:
     }
     OGRFieldType GetFormattedType(CPLXMLNode* nodeIn)
     {
-        const char* psRefSuper = CPLGetXMLValue( nodeIn, "Super.REF", NULL );
+        const char* psRefSuper = CPLGetXMLValue( nodeIn, "Super.REF", nullptr );
         if (psRefSuper)
             return GetFormattedType(oTidLookup[psRefSuper]);
 
@@ -194,7 +193,7 @@ public:
         // Delete default geometry field
         poTableDefn->DeleteGeomFieldDefn(0);
 
-        const char* psKind = CPLGetXMLValue( node, "Kind", NULL );
+        const char* psKind = CPLGetXMLValue( node, "Kind", "" );
 #ifdef DEBUG_VERBOSE
         CPLDebug( "OGR_ILI", "InitFieldDefinitions of '%s' kind: %s",
                   GetName(), psKind );
@@ -221,10 +220,10 @@ public:
              it != oFields.end();
              ++it)
         {
-            if (*it == NULL) continue;
-            const char* psName = CPLGetXMLValue( *it, "Name", NULL );
-            const char* psTypeRef = CPLGetXMLValue( *it, "Type.REF", NULL );
-            if (psTypeRef == NULL) //Assoc Role
+            if (*it == nullptr) continue;
+            const char* psName = CPLGetXMLValue( *it, "Name", nullptr );
+            const char* psTypeRef = CPLGetXMLValue( *it, "Type.REF", nullptr );
+            if (psTypeRef == nullptr) //Assoc Role
                 AddField(psName, OFTString); //FIXME: numeric?
             else
             {
@@ -258,7 +257,7 @@ public:
                 {
                     //min -> Multiplicity/IlisMeta07.ModelData.Multiplicity/Min
                     //max -> Multiplicity/IlisMeta07.ModelData.Multiplicity/Max
-                    const char* psClassRef = CPLGetXMLValue( psElementNode, "BaseType.REF", NULL );
+                    const char* psClassRef = CPLGetXMLValue( psElementNode, "BaseType.REF", nullptr );
                     if (psClassRef)
                     {
                         IliClass* psParentClass = oClasses[oTidLookup[psClassRef]];
@@ -276,7 +275,7 @@ public:
                 }
                 else if (EQUAL(typeName, "IlisMeta07.ModelData.LineType"))
                 {
-                    const char* psKind = CPLGetXMLValue( psElementNode, "Kind", NULL );
+                    const char* psKind = CPLGetXMLValue( psElementNode, "Kind", "" );
                     poGeomFieldInfos[psName].iliGeomType = psKind;
                     bool isLinearType = (std::find(oArcLineTypes.begin(), oArcLineTypes.end(), psElementNode) == oArcLineTypes.end());
                     bool linearGeom = isLinearType || CPLTestBool(CPLGetConfigOption("OGR_STROKE_CURVE", "FALSE"));
@@ -334,20 +333,18 @@ public:
     }
 
   private:
-    CPL_DISALLOW_COPY_ASSIGN(IliClass);
+    CPL_DISALLOW_COPY_ASSIGN(IliClass)
 };
-
 
 ImdReader::ImdReader(int iliVersionIn) :
     iliVersion(iliVersionIn),
-    modelInfos()
-{
-    mainModelName = "OGR";
-    mainTopicName = "OGR";
-    codeBlank = '_';
-    codeUndefined = '@';
-    codeContinue = '\\';
-}
+    modelInfos(),  // TODO(schwehr): Remove.  No need for default ctor, correct?
+    mainModelName("OGR"),
+    mainTopicName("OGR"),
+    codeBlank('_'),
+    codeUndefined('@'),
+    codeContinue('\\')
+{}
 
 ImdReader::~ImdReader() {}
 
@@ -355,40 +352,41 @@ void ImdReader::ReadModel(const char *pszFilename) {
     CPLDebug( "OGR_ILI", "Reading model '%s'", pszFilename);
 
     CPLXMLNode* psRootNode = CPLParseXMLFile(pszFilename);
-    if( psRootNode == NULL )
+    if( psRootNode == nullptr )
         return;
     CPLXMLNode *psSectionNode
         = CPLGetXMLNode( psRootNode, "=TRANSFER.DATASECTION" );
-    if( psSectionNode == NULL )
+    if( psSectionNode == nullptr )
+    {
+        CPLDestroyXMLNode(psRootNode);
         return;
+    }
 
     StrNodeMap oTidLookup; /* for fast lookup of REF relations */
     ClassesMap oClasses;
     NodeCountMap oAxisCount;
     NodeVector oArcLineTypes;
-    const char *modelName;
 
     /* Fill TID lookup map and IliClasses lookup map */
     CPLXMLNode* psModel = psSectionNode->psChild;
-    while( psModel != NULL )
+    while( psModel != nullptr )
     {
-        modelName = CPLGetXMLValue( psModel, "BID", NULL );
+        const char *modelName = CPLGetXMLValue( psModel, "BID", nullptr );
 #ifdef DEBUG_VERBOSE
         CPLDebug( "OGR_ILI", "Model: '%s'", modelName);
 #endif
 
         CPLXMLNode* psEntry = psModel->psChild;
-        while( psEntry != NULL )
+        while( psEntry != nullptr )
                 {
             if (psEntry->eType != CXT_Attribute) //ignore BID
             {
 #ifdef DEBUG_VERBOSE
                 CPLDebug( "OGR_ILI", "Node tag: '%s'", psEntry->pszValue);
 #endif
-                const char* psTID = CPLGetXMLValue( psEntry, "TID", NULL );
-                if( psTID != NULL )
+                const char* psTID = CPLGetXMLValue( psEntry, "TID", nullptr );
+                if( psTID != nullptr )
                     oTidLookup[psTID] = psEntry;
-
 
                 if( EQUAL(psEntry->pszValue, "IlisMeta07.ModelData.Model") &&
                     !EQUAL(modelName, "MODEL.INTERLIS"))
@@ -403,7 +401,7 @@ void ImdReader::ReadModel(const char *pszFilename) {
 
                     CPLXMLNode *psFormatNode
                         = CPLGetXMLNode( psEntry, "ili1Format" );
-                    if (psFormatNode != NULL)
+                    if (psFormatNode != nullptr)
                     {
                         psFormatNode = psFormatNode->psChild;
                         codeBlank = static_cast<char>(
@@ -434,7 +432,7 @@ void ImdReader::ReadModel(const char *pszFilename) {
 
         // 2nd pass: add fields via TransferElement entries & role associations
         psEntry = psModel->psChild;
-        while( psEntry != NULL )
+        while( psEntry != nullptr )
         {
             if (psEntry->eType != CXT_Attribute) //ignore BID
             {
@@ -446,9 +444,9 @@ void ImdReader::ReadModel(const char *pszFilename) {
                            "IlisMeta07.ModelData.Ili1TransferElement"))
                 {
                     const char* psClassRef = CPLGetXMLValue(
-                      psEntry, "Ili1TransferClass.REF", NULL );
+                      psEntry, "Ili1TransferClass.REF", nullptr );
                     const char* psElementRef
-                        = CPLGetXMLValue( psEntry, "Ili1RefAttr.REF", NULL );
+                        = CPLGetXMLValue( psEntry, "Ili1RefAttr.REF", nullptr );
                     int iOrderPos = atoi(CPLGetXMLValue(
                         psEntry, "Ili1RefAttr.ORDER_POS", "0" ))-1;
                     IliClass* psParentClass = oClasses[oTidLookup[psClassRef]];
@@ -459,9 +457,9 @@ void ImdReader::ReadModel(const char *pszFilename) {
                                 "IlisMeta07.ModelData.TransferElement"))
                 {
                     const char* psClassRef
-                        = CPLGetXMLValue( psEntry, "TransferClass.REF", NULL );
+                        = CPLGetXMLValue( psEntry, "TransferClass.REF", nullptr );
                     const char* psElementRef = CPLGetXMLValue(
-                        psEntry, "TransferElement.REF", NULL );
+                        psEntry, "TransferElement.REF", nullptr );
                     int iOrderPos = atoi(CPLGetXMLValue(
                         psEntry, "TransferElement.ORDER_POS", "0" ))-1;
                     IliClass* psParentClass = oClasses[oTidLookup[psClassRef]];
@@ -471,7 +469,7 @@ void ImdReader::ReadModel(const char *pszFilename) {
                 else if( EQUAL(psEntry->pszValue, "IlisMeta07.ModelData.Role"))
                 {
                     const char* psRefParent
-                        = CPLGetXMLValue( psEntry, "Association.REF", NULL );
+                        = CPLGetXMLValue( psEntry, "Association.REF", nullptr );
                     int iOrderPos = atoi(
                         CPLGetXMLValue( psEntry,
                                         "Association.ORDER_POS", "0" ))-1;
@@ -482,7 +480,7 @@ void ImdReader::ReadModel(const char *pszFilename) {
                 else if( EQUAL(psEntry->pszValue, "IlisMeta07.ModelData.AxisSpec"))
                 {
                     const char* psClassRef
-                        = CPLGetXMLValue( psEntry, "CoordType.REF", NULL );
+                        = CPLGetXMLValue( psEntry, "CoordType.REF", nullptr );
                     // int iOrderPos = atoi(
                     //     CPLGetXMLValue( psEntry, "Axis.ORDER_POS", "0" ))-1;
                     CPLXMLNode* psCoordTypeNode = oTidLookup[psClassRef];
@@ -492,17 +490,16 @@ void ImdReader::ReadModel(const char *pszFilename) {
                                 "IlisMeta07.ModelData.LinesForm"))
                 {
                     const char* psLineForm
-                        = CPLGetXMLValue( psEntry, "LineForm.REF", NULL );
+                        = CPLGetXMLValue( psEntry, "LineForm.REF", nullptr );
                     if (EQUAL(psLineForm, "INTERLIS.ARCS")) {
                         const char* psElementRef
-                            = CPLGetXMLValue( psEntry, "LineType.REF", NULL );
+                            = CPLGetXMLValue( psEntry, "LineType.REF", nullptr );
                         CPLXMLNode* psElementNode = oTidLookup[psElementRef];
                         oArcLineTypes.push_back(psElementNode);
                     }
                 }
             }
             psEntry = psEntry->psNext;
-
         }
 
         psModel = psModel->psNext;
@@ -516,7 +513,7 @@ void ImdReader::ReadModel(const char *pszFilename) {
 #ifdef DEBUG_VERBOSE
         CPLDebug( "OGR_ILI", "Class: '%s'", it->second->GetName());
 #endif
-        const char* psRefSuper = CPLGetXMLValue( it->first, "Super.REF", NULL );
+        const char* psRefSuper = CPLGetXMLValue( it->first, "Super.REF", nullptr );
         if (psRefSuper) {
             if (oTidLookup.find(psRefSuper) != oTidLookup.end() &&
                 oClasses.find(oTidLookup[psRefSuper]) != oClasses.end()) {

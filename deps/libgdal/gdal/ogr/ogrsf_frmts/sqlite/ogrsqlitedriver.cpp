@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrsqlitedriver.cpp 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRSQLiteDriver class.
@@ -35,10 +34,22 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
 #include "ogr_sqlite.h"
-#include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrsqlitedriver.cpp 33714 2016-03-13 05:42:13Z goatbar $");
+#include <cstring>
+#include <string>
+
+#include "cpl_conv.h"
+#include "cpl_error.h"
+#include "cpl_string.h"
+#include "cpl_vsi.h"
+#include "gdal.h"
+#include "gdal_priv.h"
+#include "ogr_core.h"
+#include "sqlite3.h"
+
+CPL_CVSID("$Id: ogrsqlitedriver.cpp 52ab63f8c20bb2ccc0a5b378a29fdc11768a09c0 2018-09-22 15:56:48 +0200 Even Rouault $")
 
 /************************************************************************/
 /*                     OGRSQLiteDriverIdentify()                        */
@@ -47,12 +58,31 @@ CPL_CVSID("$Id: ogrsqlitedriver.cpp 33714 2016-03-13 05:42:13Z goatbar $");
 static int OGRSQLiteDriverIdentify( GDALOpenInfo* poOpenInfo )
 
 {
-    int nLen = (int) strlen(poOpenInfo->pszFilename);
-    if (STARTS_WITH_CI(poOpenInfo->pszFilename, "VirtualShape:") &&
-        nLen > 4 && EQUAL(poOpenInfo->pszFilename + nLen - 4, ".SHP"))
+    if (STARTS_WITH_CI(poOpenInfo->pszFilename, "SQLITE:") )
     {
         return TRUE;
     }
+
+    CPLString osExt(CPLGetExtension(poOpenInfo->pszFilename));
+    if( EQUAL(osExt, "gpkg") && GDALGetDriverByName("GPKG") != nullptr )
+    {
+        return FALSE;
+    }
+    if( EQUAL(osExt, "mbtiles") && GDALGetDriverByName("MBTILES") != nullptr )
+    {
+        return FALSE;
+    }
+
+    if (STARTS_WITH_CI(poOpenInfo->pszFilename, "VirtualShape:") &&
+        EQUAL(osExt, "shp"))
+    {
+        return TRUE;
+    }
+
+#ifdef HAVE_RASTERLITE2
+    if( STARTS_WITH_CI(poOpenInfo->pszFilename, "RASTERLITE2:") )
+        return poOpenInfo->nOpenFlags & GDAL_OF_RASTER;
+#endif
 
     if( EQUAL(poOpenInfo->pszFilename, ":memory:") )
         return TRUE;
@@ -69,7 +99,7 @@ static int OGRSQLiteDriverIdentify( GDALOpenInfo* poOpenInfo )
         char * queryparams = strchr(poOpenInfo->pszFilename, '?');
         if( queryparams )
         {
-            if( strstr(queryparams, "mode=memory") != NULL )
+            if( strstr(queryparams, "mode=memory") != nullptr )
                 return TRUE;
         }
     }
@@ -79,13 +109,41 @@ static int OGRSQLiteDriverIdentify( GDALOpenInfo* poOpenInfo )
 /*      Verify that the target is a real file, and has an               */
 /*      appropriate magic string at the beginning.                      */
 /* -------------------------------------------------------------------- */
-    if( poOpenInfo->nHeaderBytes < 16 )
+    if( poOpenInfo->nHeaderBytes < 100 )
         return FALSE;
+
+#ifdef ENABLE_SQL_SQLITE_FORMAT
+    if( STARTS_WITH((const char*)poOpenInfo->pabyHeader, "-- SQL SQLITE") )
+    {
+        return TRUE;
+    }
+    if( STARTS_WITH((const char*)poOpenInfo->pabyHeader, "-- SQL RASTERLITE") )
+    {
+        return -1;
+    }
+    if( STARTS_WITH((const char*)poOpenInfo->pabyHeader, "-- SQL MBTILES") )
+    {
+        if( GDALGetDriverByName("MBTILES") != nullptr )
+            return FALSE;
+        if( poOpenInfo->eAccess == GA_Update )
+            return FALSE;
+        return -1;
+    }
+#endif
 
     if( !STARTS_WITH((const char*)poOpenInfo->pabyHeader, "SQLite format 3") )
         return FALSE;
 
-    // Could be a Rasterlite file as well
+    // In case we are opening /vsizip/foo.zip with a .gpkg inside
+    if( (memcmp(poOpenInfo->pabyHeader + 68, "GP10", 4) == 0 ||
+         memcmp(poOpenInfo->pabyHeader + 68, "GP11", 4) == 0 ||
+         memcmp(poOpenInfo->pabyHeader + 68, "GPKG", 4) == 0) &&
+        GDALGetDriverByName("GPKG") != nullptr )
+    {
+        return FALSE;
+    }
+
+    // Could be a Rasterlite or MBTiles file as well
     return -1;
 }
 
@@ -97,7 +155,7 @@ static GDALDataset *OGRSQLiteDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
     if( OGRSQLiteDriverIdentify(poOpenInfo) == FALSE )
-        return NULL;
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Check VirtualShape:xxx.shp syntax                               */
@@ -106,28 +164,26 @@ static GDALDataset *OGRSQLiteDriverOpen( GDALOpenInfo* poOpenInfo )
     if (STARTS_WITH_CI(poOpenInfo->pszFilename, "VirtualShape:") &&
         nLen > 4 && EQUAL(poOpenInfo->pszFilename + nLen - 4, ".SHP"))
     {
-        OGRSQLiteDataSource     *poDS;
+        OGRSQLiteDataSource *poDS = new OGRSQLiteDataSource();
 
-        poDS = new OGRSQLiteDataSource();
-
-        char** papszOptions = CSLAddString(NULL, "SPATIALITE=YES");
+        char** papszOptions = CSLAddString(nullptr, "SPATIALITE=YES");
         int nRet = poDS->Create( ":memory:", papszOptions );
         poDS->SetDescription(poOpenInfo->pszFilename);
         CSLDestroy(papszOptions);
         if (!nRet)
         {
             delete poDS;
-            return NULL;
+            return nullptr;
         }
 
         char* pszSQLiteFilename = CPLStrdup(poOpenInfo->pszFilename + strlen( "VirtualShape:" ));
         GDALDataset* poSQLiteDS = (GDALDataset*) GDALOpenEx(pszSQLiteFilename,
-                                            GDAL_OF_VECTOR, NULL, NULL, NULL);
-        if (poSQLiteDS == NULL)
+                                            GDAL_OF_VECTOR, nullptr, nullptr, nullptr);
+        if (poSQLiteDS == nullptr)
         {
             CPLFree(pszSQLiteFilename);
             delete poDS;
-            return NULL;
+            return nullptr;
         }
         delete poSQLiteDS;
 
@@ -139,7 +195,7 @@ static GDALDataset *OGRSQLiteDriverOpen( GDALOpenInfo* poOpenInfo )
 
         char* pszSQL = CPLStrdup(CPLSPrintf("CREATE VIRTUAL TABLE %s USING VirtualShape(%s, CP1252, -1)",
                                             pszTableName, pszSQLiteFilename));
-        poDS->ExecuteSQL(pszSQL, NULL, NULL);
+        poDS->ExecuteSQL(pszSQL, nullptr, nullptr);
         CPLFree(pszSQL);
         CPLFree(pszSQLiteFilename);
         poDS->SetUpdate(FALSE);
@@ -150,15 +206,12 @@ static GDALDataset *OGRSQLiteDriverOpen( GDALOpenInfo* poOpenInfo )
 /*      We think this is really an SQLite database, go ahead and try    */
 /*      and open it.                                                    */
 /* -------------------------------------------------------------------- */
-    OGRSQLiteDataSource     *poDS;
+    OGRSQLiteDataSource *poDS = new OGRSQLiteDataSource();
 
-    poDS = new OGRSQLiteDataSource();
-
-    if( !poDS->Open( poOpenInfo->pszFilename, poOpenInfo->eAccess == GA_Update,
-                     poOpenInfo->papszOpenOptions ) )
+    if( !poDS->Open( poOpenInfo ) )
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
     else
         return poDS;
@@ -169,12 +222,20 @@ static GDALDataset *OGRSQLiteDriverOpen( GDALOpenInfo* poOpenInfo )
 /************************************************************************/
 
 static GDALDataset *OGRSQLiteDriverCreate( const char * pszName,
-                                           CPL_UNUSED int nBands,
+                                           int nBands,
                                            CPL_UNUSED int nXSize,
                                            CPL_UNUSED int nYSize,
                                            CPL_UNUSED GDALDataType eDT,
                                            char **papszOptions )
 {
+    if( nBands != 0 )
+    {
+        CPLError(CE_Failure, CPLE_NotSupported,
+                 "Raster creation through Create() interface is not supported. "
+                 "Only CreateCopy() is supported");
+        return nullptr;
+    }
+
 /* -------------------------------------------------------------------- */
 /*      First, ensure there isn't any such file yet.                    */
 /* -------------------------------------------------------------------- */
@@ -186,23 +247,21 @@ static GDALDataset *OGRSQLiteDriverCreate( const char * pszName,
                   "It seems a file system object called '%s' already exists.",
                   pszName );
 
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
 /*      Try to create datasource.                                       */
 /* -------------------------------------------------------------------- */
-    OGRSQLiteDataSource     *poDS;
-
-    poDS = new OGRSQLiteDataSource();
+    OGRSQLiteDataSource *poDS = new OGRSQLiteDataSource();
 
     if( !poDS->Create( pszName, papszOptions ) )
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
-    else
-        return poDS;
+
+    return poDS;
 }
 
 /************************************************************************/
@@ -227,14 +286,19 @@ void RegisterOGRSQLite()
     if( !GDAL_CHECK_VERSION("SQLite driver") )
         return;
 
-    if( GDALGetDriverByName( "SQLite" ) != NULL )
+    if( GDALGetDriverByName( "SQLite" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();
 
     poDriver->SetDescription( "SQLite" );
     poDriver->SetMetadataItem( GDAL_DCAP_VECTOR, "YES" );
+#ifdef HAVE_RASTERLITE2
+    poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
+    poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, "SQLite / Spatialite / RasterLite2" );
+#else
     poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, "SQLite / Spatialite" );
+#endif
     poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_sqlite.html" );
     poDriver->SetMetadataItem( GDAL_DMD_EXTENSIONS, "sqlite db" );
 
@@ -242,16 +306,62 @@ void RegisterOGRSQLite()
 "<OpenOptionList>"
 "  <Option name='LIST_ALL_TABLES' type='boolean' description='Whether all tables, including non-spatial ones, should be listed' default='NO'/>"
 "  <Option name='LIST_VIRTUAL_OGR' type='boolean' description='Whether VirtualOGR virtual tables should be listed. Should only be enabled on trusted datasources to avoid potential safety issues' default='NO'/>"
+"  <Option name='1BIT_AS_8BIT' type='boolean' description='Whether to promote 1-bit monochrome raster as 8-bit, so as to have higher quality overviews' default='YES'/>"
 "</OpenOptionList>");
 
-    poDriver->SetMetadataItem( GDAL_DMD_CREATIONOPTIONLIST,
+    CPLString osCreationOptions(
 "<CreationOptionList>"
 #ifdef HAVE_SPATIALITE
 "  <Option name='SPATIALITE' type='boolean' description='Whether to create a Spatialite database' default='NO'/>"
 #endif
 "  <Option name='METADATA' type='boolean' description='Whether to create the geometry_columns and spatial_ref_sys tables' default='YES'/>"
 "  <Option name='INIT_WITH_EPSG' type='boolean' description='Whether to insert the content of the EPSG CSV files into the spatial_ref_sys table ' default='NO'/>"
-"</CreationOptionList>");
+#ifdef HAVE_RASTERLITE2
+"  <Option name='APPEND_SUBDATASET' scope='raster' type='boolean' description='Whether to add the raster to the existing file' default='NO'/>"
+"  <Option name='COVERAGE' scope='raster' type='string' description='Coverage name'/>"
+"  <Option name='SECTION' scope='raster' type='string' description='Section name'/>"
+"  <Option name='COMPRESS' scope='raster' type='string-select' description='Raster compression' default='NONE'>"
+"    <Value>NONE</Value>"
+#endif
+    );
+#ifdef HAVE_RASTERLITE2
+    if( rl2_is_supported_codec( RL2_COMPRESSION_DEFLATE ) )
+        osCreationOptions += "    <Value>DEFLATE</Value>";
+    if( rl2_is_supported_codec( RL2_COMPRESSION_LZMA ) )
+        osCreationOptions += "    <Value>LZMA</Value>";
+    if( rl2_is_supported_codec( RL2_COMPRESSION_PNG ) )
+        osCreationOptions += "    <Value>PNG</Value>";
+    if( rl2_is_supported_codec( RL2_COMPRESSION_CCITTFAX4 ) )
+        osCreationOptions += "    <Value>CCITTFAX4</Value>";
+    if( rl2_is_supported_codec( RL2_COMPRESSION_JPEG ) )
+        osCreationOptions += "    <Value>JPEG</Value>";
+    if( rl2_is_supported_codec( RL2_COMPRESSION_LOSSY_WEBP ) )
+        osCreationOptions += "    <Value>WEBP</Value>";
+    if( rl2_is_supported_codec( RL2_COMPRESSION_CHARLS ) )
+        osCreationOptions += "    <Value>CHARLS</Value>";
+    if( rl2_is_supported_codec( RL2_COMPRESSION_LOSSY_JP2 ) )
+        osCreationOptions += "    <Value>JPEG2000</Value>";
+#endif
+    osCreationOptions +=
+#ifdef HAVE_RASTERLITE2
+"  </Option>"
+"  <Option name='QUALITY' scope='raster' type='int' description='Image quality for JPEG, WEBP and JPEG2000 compressions'/>"
+"  <Option name='PIXEL_TYPE' scope='raster' type='string-select' description='Raster pixel type. Determines photometric interpretation'>"
+"    <Value>MONOCHROME</Value>"
+"    <Value>PALETTE</Value>"
+"    <Value>GRAYSCALE</Value>"
+"    <Value>RGB</Value>"
+"    <Value>MULTIBAND</Value>"
+"    <Value>DATAGRID</Value>"
+"  </Option>"
+"  <Option name='BLOCKXSIZE' scope='raster' type='int' description='Block width' default='512'/>"
+"  <Option name='BLOCKYSIZE' scope='raster' type='int' description='Block height' default='512'/>"
+"  <Option name='NBITS' scope='raster' type='int' description='Force bit width. 1, 2 or 4 are supported'/>"
+"  <Option name='PYRAMIDIZE' scope='raster' type='boolean' description='Whether to automatically build relevant pyramids/overviews' default='NO'/>"
+#endif
+"</CreationOptionList>";
+
+    poDriver->SetMetadataItem( GDAL_DMD_CREATIONOPTIONLIST, osCreationOptions);
 
     poDriver->SetMetadataItem( GDAL_DS_LAYER_CREATIONOPTIONLIST,
 "<LayerCreationOptionList>"
@@ -276,15 +386,33 @@ void RegisterOGRSQLite()
 
     poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATATYPES,
                                "Integer Integer64 Real String Date DateTime "
-                               "Time Binary" );
+                               "Time Binary IntegerList Integer64List "
+                               "RealList StringList" );
+    poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATASUBTYPES, "Boolean Int16 Float32" );
+
+#ifdef HAVE_RASTERLITE2
+    poDriver->SetMetadataItem( GDAL_DMD_CREATIONDATATYPES,
+                               "Byte UInt16 Int16 UInt32 Int32 Float32 "
+                               "Float64" );
+#endif
     poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_FIELDS, "YES" );
     poDriver->SetMetadataItem( GDAL_DCAP_DEFAULT_FIELDS, "YES" );
     poDriver->SetMetadataItem( GDAL_DCAP_NOTNULL_GEOMFIELDS, "YES" );
     poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
 
+#ifdef ENABLE_SQL_SQLITE_FORMAT
+    poDriver->SetMetadataItem("ENABLE_SQL_SQLITE_FORMAT", "YES");
+#endif
+#ifdef SQLITE_HAS_COLUMN_METADATA
+    poDriver->SetMetadataItem("SQLITE_HAS_COLUMN_METADATA", "YES");
+#endif
+
     poDriver->pfnOpen = OGRSQLiteDriverOpen;
     poDriver->pfnIdentify = OGRSQLiteDriverIdentify;
     poDriver->pfnCreate = OGRSQLiteDriverCreate;
+#ifdef HAVE_RASTERLITE2
+    poDriver->pfnCreateCopy = OGRSQLiteDriverCreateCopy;
+#endif
     poDriver->pfnDelete = OGRSQLiteDriverDelete;
     poDriver->pfnUnloadDriver = OGRSQLiteDriverUnload;
 

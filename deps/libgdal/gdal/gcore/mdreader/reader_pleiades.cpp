@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: reader_pleiades.cpp 34367 2016-06-17 13:58:32Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Read metadata from Pleiades imagery.
@@ -7,7 +6,7 @@
  * Author:   Dmitry Baryshnikov, polimax@mail.ru
  *
  ******************************************************************************
- * Copyright (c) 2014-2015 NextGIS <info@nextgis.ru>
+ * Copyright (c) 2014-2018 NextGIS <info@nextgis.ru>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -28,17 +27,33 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
 #include "reader_pleiades.h"
 
-CPL_CVSID("$Id: reader_pleiades.cpp 34367 2016-06-17 13:58:32Z rouault $");
+#include <cstddef>
+#include <cstdio>
+#include <cstring>
+#include <ctime>
+
+#include <string>
+
+#include "cpl_conv.h"
+#include "cpl_error.h"
+#include "cpl_minixml.h"
+#include "cpl_string.h"
+
+CPL_CVSID("$Id: reader_pleiades.cpp 13451aabc59c2e130ab2dd4998d8c61e139973ec 2018-06-23 23:34:04 +0300 Dmitry Baryshnikov $")
 
 /**
  * GDALMDReaderPleiades()
  */
 GDALMDReaderPleiades::GDALMDReaderPleiades(const char *pszPath,
-        char **papszSiblingFiles) : GDALMDReaderBase(pszPath, papszSiblingFiles)
+                                        char **papszSiblingFiles) :
+    GDALMDReaderBase(pszPath, papszSiblingFiles),
+    m_osBaseFilename( pszPath ),
+    m_osIMDSourceFilename( CPLString() ),
+    m_osRPBSourceFilename( CPLString() )
 {
-    m_osBaseFilename = pszPath;
     const char* pszBaseName = CPLGetBasename(pszPath);
     size_t nBaseNameLen = strlen(pszBaseName);
     if( nBaseNameLen < 4 || nBaseNameLen > 511 )
@@ -46,9 +61,9 @@ GDALMDReaderPleiades::GDALMDReaderPleiades(const char *pszPath,
 
     const char* pszDirName = CPLGetDirname(pszPath);
 
-    const char* pszIMDSourceFilename = CPLFormFilename( pszDirName,
+    CPLString osIMDSourceFilename = CPLFormFilename( pszDirName,
                                 CPLSPrintf("DIM_%s", pszBaseName + 4), "XML" );
-    const char* pszRPBSourceFilename = CPLFormFilename( pszDirName,
+    CPLString osRPBSourceFilename = CPLFormFilename( pszDirName,
                                 CPLSPrintf("RPC_%s", pszBaseName + 4), "XML" );
 
     // find last underline
@@ -63,40 +78,61 @@ GDALMDReaderPleiades::GDALMDReaderPleiades(const char *pszPath,
 
     sBaseName[nLastUnderline] = 0;
 
-    if (CPLCheckForFile((char*)pszIMDSourceFilename, papszSiblingFiles))
+    // Check if last 4 characters are fit in mask RjCj
+    unsigned int iRow, iCol;
+    bool bHasRowColPart = nBaseNameLen > nLastUnderline + 5U;
+    if(!bHasRowColPart || sscanf (pszBaseName + nLastUnderline + 5U, "R%uC%u",
+        &iRow, &iCol) != 2)
     {
-        m_osIMDSourceFilename = pszIMDSourceFilename;
+        CPLDebug( "MDReaderPleiades", "Not a Pleiades product" );
+        return;
+    }
+
+    if (CPLCheckForFile(&osIMDSourceFilename[0], papszSiblingFiles))
+    {
+        m_osIMDSourceFilename = osIMDSourceFilename;
     }
     else
     {
-        pszIMDSourceFilename = CPLFormFilename( pszDirName, CPLSPrintf("DIM_%s",
+        osIMDSourceFilename = CPLFormFilename( pszDirName, CPLSPrintf("DIM_%s",
                                                             sBaseName), "XML" );
-        if (CPLCheckForFile((char*)pszIMDSourceFilename, papszSiblingFiles))
+        if (CPLCheckForFile(&osIMDSourceFilename[0], papszSiblingFiles))
         {
-            m_osIMDSourceFilename = pszIMDSourceFilename;
+            m_osIMDSourceFilename = osIMDSourceFilename;
         }
     }
 
-    if (CPLCheckForFile((char*)pszRPBSourceFilename, papszSiblingFiles))
+    if (CPLCheckForFile(&osRPBSourceFilename[0], papszSiblingFiles))
     {
-        m_osRPBSourceFilename = pszRPBSourceFilename;
+        m_osRPBSourceFilename = osRPBSourceFilename;
     }
     else
     {
-        pszRPBSourceFilename = CPLFormFilename( pszDirName, CPLSPrintf("RPC_%s",
+        osRPBSourceFilename = CPLFormFilename( pszDirName, CPLSPrintf("RPC_%s",
                                                             sBaseName), "XML" );
-        if (CPLCheckForFile((char*)pszRPBSourceFilename, papszSiblingFiles))
+        if (CPLCheckForFile(&osRPBSourceFilename[0], papszSiblingFiles))
         {
-            m_osRPBSourceFilename = pszRPBSourceFilename;
+            m_osRPBSourceFilename = osRPBSourceFilename;
         }
     }
 
-    if( m_osIMDSourceFilename.size() )
+    if( !m_osIMDSourceFilename.empty() )
         CPLDebug( "MDReaderPleiades", "IMD Filename: %s",
                   m_osIMDSourceFilename.c_str() );
-    if( m_osRPBSourceFilename.size() )
+    if( !m_osRPBSourceFilename.empty() )
         CPLDebug( "MDReaderPleiades", "RPB Filename: %s",
                   m_osRPBSourceFilename.c_str() );
+}
+
+GDALMDReaderPleiades::GDALMDReaderPleiades() : GDALMDReaderBase(nullptr, nullptr)
+{
+}
+
+GDALMDReaderPleiades* GDALMDReaderPleiades::CreateReaderForRPC(const char* pszRPCSourceFilename)
+{
+    GDALMDReaderPleiades* poReader = new GDALMDReaderPleiades();
+    poReader->m_osRPBSourceFilename = pszRPCSourceFilename;
+    return poReader;
 }
 
 /**
@@ -124,7 +160,7 @@ bool GDALMDReaderPleiades::HasRequiredFiles() const
  */
 char** GDALMDReaderPleiades::GetMetadataFiles() const
 {
-    char **papszFileList = NULL;
+    char **papszFileList = nullptr;
     if(!m_osIMDSourceFilename.empty())
         papszFileList= CSLAddString( papszFileList, m_osIMDSourceFilename );
     if(!m_osRPBSourceFilename.empty())
@@ -145,11 +181,11 @@ void GDALMDReaderPleiades::LoadMetadata()
     {
         CPLXMLNode* psNode = CPLParseXMLFile(m_osIMDSourceFilename);
 
-        if(psNode != NULL)
+        if(psNode != nullptr)
         {
             CPLXMLNode* psisdNode = CPLSearchXMLNode(psNode, "=Dimap_Document");
 
-            if(psisdNode != NULL)
+            if(psisdNode != nullptr)
             {
                 m_papszIMDMD = ReadXMLToList(psisdNode->psChild, m_papszIMDMD);
             }
@@ -166,7 +202,7 @@ void GDALMDReaderPleiades::LoadMetadata()
 
     m_bIsMetadataLoad = true;
 
-    if(NULL == m_papszIMDMD)
+    if(nullptr == m_papszIMDMD)
     {
         return;
     }
@@ -175,7 +211,7 @@ void GDALMDReaderPleiades::LoadMetadata()
     int nCounter = -1;
     const char* pszSatId1 = CSLFetchNameValue(m_papszIMDMD,
                   "Dataset_Sources.Source_Identification.Strip_Source.MISSION");
-    if(NULL == pszSatId1)
+    if(nullptr == pszSatId1)
     {
         nCounter = 1;
         for(int i = 0; i < 5; i++)
@@ -183,12 +219,11 @@ void GDALMDReaderPleiades::LoadMetadata()
             pszSatId1 = CSLFetchNameValue(m_papszIMDMD,
             CPLSPrintf("Dataset_Sources.Source_Identification_%d.Strip_Source.MISSION",
                        nCounter));
-            if(NULL != pszSatId1)
+            if(nullptr != pszSatId1)
                 break;
             nCounter++;
         }
     }
-
 
     const char* pszSatId2;
     if(nCounter == -1)
@@ -199,24 +234,23 @@ void GDALMDReaderPleiades::LoadMetadata()
             "Dataset_Sources.Source_Identification_%d.Strip_Source.MISSION_INDEX",
             nCounter));
 
-    if(NULL != pszSatId1 && NULL != pszSatId2)
+    if(nullptr != pszSatId1 && nullptr != pszSatId2)
     {
         m_papszIMAGERYMD = CSLAddNameValue(m_papszIMAGERYMD,
                            MD_NAME_SATELLITE, CPLSPrintf( "%s %s",
                            CPLStripQuotes(pszSatId1).c_str(),
                            CPLStripQuotes(pszSatId2).c_str()));
     }
-    else if(NULL != pszSatId1 && NULL == pszSatId2)
+    else if(nullptr != pszSatId1 && nullptr == pszSatId2)
     {
         m_papszIMAGERYMD = CSLAddNameValue(m_papszIMAGERYMD,
                                 MD_NAME_SATELLITE, CPLStripQuotes(pszSatId1));
     }
-    else if(NULL == pszSatId1 && NULL != pszSatId2)
+    else if(nullptr == pszSatId1 && nullptr != pszSatId2)
     {
         m_papszIMAGERYMD = CSLAddNameValue(m_papszIMAGERYMD,
                                 MD_NAME_SATELLITE, CPLStripQuotes(pszSatId2));
     }
-
 
     const char* pszDate;
     if(nCounter == -1)
@@ -227,7 +261,7 @@ void GDALMDReaderPleiades::LoadMetadata()
              "Dataset_Sources.Source_Identification_%d.Strip_Source.IMAGING_DATE",
              nCounter));
 
-    if(NULL != pszDate)
+    if(nullptr != pszDate)
     {
         const char* pszTime;
         if(nCounter == -1)
@@ -238,7 +272,7 @@ void GDALMDReaderPleiades::LoadMetadata()
              "Dataset_Sources.Source_Identification_%d.Strip_Source.IMAGING_TIME",
              nCounter));
 
-        if(NULL == pszTime)
+        if(nullptr == pszTime)
             pszTime = "00:00:00.0Z";
 
         char buffer[80];
@@ -268,7 +302,7 @@ static const char * const apszRPBMap[] = {
     RPC_LAT_SCALE,  "RFM_Validity.LAT_SCALE",
     RPC_LONG_SCALE, "RFM_Validity.LONG_SCALE",
     RPC_HEIGHT_SCALE,   "RFM_Validity.HEIGHT_SCALE",
-    NULL,             NULL };
+    nullptr,             nullptr };
 
 static const char * const apszRPCTXT20ValItems[] =
 {
@@ -276,29 +310,29 @@ static const char * const apszRPCTXT20ValItems[] =
     RPC_LINE_DEN_COEFF,
     RPC_SAMP_NUM_COEFF,
     RPC_SAMP_DEN_COEFF,
-    NULL
+    nullptr
 };
 
 char** GDALMDReaderPleiades::LoadRPCXmlFile()
 {
     CPLXMLNode* pNode = CPLParseXMLFile(m_osRPBSourceFilename);
 
-    if(NULL == pNode)
-        return NULL;
+    if(nullptr == pNode)
+        return nullptr;
 
     // search Global_RFM
-    char** papszRawRPCList = NULL;
+    char** papszRawRPCList = nullptr;
     CPLXMLNode* pGRFMNode = CPLSearchXMLNode(pNode, "=Global_RFM");
 
-    if(pGRFMNode != NULL)
+    if(pGRFMNode != nullptr)
     {
         papszRawRPCList = ReadXMLToList(pGRFMNode->psChild, papszRawRPCList);
     }
 
-    if( NULL == papszRawRPCList )
+    if( nullptr == papszRawRPCList )
     {
         CPLDestroyXMLNode(pNode);
-        return NULL;
+        return nullptr;
     }
 
     // If we are not the top-left tile, then we must shift LINE_OFF and SAMP_OFF
@@ -309,7 +343,7 @@ char** GDALMDReaderPleiades::LoadRPCXmlFile()
         CPLString osKey;
         osKey.Printf("Raster_Data.Data_Access.Data_Files.Data_File_%d.DATA_FILE_PATH.href", i);
         const char* pszHref = CSLFetchNameValue(m_papszIMDMD, osKey);
-        if( pszHref == NULL )
+        if( pszHref == nullptr )
             break;
         if( strcmp( CPLGetFilename(pszHref), CPLGetFilename(m_osBaseFilename) ) == 0 )
         {
@@ -337,8 +371,8 @@ char** GDALMDReaderPleiades::LoadRPCXmlFile()
     }
 
     // format list
-    char** papszRPB = NULL;
-    for( int i = 0; apszRPBMap[i] != NULL; i += 2 )
+    char** papszRPB = nullptr;
+    for( int i = 0; apszRPBMap[i] != nullptr; i += 2 )
     {
         // Pleiades RPCs use "center of upper left pixel is 1,1" convention, convert to
         // Digital globe convention of "center of upper left pixel is 0,0".
@@ -364,7 +398,7 @@ char** GDALMDReaderPleiades::LoadRPCXmlFile()
     }
 
     // merge coefficients
-    for( int i = 0; apszRPCTXT20ValItems[i] != NULL; i++ )
+    for( int i = 0; apszRPCTXT20ValItems[i] != nullptr; i++ )
     {
         CPLString value;
         for( int j = 1; j < 21; j++ )
@@ -375,7 +409,7 @@ char** GDALMDReaderPleiades::LoadRPCXmlFile()
             // supplies geographic coordinates (lon, lat) and an altitude (alt)"""
             const char* pszValue = CSLFetchNameValue(papszRawRPCList,
                  CPLSPrintf("Inverse_Model.%s_%d", apszRPCTXT20ValItems[i], j));
-            if(NULL != pszValue)
+            if(nullptr != pszValue)
                 value = value + " " + CPLString(pszValue);
         }
         papszRPB = CSLAddNameValue(papszRPB, apszRPCTXT20ValItems[i], value);

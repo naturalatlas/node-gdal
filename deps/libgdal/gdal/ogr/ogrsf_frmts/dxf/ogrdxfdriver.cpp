@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrdxfdriver.cpp 32110 2015-12-10 17:19:40Z goatbar $
  *
  * Project:  DXF Translator
  * Purpose:  Implements OGRDXFDriver.
@@ -30,7 +29,7 @@
 #include "ogr_dxf.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrdxfdriver.cpp 32110 2015-12-10 17:19:40Z goatbar $");
+CPL_CVSID("$Id: ogrdxfdriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                       OGRDXFDriverIdentify()                         */
@@ -39,37 +38,37 @@ CPL_CVSID("$Id: ogrdxfdriver.cpp 32110 2015-12-10 17:19:40Z goatbar $");
 static int OGRDXFDriverIdentify( GDALOpenInfo* poOpenInfo )
 
 {
-    if( poOpenInfo->fpL == NULL || poOpenInfo->nHeaderBytes == 0 )
+    if( poOpenInfo->fpL == nullptr || poOpenInfo->nHeaderBytes == 0 )
         return FALSE;
     if( EQUAL(CPLGetExtension(poOpenInfo->pszFilename),"dxf") )
         return TRUE;
     const char* pszIter = (const char*)poOpenInfo->pabyHeader;
-    int bFoundZero = FALSE;
-    int i = 0;
-    for(i=0; pszIter[i]; i++)
+    bool bFoundZero = false;
+    int i = 0;  // Used after for.
+    for( ; pszIter[i]; i++ )
     {
         if( pszIter[i] == '0' )
         {
-            int j=i-1;
-            for(; j>=0; j--)
+            int j = i-1;  // Used after for.
+            for( ; j >= 0; j-- )
             {
                 if( pszIter[j] != ' ' )
                     break;
             }
             if( j < 0 || pszIter[j] == '\n'|| pszIter[j] == '\r' )
             {
-                bFoundZero = TRUE;
+                bFoundZero = true;
                 break;
             }
         }
     }
     if( !bFoundZero )
         return FALSE;
-    i ++;
+    i++;
     while( pszIter[i] == ' ' )
-        i ++;
+        i++;
     while( pszIter[i] == '\n' || pszIter[i] == '\r' )
-        i ++;
+        i++;
     if( !STARTS_WITH_CI(pszIter + i, "SECTION") )
         return FALSE;
     i += static_cast<int>(strlen("SECTION"));
@@ -84,14 +83,14 @@ static GDALDataset *OGRDXFDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
     if( !OGRDXFDriverIdentify(poOpenInfo) )
-        return NULL;
+        return nullptr;
 
-    OGRDXFDataSource   *poDS = new OGRDXFDataSource();
+    OGRDXFDataSource *poDS = new OGRDXFDataSource();
 
     if( !poDS->Open( poOpenInfo->pszFilename ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
@@ -115,7 +114,7 @@ static GDALDataset *OGRDXFDriverCreate( const char * pszName,
     else
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -126,7 +125,7 @@ static GDALDataset *OGRDXFDriverCreate( const char * pszName,
 void RegisterOGRDXF()
 
 {
-    if( GDALGetDriverByName( "DXF" ) != NULL )
+    if( GDALGetDriverByName( "DXF" ) != nullptr )
         return;
 
     GDALDriver  *poDriver = new GDALDriver();
@@ -148,6 +147,7 @@ void RegisterOGRDXF()
                                "<LayerCreationOptionList/>" );
 
     poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
+    poDriver->SetMetadataItem( GDAL_DCAP_FEATURE_STYLES, "YES" );
 
     poDriver->pfnOpen = OGRDXFDriverOpen;
     poDriver->pfnIdentify = OGRDXFDriverIdentify;

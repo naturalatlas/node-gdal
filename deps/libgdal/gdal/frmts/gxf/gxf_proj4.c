@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gxf_proj4.c 33720 2016-03-15 00:39:53Z goatbar $
+ * $Id: gxf_proj4.c 3b0bbf7a8a012d69a783ee1f9cfeb5c52b370021 2017-06-27 20:57:02Z Even Rouault $
  *
  * Project:  GXF Reader
  * Purpose:  Handle GXF to PROJ.4 projection transformation.
@@ -30,7 +30,7 @@
 
 #include "gxfopen.h"
 
-CPL_CVSID("$Id: gxf_proj4.c 33720 2016-03-15 00:39:53Z goatbar $");
+CPL_CVSID("$Id: gxf_proj4.c 3b0bbf7a8a012d69a783ee1f9cfeb5c52b370021 2017-06-27 20:57:02Z Even Rouault $")
 
 
 #define SAFE_strcat(x,y) snprintf(x + strlen(x),sizeof(x) - strlen(x), "%s", y)
@@ -75,15 +75,13 @@ char *GXFGetMapProjectionAsPROJ4( GXFHandle hGXF )
 {
     GXFInfo_t	*psGXF = (GXFInfo_t *) hGXF;
     char	**papszMethods = NULL;
-    char	szPROJ4[512];
+    char	szPROJ4[512] = { 0 };
 
 /* -------------------------------------------------------------------- */
 /*      If there was nothing in the file return "unknown".              */
 /* -------------------------------------------------------------------- */
     if( CSLCount(psGXF->papszMapProjection) < 2 )
         return( CPLStrdup( "unknown" ) );
-
-    szPROJ4[0] = '\0';
 
 /* -------------------------------------------------------------------- */
 /*      Parse the third line, looking for known projection methods.     */

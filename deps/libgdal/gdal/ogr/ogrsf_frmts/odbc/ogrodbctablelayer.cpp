@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrodbctablelayer.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRODBCTableLayer class, access to an existing table.
@@ -31,29 +30,23 @@
 #include "cpl_conv.h"
 #include "ogr_odbc.h"
 
-CPL_CVSID("$Id: ogrodbctablelayer.cpp 33713 2016-03-12 17:41:57Z goatbar $");
+CPL_CVSID("$Id: ogrodbctablelayer.cpp acf3639a36d153f78167a5ae85eb6d57319ce3d1 2018-03-09 14:00:24Z Even Rouault $")
 /************************************************************************/
 /*                          OGRODBCTableLayer()                         */
 /************************************************************************/
 
-OGRODBCTableLayer::OGRODBCTableLayer( OGRODBCDataSource *poDSIn )
-
+OGRODBCTableLayer::OGRODBCTableLayer( OGRODBCDataSource *poDSIn ) :
+    pszQuery(nullptr),
+    bHaveSpatialExtents(FALSE),
+    pszTableName(nullptr),
+    pszSchemaName(nullptr)
 {
     poDS = poDSIn;
-
-    pszQuery = NULL;
-
-    bUpdateAccess = TRUE;
-    bHaveSpatialExtents = FALSE;
-
     iNextShapeId = 0;
 
     nSRSId = -1;
 
-    poFeatureDefn = NULL;
-
-    pszTableName = NULL;
-    pszSchemaName = NULL;
+    poFeatureDefn = nullptr;
 }
 
 /************************************************************************/
@@ -81,7 +74,7 @@ CPLErr OGRODBCTableLayer::Initialize( const char *pszLayerName,
     CPLODBCSession *poSession = poDS->GetSession();
 
     CPLFree( pszFIDColumn );
-    pszFIDColumn = NULL;
+    pszFIDColumn = nullptr;
 
     SetDescription( pszLayerName );
 
@@ -91,7 +84,7 @@ CPLErr OGRODBCTableLayer::Initialize( const char *pszLayerName,
 /*      it is in the form <schema>.<tablename>                          */
 /* -------------------------------------------------------------------- */
     const char *pszDot = strstr(pszLayerName,".");
-    if( pszDot != NULL )
+    if( pszDot != nullptr )
     {
         pszTableName = CPLStrdup(pszDot + 1);
         pszSchemaName = CPLStrdup(pszLayerName);
@@ -107,7 +100,7 @@ CPLErr OGRODBCTableLayer::Initialize( const char *pszLayerName,
 /* -------------------------------------------------------------------- */
     CPLODBCStatement oGetKey( poSession );
 
-    if( oGetKey.GetPrimaryKeys( pszTableName, NULL, pszSchemaName )
+    if( oGetKey.GetPrimaryKeys( pszTableName, nullptr, pszSchemaName )
         && oGetKey.Fetch() )
     {
         pszFIDColumn = CPLStrdup(oGetKey.GetColData( 3 ));
@@ -115,7 +108,7 @@ CPLErr OGRODBCTableLayer::Initialize( const char *pszLayerName,
         if( oGetKey.Fetch() ) // more than one field in key!
         {
             CPLFree( pszFIDColumn );
-            pszFIDColumn = NULL;
+            pszFIDColumn = nullptr;
 
             CPLDebug( "OGR_ODBC", "Table %s has multiple primary key fields, "
                       "ignoring them all.", pszTableName );
@@ -126,8 +119,8 @@ CPLErr OGRODBCTableLayer::Initialize( const char *pszLayerName,
 /*      Have we been provided a geometry column?                        */
 /* -------------------------------------------------------------------- */
     CPLFree( pszGeomColumn );
-    if( pszGeomCol == NULL )
-        pszGeomColumn = NULL;
+    if( pszGeomCol == nullptr )
+        pszGeomColumn = nullptr;
     else
         pszGeomColumn = CPLStrdup( pszGeomCol );
 
@@ -137,7 +130,7 @@ CPLErr OGRODBCTableLayer::Initialize( const char *pszLayerName,
     CPLODBCStatement oGetCol( poSession );
     CPLErr eErr;
 
-    if( !oGetCol.GetColumns( pszTableName, NULL, pszSchemaName ) )
+    if( !oGetCol.GetColumns( pszTableName, nullptr, pszSchemaName ) )
         return CE_Failure;
 
     eErr = BuildFeatureDefn( pszLayerName, &oGetCol );
@@ -168,7 +161,7 @@ CPLErr OGRODBCTableLayer::Initialize( const char *pszLayerName,
 /* -------------------------------------------------------------------- */
 /*      If we got a geometry column, does it exist?  Is it binary?      */
 /* -------------------------------------------------------------------- */
-    if( pszGeomColumn != NULL )
+    if( pszGeomColumn != nullptr )
     {
         int iColumn = oGetCol.GetColId( pszGeomColumn );
         if( iColumn < 0 )
@@ -177,7 +170,7 @@ CPLErr OGRODBCTableLayer::Initialize( const char *pszLayerName,
                       "Column %s requested for geometry, but it does not exist.",
                       pszGeomColumn );
             CPLFree( pszGeomColumn );
-            pszGeomColumn = NULL;
+            pszGeomColumn = nullptr;
         }
         else
         {
@@ -186,7 +179,6 @@ CPLErr OGRODBCTableLayer::Initialize( const char *pszLayerName,
                 bGeomColumnWKB = TRUE;
         }
     }
-
 
     return CE_None;
 }
@@ -198,10 +190,10 @@ CPLErr OGRODBCTableLayer::Initialize( const char *pszLayerName,
 void OGRODBCTableLayer::ClearStatement()
 
 {
-    if( poStmt != NULL )
+    if( poStmt != nullptr )
     {
         delete poStmt;
-        poStmt = NULL;
+        poStmt = nullptr;
     }
 }
 
@@ -212,10 +204,36 @@ void OGRODBCTableLayer::ClearStatement()
 CPLODBCStatement *OGRODBCTableLayer::GetStatement()
 
 {
-    if( poStmt == NULL )
+    if( poStmt == nullptr )
         ResetStatement();
 
     return poStmt;
+}
+
+/************************************************************************/
+/*                      EscapeAndQuoteIdentifier()                      */
+/************************************************************************/
+
+static CPLString EscapeAndQuoteIdentifier(const CPLString& osStr)
+{
+    CPLString osRet; int num_dots = 0;
+    for( size_t i = 0; i < osStr.size(); i++ )
+    {
+        if( osStr[i] == '"' )
+        {
+            osRet += "\\\"";
+        }
+        else if (osStr[i] == '.' && num_dots == 0){
+            /* It's schema qualified, so first segment we assume is the schema and should be quoted separately */
+            osRet += "\".\"";
+            num_dots += 1;
+        }
+        else
+        {
+            osRet += osStr[i];
+        }
+    }
+    return '"' + osRet + '"';
 }
 
 /************************************************************************/
@@ -231,16 +249,16 @@ OGRErr OGRODBCTableLayer::ResetStatement()
 
     poStmt = new CPLODBCStatement( poDS->GetSession() );
     poStmt->Append( "SELECT * FROM " );
-    poStmt->Append( poFeatureDefn->GetName() );
+    poStmt->Append( EscapeAndQuoteIdentifier(poFeatureDefn->GetName()) );
 
     /* Append attribute query if we have it */
-    if( pszQuery != NULL )
+    if( pszQuery != nullptr )
         poStmt->Appendf( " WHERE %s", pszQuery );
 
     /* If we have a spatial filter, and per record extents, query on it */
-    if( m_poFilterGeom != NULL && bHaveSpatialExtents )
+    if( m_poFilterGeom != nullptr && bHaveSpatialExtents )
     {
-        if( pszQuery == NULL )
+        if( pszQuery == nullptr )
             poStmt->Append( " WHERE" );
         else
             poStmt->Append( " AND" );
@@ -257,7 +275,7 @@ OGRErr OGRODBCTableLayer::ResetStatement()
     else
     {
         delete poStmt;
-        poStmt = NULL;
+        poStmt = nullptr;
         return OGRERR_FAILURE;
     }
 }
@@ -280,7 +298,7 @@ void OGRODBCTableLayer::ResetReading()
 OGRFeature *OGRODBCTableLayer::GetFeature( GIntBig nFeatureId )
 
 {
-    if( pszFIDColumn == NULL )
+    if( pszFIDColumn == nullptr )
         return OGRODBCLayer::GetFeature( nFeatureId );
 
     ClearStatement();
@@ -289,14 +307,16 @@ OGRFeature *OGRODBCTableLayer::GetFeature( GIntBig nFeatureId )
 
     poStmt = new CPLODBCStatement( poDS->GetSession() );
     poStmt->Append( "SELECT * FROM " );
-    poStmt->Append( poFeatureDefn->GetName() );
-    poStmt->Appendf( " WHERE %s = " CPL_FRMT_GIB, pszFIDColumn, nFeatureId );
+    poStmt->Append( EscapeAndQuoteIdentifier(poFeatureDefn->GetName()) );
+    poStmt->Appendf( " WHERE %s = " CPL_FRMT_GIB,
+                     EscapeAndQuoteIdentifier(pszFIDColumn).c_str(),
+                     nFeatureId );
 
     if( !poStmt->ExecuteSQL() )
     {
         delete poStmt;
-        poStmt = NULL;
-        return NULL;
+        poStmt = nullptr;
+        return nullptr;
     }
 
     return GetNextRawFeature();
@@ -310,21 +330,20 @@ OGRErr OGRODBCTableLayer::SetAttributeFilter( const char *pszQueryIn )
 
 {
     CPLFree(m_pszAttrQueryString);
-    m_pszAttrQueryString = (pszQueryIn) ? CPLStrdup(pszQueryIn) : NULL;
+    m_pszAttrQueryString = (pszQueryIn) ? CPLStrdup(pszQueryIn) : nullptr;
 
-    if( (pszQueryIn == NULL && this->pszQuery == NULL)
-        || (pszQueryIn != NULL && this->pszQuery != NULL
-            && EQUAL(pszQueryIn,this->pszQuery)) )
+    if( (pszQueryIn == nullptr && pszQuery == nullptr)
+        || (pszQueryIn != nullptr && pszQuery != nullptr
+            && EQUAL(pszQueryIn, pszQuery)) )
         return OGRERR_NONE;
 
-    CPLFree( this->pszQuery );
-    this->pszQuery = (pszQueryIn != NULL ) ? CPLStrdup( pszQueryIn ) : NULL;
+    CPLFree( pszQuery );
+    pszQuery = pszQueryIn != nullptr ? CPLStrdup( pszQueryIn ) : nullptr;
 
     ClearStatement();
 
     return OGRERR_NONE;
 }
-
 
 /************************************************************************/
 /*                           TestCapability()                           */
@@ -352,14 +371,14 @@ int OGRODBCTableLayer::TestCapability( const char * pszCap )
 GIntBig OGRODBCTableLayer::GetFeatureCount( int bForce )
 
 {
-    if( m_poFilterGeom != NULL )
+    if( m_poFilterGeom != nullptr )
         return OGRODBCLayer::GetFeatureCount( bForce );
 
     CPLODBCStatement oStmt( poDS->GetSession() );
     oStmt.Append( "SELECT COUNT(*) FROM " );
-    oStmt.Append( poFeatureDefn->GetName() );
+    oStmt.Append( EscapeAndQuoteIdentifier(poFeatureDefn->GetName()) );
 
-    if( pszQuery != NULL )
+    if( pszQuery != nullptr )
         oStmt.Appendf( " WHERE %s", pszQuery );
 
     if( !oStmt.ExecuteSQL() || !oStmt.Fetch() )
@@ -388,18 +407,17 @@ OGRSpatialReference *OGRODBCTableLayer::GetSpatialRef()
     if( nSRSId == -2 )
     {
         PGconn          *hPGConn = poDS->GetPGConn();
-        PGresult        *hResult;
-        char            szCommand[1024];
 
         nSRSId = -1;
 
         poDS->SoftStartTransaction();
 
+        char szCommand[1024] = {};
         sprintf( szCommand,
                  "SELECT srid FROM geometry_columns "
                  "WHERE f_table_name = '%s'",
                  poFeatureDefn->GetName() );
-        hResult = PQexec(hPGConn, szCommand );
+        PGresult *hResult = PQexec(hPGConn, szCommand );
 
         if( hResult
             && PQresultStatus(hResult) == PGRES_TUPLES_OK

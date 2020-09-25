@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-#******************************************************************************
-#  $Id: s57tables.py 32444 2015-12-25 01:14:58Z goatbar $
+# ******************************************************************************
+#  $Id: s57tables.py a1094f6d2898cd840a8a296ab7e1734c641a0dac 2018-05-07 10:02:54 +1000 Ben Elliston $
 #
 #  Project:  S-57 OGR Translator
 #  Purpose:  Script to translate s57 .csv files into C code "data" statements.
 #  Author:   Frank Warmerdam, warmerdam@pobox.com
 #
-#******************************************************************************
+# ******************************************************************************
 #  Copyright (c) 2001, Frank Warmerdam
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
@@ -26,33 +26,26 @@
 #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #  DEALINGS IN THE SOFTWARE.
-#******************************************************************************
+# ******************************************************************************
 
 import os
-import string
 import sys
 
 # -----------------------------------------------------------------------------
 # EscapeLine - escape anything C-problematic in a line.
 # -----------------------------------------------------------------------------
 
-def EscapeLine( line ):
 
-    line_out = ''
-    for lchar in line:
-        if lchar == '"':
-            line_out += '\\"'
-        else:
-            line_out += lchar
-
-    return line_out
+def EscapeLine(ln):
+    return ln.replace('"', '\\"')
 
 # -----------------------------------------------------------------------------
 #
 
+
 if __name__ != '__main__':
-    print 'This module should only be used as a mainline.'
-    sys.exit( 1 )
+    print('This module should only be used as a mainline.')
+    sys.exit(1)
 
 if len(sys.argv) < 2:
     directory = os.environ['S57_CSV']
@@ -60,20 +53,18 @@ else:
     directory = sys.argv[1]
 
 
-print 'char *gpapszS57Classes[] = {'
-classes = open( directory + '/s57objectclasses.csv' ).readlines()
+print('char *gpapszS57Classes[] = {')
+classes = open(directory + '/s57objectclasses.csv').readlines()
 
 for line in classes:
-    print '"%s",' % EscapeLine(string.strip(line))
+    print('"%s",' % EscapeLine(line.strip()))
 
-print 'NULL };'
+print('NULL };')
 
-print 'char *gpapszS57attributes[] = {'
-classes = open( directory + '/s57attributes.csv' ).readlines()
+print('char *gpapszS57attributes[] = {')
+classes = open(directory + '/s57attributes.csv').readlines()
 
 for line in classes:
-    print '"%s",' % EscapeLine(string.strip(line))
+    print('"%s",' % EscapeLine(line.strip()))
 
-print 'NULL };'
-
-
+print('NULL };')

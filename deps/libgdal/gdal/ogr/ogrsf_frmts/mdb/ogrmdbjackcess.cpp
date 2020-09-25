@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrmdbjackcess.cpp 33102 2016-01-23 11:05:59Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMDBJavaEnv class.
@@ -28,11 +27,17 @@
  ****************************************************************************/
 
 #include "ogr_mdb.h"
+#include "cpl_multiproc.h"
 
-CPL_CVSID("$Id: ogrmdbjackcess.cpp 33102 2016-01-23 11:05:59Z rouault $");
+CPL_CVSID("$Id: ogrmdbjackcess.cpp d14a537a4324399712f4b822656d374341773cd3 2018-07-29 23:14:54 +0200 Even Rouault $")
 
-static JavaVM *jvm_static = NULL;
-static JNIEnv *env_static = NULL;
+#if JVM_LIB_DLOPEN
+#include <limits.h>
+#include <stdio.h>
+#endif
+
+static JavaVM *jvm_static = nullptr;
+static CPLMutex* hMutex = nullptr;
 
 /************************************************************************/
 /*                         OGRMDBJavaEnv()                              */
@@ -40,68 +45,6 @@ static JNIEnv *env_static = NULL;
 
 OGRMDBJavaEnv::OGRMDBJavaEnv()
 {
-    jvm = NULL;
-    env = NULL;
-    bCalledFromJava = FALSE;
-
-    byteArray_class = NULL;
-
-    file_class = NULL;
-    file_constructor = NULL;
-    database_class = NULL;
-    database_open = NULL;
-    database_close = NULL;
-    database_getTableNames = NULL;
-    database_getTable = NULL;
-
-    table_class = NULL;
-    table_getColumns = NULL;
-    table_iterator = NULL;
-    table_getRowCount = NULL;
-
-    column_class = NULL;
-    column_getName = NULL;
-    column_getType = NULL;
-    column_getLength = NULL;
-    column_isVariableLength = NULL;
-
-    datatype_class = NULL;
-    datatype_getValue = NULL;
-
-    list_class = NULL;
-    list_iterator = NULL;
-
-    set_class = NULL;
-    set_iterator = NULL;
-
-    map_class = NULL;
-    map_get = NULL;
-
-    iterator_class = NULL;
-    iterator_hasNext = NULL;
-    iterator_next = NULL;
-
-    object_class = NULL;
-    object_toString = NULL;
-    object_getClass = NULL;
-
-    boolean_class = NULL;
-    boolean_booleanValue = NULL;
-
-    byte_class = NULL;
-    byte_byteValue = NULL;
-
-    short_class = NULL;
-    short_shortValue = NULL;
-
-    integer_class = NULL;
-    integer_intValue = NULL;
-
-    float_class = NULL;
-    float_floatValue = NULL;
-
-    double_class = NULL;
-    double_doubleValue = NULL;
 }
 
 /************************************************************************/
@@ -149,7 +92,35 @@ OGRMDBJavaEnv::~OGRMDBJavaEnv()
     }
 }
 
-#define CHECK(x, y) do {x = y; if (!x) { CPLError(CE_Failure, CPLE_AppDefined, #y " failed"); return FALSE;} } while(0)
+#define CHECK(x, y) do {x = y; if (!x) { \
+      CPLError(CE_Failure, CPLE_AppDefined, #y " failed"); \
+      return FALSE;} } while( false )
+
+/************************************************************************/
+/*                         CleanupMutex()                               */
+/************************************************************************/
+
+void OGRMDBJavaEnv::CleanupMutex()
+{
+    if( hMutex ) 
+        CPLDestroyMutex(hMutex);
+    hMutex = nullptr;
+}
+
+/************************************************************************/
+/*                           InitIfNeeded()                             */
+/************************************************************************/
+
+int OGRMDBJavaEnv::InitIfNeeded()
+{
+    GIntBig nCurPID = CPLGetPID();
+    if( env == nullptr || bCalledFromJava || nLastPID != nCurPID )
+    {
+        nLastPID = nCurPID;
+        return Init();
+    }
+    return env != nullptr;
+}
 
 /************************************************************************/
 /*                              Init()                                  */
@@ -157,13 +128,74 @@ OGRMDBJavaEnv::~OGRMDBJavaEnv()
 
 int OGRMDBJavaEnv::Init()
 {
-    if (jvm_static == NULL)
+    CPLMutexHolderD(&hMutex);
+
+    jvm = nullptr;
+    env = nullptr;
+
+    if (jvm_static == nullptr)
     {
         JavaVM* vmBuf[1];
         jsize nVMs;
+        int ret = 0;
+
+#if JVM_LIB_DLOPEN
+#  if defined(__APPLE__) && defined(__MACH__)
+#    define SO_EXT "dylib"
+#  else
+#    define SO_EXT "so"
+#  endif
+        const char *jvmLibPtr = "libjvm." SO_EXT;
+        char jvmLib[PATH_MAX];
+
+        /* libjvm.so's location is hard to predict so
+           ${JAVA_HOME}/bin/java -XshowSettings is executed to find
+           its location. If JAVA_HOME is not set then java is executed
+           from the PATH instead. This is POSIX-compliant code. */
+        FILE *javaCmd = popen("\"${JAVA_HOME}${JAVA_HOME:+/bin/}java\" -XshowSettings 2>&1 | grep 'sun.boot.library.path'", "r");
+
+        if (javaCmd != nullptr)
+        {
+            char szTmp[PATH_MAX];
+            size_t javaCmdRead = fread(szTmp, 1, sizeof(szTmp), javaCmd);
+            ret = pclose(javaCmd);
+
+            if (ret == 0 && javaCmdRead >= 2)
+            {
+                /* Chomp the new line */
+                szTmp[javaCmdRead - 1] = '\0';
+                const char* pszPtr = strchr(szTmp, '=');
+                if( pszPtr )
+                {
+                    pszPtr ++;
+                    while( *pszPtr == ' ' )
+                        pszPtr ++;
+                    snprintf(jvmLib, sizeof(jvmLib), "%s/server/libjvm." SO_EXT, pszPtr);
+                    jvmLibPtr = jvmLib;
+                }
+            }
+        }
+
+        CPLDebug("MDB", "Trying %s", jvmLibPtr);
+        jint (*pfnJNI_GetCreatedJavaVMs)(JavaVM **, jsize, jsize *);
+        pfnJNI_GetCreatedJavaVMs = (jint (*)(JavaVM **, jsize, jsize *))
+            CPLGetSymbol(jvmLibPtr, "JNI_GetCreatedJavaVMs");
+
+        if (pfnJNI_GetCreatedJavaVMs == nullptr)
+        {
+            CPLDebug("MDB", "Cannot find JNI_GetCreatedJavaVMs function");
+            return FALSE;
+        }
+        else
+        {
+            ret = pfnJNI_GetCreatedJavaVMs(vmBuf, 1, &nVMs);
+        }
+#else
+        ret = JNI_GetCreatedJavaVMs(vmBuf, 1, &nVMs);
+#endif
 
         /* Are we already called from Java ? */
-        if (JNI_GetCreatedJavaVMs(vmBuf, 1, &nVMs) == JNI_OK && nVMs == 1)
+        if (ret == JNI_OK && nVMs == 1)
         {
             jvm = vmBuf[0];
             if (jvm->GetEnv((void **)&env, JNI_VERSION_1_2) == JNI_OK)
@@ -172,8 +204,8 @@ int OGRMDBJavaEnv::Init()
             }
             else
             {
-                jvm = NULL;
-                env = NULL;
+                jvm = nullptr;
+                env = nullptr;
             }
         }
         else
@@ -181,8 +213,8 @@ int OGRMDBJavaEnv::Init()
             JavaVMInitArgs args;
             JavaVMOption options[1];
             args.version = JNI_VERSION_1_2;
-            const char* pszClassPath = CPLGetConfigOption("CLASSPATH", NULL);
-            char* pszClassPathOption = NULL;
+            const char* pszClassPath = CPLGetConfigOption("CLASSPATH", nullptr);
+            char* pszClassPathOption = nullptr;
             if (pszClassPath)
             {
                 args.nOptions = 1;
@@ -194,26 +226,44 @@ int OGRMDBJavaEnv::Init()
                 args.nOptions = 0;
             args.ignoreUnrecognized = JNI_FALSE;
 
-            int ret = JNI_CreateJavaVM(&jvm, (void **)&env, &args);
+#if JVM_LIB_DLOPEN
+            jint (*pfnJNI_CreateJavaVM)(JavaVM **, void **, void *);
+            pfnJNI_CreateJavaVM = (jint (*)(JavaVM **, void **, void *))
+                CPLGetSymbol(jvmLibPtr, "JNI_CreateJavaVM");
+
+            if (pfnJNI_CreateJavaVM == nullptr)
+                return FALSE;
+            else
+                ret = pfnJNI_CreateJavaVM(&jvm, (void **)&env, &args);
+#else
+            ret = JNI_CreateJavaVM(&jvm, (void **)&env, &args);
+#endif
 
             CPLFree(pszClassPathOption);
 
-            if (ret != 0 || jvm == NULL || env == NULL)
+            if (ret != JNI_OK || jvm == nullptr || env == nullptr)
             {
                 CPLError(CE_Failure, CPLE_AppDefined, "JNI_CreateJavaVM failed (%d)", ret);
                 return FALSE;
             }
 
             jvm_static = jvm;
-            env_static = env;
         }
     }
     else
     {
         jvm = jvm_static;
-        env = env_static;
     }
-    if( env == NULL )
+
+    if( jvm == nullptr )
+        return FALSE;
+
+    if (jvm->GetEnv((void **)&env, JNI_VERSION_1_2) == JNI_EDETACHED )
+    {
+        jvm->AttachCurrentThread((void **)&env, nullptr);
+    }
+
+    if( env == nullptr )
         return FALSE;
 
     CHECK(byteArray_class, env->FindClass("[B"));
@@ -278,7 +328,6 @@ int OGRMDBJavaEnv::Init()
     return TRUE;
 }
 
-
 /************************************************************************/
 /*                       ExceptionOccurred()                             */
 /************************************************************************/
@@ -295,15 +344,12 @@ int OGRMDBJavaEnv::ExceptionOccurred()
     return FALSE;
 }
 
-
 /************************************************************************/
 /*                           OGRMDBDatabase()                           */
 /************************************************************************/
 
 OGRMDBDatabase::OGRMDBDatabase()
 {
-    env = NULL;
-    database = NULL;
 }
 
 /************************************************************************/
@@ -329,16 +375,16 @@ OGRMDBDatabase* OGRMDBDatabase::Open(OGRMDBJavaEnv* env, const char* pszName)
 {
     jstring jstr = env->env->NewStringUTF(pszName);
     jobject file = env->env->NewObject(env->file_class, env->file_constructor, jstr);
-    if (env->ExceptionOccurred()) return NULL;
-    env->env->ReleaseStringUTFChars(jstr, NULL);
+    if (env->ExceptionOccurred()) return nullptr;
+    env->env->ReleaseStringUTFChars(jstr, nullptr);
 
     jobject database = env->env->CallStaticObjectMethod(env->database_class, env->database_open, file, JNI_TRUE);
 
     env->env->DeleteLocalRef(file);
 
-    if (env->ExceptionOccurred()) return NULL;
-    if (database == NULL)
-        return NULL;
+    if (env->ExceptionOccurred()) return nullptr;
+    if (database == nullptr)
+        return nullptr;
 
     OGRMDBDatabase* poDB = new OGRMDBDatabase();
     poDB->env = env;
@@ -353,8 +399,8 @@ OGRMDBDatabase* OGRMDBDatabase::Open(OGRMDBJavaEnv* env, const char* pszName)
 
 int OGRMDBDatabase::FetchTableNames()
 {
-    if (env->bCalledFromJava)
-        env->Init();
+    if( !env->InitIfNeeded() )
+        return FALSE;
 
     jobject table_set = env->env->CallObjectMethod(database, env->database_getTableNames);
     if (env->ExceptionOccurred()) return FALSE;
@@ -386,16 +432,16 @@ int OGRMDBDatabase::FetchTableNames()
 
 OGRMDBTable* OGRMDBDatabase::GetTable(const char* pszTableName)
 {
-    if (env->bCalledFromJava)
-        env->Init();
+    if( !env->InitIfNeeded() )
+        return nullptr;
 
     jstring table_name_jstring = env->env->NewStringUTF(pszTableName);
     jobject table = env->env->CallObjectMethod(database, env->database_getTable, table_name_jstring);
-    if (env->ExceptionOccurred()) return NULL;
+    if (env->ExceptionOccurred()) return nullptr;
     env->env->DeleteLocalRef(table_name_jstring);
 
     if (!table)
-        return NULL;
+        return nullptr;
 
     jobject global_table = env->env->NewGlobalRef(table);
     env->env->DeleteLocalRef(table);
@@ -405,7 +451,7 @@ OGRMDBTable* OGRMDBDatabase::GetTable(const char* pszTableName)
     if (!poTable->FetchColumns())
     {
         delete poTable;
-        return NULL;
+        return nullptr;
     }
     return poTable;
 }
@@ -414,14 +460,10 @@ OGRMDBTable* OGRMDBDatabase::GetTable(const char* pszTableName)
 /*                           OGRMDBTable()                              */
 /************************************************************************/
 
-OGRMDBTable::OGRMDBTable(OGRMDBJavaEnv* envIn, OGRMDBDatabase* poDBIn, jobject tableIn, const char* pszTableName )
+OGRMDBTable::OGRMDBTable(OGRMDBJavaEnv* envIn, OGRMDBDatabase* poDBIn,
+                         jobject tableIn, const char* pszTableName ) :
+    env(envIn), poDB(poDBIn), table(tableIn), osTableName( pszTableName )
 {
-    this->env = envIn;
-    this->poDB = poDBIn;
-    this->table = tableIn;
-    osTableName = pszTableName;
-    table_iterator_obj = NULL;
-    row = NULL;
 }
 
 /************************************************************************/
@@ -430,12 +472,9 @@ OGRMDBTable::OGRMDBTable(OGRMDBJavaEnv* envIn, OGRMDBDatabase* poDBIn, jobject t
 
 OGRMDBTable::~OGRMDBTable()
 {
-    if (env)
+    if (env && env->InitIfNeeded())
     {
         //CPLDebug("MDB", "Freeing table %s", osTableName.c_str());
-        if (env->bCalledFromJava)
-            env->Init();
-
         int i;
         for(i=0;i<(int)apoColumnNameObjects.size();i++)
             env->env->DeleteGlobalRef(apoColumnNameObjects[i]);
@@ -452,8 +491,8 @@ OGRMDBTable::~OGRMDBTable()
 
 int OGRMDBTable::FetchColumns()
 {
-    if (env->bCalledFromJava)
-        env->Init();
+    if( !env->InitIfNeeded() )
+        return FALSE;
 
     jobject column_lists = env->env->CallObjectMethod(table, env->table_getColumns);
     if (env->ExceptionOccurred()) return FALSE;
@@ -495,7 +534,7 @@ int OGRMDBTable::FetchColumns()
         else
             apoColumnLengths.push_back(0);
 
-        //CPLDebug("MDB", "Column %s, type = %d", apoColumnNames[apoColumnNames.size()-1].c_str(), type);
+        //CPLDebug("MDB", "Column %s, type = %d", apoColumnNames.back().c_str(), type);
 
         env->env->DeleteLocalRef(column_type);
 
@@ -513,13 +552,13 @@ int OGRMDBTable::FetchColumns()
 
 void OGRMDBTable::ResetReading()
 {
-    if (env->bCalledFromJava)
-        env->Init();
+    if( !env->InitIfNeeded() )
+        return;
 
     env->env->DeleteGlobalRef(table_iterator_obj);
-    table_iterator_obj = NULL;
+    table_iterator_obj = nullptr;
     env->env->DeleteGlobalRef(row);
-    row = NULL;
+    row = nullptr;
 }
 
 /************************************************************************/
@@ -528,10 +567,10 @@ void OGRMDBTable::ResetReading()
 
 int OGRMDBTable::GetNextRow()
 {
-    if (env->bCalledFromJava)
-        env->Init();
+    if( !env->InitIfNeeded() )
+        return FALSE;
 
-    if (table_iterator_obj == NULL)
+    if (table_iterator_obj == nullptr)
     {
         table_iterator_obj = env->env->CallObjectMethod(table, env->table_iterator);
         if (env->ExceptionOccurred()) return FALSE;
@@ -542,7 +581,7 @@ int OGRMDBTable::GetNextRow()
             table_iterator_obj = global_table_iterator_obj;
         }
     }
-    if (table_iterator_obj == NULL)
+    if (table_iterator_obj == nullptr)
         return FALSE;
 
     if (!env->env->CallBooleanMethod(table_iterator_obj, env->iterator_hasNext))
@@ -552,12 +591,12 @@ int OGRMDBTable::GetNextRow()
     if (row)
     {
         env->env->DeleteGlobalRef(row);
-        row = NULL;
+        row = nullptr;
     }
 
     row = env->env->CallObjectMethod(table_iterator_obj, env->iterator_next);
     if (env->ExceptionOccurred()) return FALSE;
-    if (row == NULL)
+    if (row == nullptr)
         return FALSE;
 
     jobject global_row = env->env->NewGlobalRef(row);
@@ -573,11 +612,11 @@ int OGRMDBTable::GetNextRow()
 
 jobject OGRMDBTable::GetColumnVal(int iCol)
 {
-    if (row == NULL)
-        return NULL;
+    if (row == nullptr)
+        return nullptr;
 
     jobject val = env->env->CallObjectMethod(row, env->map_get, apoColumnNameObjects[iCol]);
-    if (env->ExceptionOccurred()) return NULL;
+    if (env->ExceptionOccurred()) return nullptr;
     return val;
 }
 
@@ -588,13 +627,13 @@ jobject OGRMDBTable::GetColumnVal(int iCol)
 char* OGRMDBTable::GetColumnAsString(int iCol)
 {
     jobject val = GetColumnVal(iCol);
-    if (!val) return NULL;
+    if (!val) return nullptr;
 
     jstring val_jstring = (jstring) env->env->CallObjectMethod(val, env->object_toString);
-    if (env->ExceptionOccurred()) return NULL;
+    if (env->ExceptionOccurred()) return nullptr;
     jboolean is_copy;
     const char* val_str = env->env->GetStringUTFChars(val_jstring, &is_copy);
-    char* dup_str = (val_str) ? CPLStrdup(val_str) : NULL;
+    char* dup_str = (val_str) ? CPLStrdup(val_str) : nullptr;
     env->env->ReleaseStringUTFChars(val_jstring, val_str);
     env->env->DeleteLocalRef(val_jstring);
 
@@ -658,17 +697,17 @@ GByte* OGRMDBTable::GetColumnAsBinary(int iCol, int* pnBytes)
     *pnBytes = 0;
 
     jobject val = GetColumnVal(iCol);
-    if (!val) return NULL;
+    if (!val) return nullptr;
 
     if (!env->env->IsInstanceOf(val, env->byteArray_class))
-        return NULL;
+        return nullptr;
 
     jbyteArray byteArray = (jbyteArray) val;
     *pnBytes = env->env->GetArrayLength(byteArray);
-    if (env->ExceptionOccurred()) return NULL;
+    if (env->ExceptionOccurred()) return nullptr;
     jboolean is_copy;
     jbyte* elts = env->env->GetByteArrayElements(byteArray, &is_copy);
-    if (env->ExceptionOccurred()) return NULL;
+    if (env->ExceptionOccurred()) return nullptr;
 
     GByte* pData = (GByte*)CPLMalloc(*pnBytes);
     memcpy(pData, elts, *pnBytes);
@@ -691,34 +730,34 @@ void OGRMDBTable::DumpTable()
     int nCols = static_cast<int>(apoColumnNames.size());
     while(GetNextRow())
     {
-        printf("Row = %d\n", iRow ++);
+        printf("Row = %d\n", iRow ++);/*ok*/
         for(int i=0;i<nCols;i++)
         {
-            printf("%s = ", apoColumnNames[i].c_str());
+            printf("%s = ", apoColumnNames[i].c_str());/*ok*/
             if (apoColumnTypes[i] == MDB_Float ||
                 apoColumnTypes[i] == MDB_Double)
             {
-                printf("%.15f\n", GetColumnAsDouble(i));
+                printf("%.15f\n", GetColumnAsDouble(i));/*ok*/
             }
             else if (apoColumnTypes[i] == MDB_Boolean ||
                      apoColumnTypes[i] == MDB_Byte ||
                      apoColumnTypes[i] == MDB_Short ||
                      apoColumnTypes[i] == MDB_Int)
             {
-                printf("%d\n", GetColumnAsInt(i));
+                printf("%d\n", GetColumnAsInt(i));/*ok*/
             }
             else if (apoColumnTypes[i] == MDB_Binary ||
                      apoColumnTypes[i] == MDB_OLE)
             {
                 int nBytes;
                 GByte* pData = GetColumnAsBinary(i, &nBytes);
-                printf("(%d bytes)\n", nBytes);
+                printf("(%d bytes)\n", nBytes);/*ok*/
                 CPLFree(pData);
             }
             else
             {
                 char* val = GetColumnAsString(i);
-                printf("'%s'\n", val);
+                printf("'%s'\n", val);/*ok*/
                 CPLFree(val);
             }
         }
@@ -749,8 +788,9 @@ int OGRMDBTable::GetColumnIndex(const char* pszColName, int bEmitErrorIfNotFound
 
 int OGRMDBTable::GetRowCount()
 {
-    if (env->bCalledFromJava)
-        env->Init();
+    if( !env->InitIfNeeded() )
+        return 0;
+
     int nRowCount = env->env->CallIntMethod(table, env->table_getRowCount);
     if (env->ExceptionOccurred()) return 0;
     return nRowCount;

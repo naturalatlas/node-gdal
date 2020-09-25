@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nitfdump.c 33757 2016-03-20 20:22:33Z goatbar $
+ * $Id: nitfdump.c 3b0bbf7a8a012d69a783ee1f9cfeb5c52b370021 2017-06-27 20:57:02Z Even Rouault $
  *
  * Project:  NITF Read/Write Library
  * Purpose:  Simple test mainline to dump info about NITF file.
@@ -35,7 +35,7 @@
 
 #include "ogr_api.h"
 
-CPL_CVSID("$Id: nitfdump.c 33757 2016-03-20 20:22:33Z goatbar $");
+CPL_CVSID("$Id: nitfdump.c 3b0bbf7a8a012d69a783ee1f9cfeb5c52b370021 2017-06-27 20:57:02Z Even Rouault $")
 
 static void DumpRPC( NITFImage *psImage, NITFRPC00BInfo *psRPC );
 static void DumpMetadata( const char *, const char *, char ** );
@@ -456,7 +456,7 @@ int main( int nArgc, char ** papszArgv )
                 printf( "  Location Table\n" );
                 for( i = 0; i < psImage->nLocCount; i++ )
                 {
-                    printf( "    LocName=%s, LocId=%d, Offset=%d, Size=%d\n",
+                    printf( "    LocName=%s, LocId=%d, Offset=%u, Size=%u\n",
                             GetLocationNameFromId(psImage->pasLocations[i].nLocId),
                             psImage->pasLocations[i].nLocId,
                             psImage->pasLocations[i].nLocOffset,
@@ -682,7 +682,7 @@ int main( int nArgc, char ** papszArgv )
                     printf( "  Location Table\n" );
                     for( i = 0; i < nLocCount; i++ )
                     {
-                        printf( "    LocName=%s, LocId=%d, Offset=%d, Size=%d\n",
+                        printf( "    LocName=%s, LocId=%d, Offset=%u, Size=%u\n",
                                 GetLocationNameFromId(pasLocations[i].nLocId),
                                 pasLocations[i].nLocId,
                                 pasLocations[i].nLocOffset,

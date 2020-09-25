@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: $
  *
  * Name:     georaster_rasterband.cpp
  * Project:  Oracle Spatial GeoRaster Driver
@@ -36,21 +35,24 @@
 #include "cpl_vsi.h"
 #include "cpl_error.h"
 
+CPL_CVSID("$Id: georaster_rasterband.cpp e13dcd4dc171dfeed63f912ba06b9374ce4f3bb2 2018-03-18 21:37:41Z Even Rouault $")
+
 //  ---------------------------------------------------------------------------
 //                                                        GeoRasterRasterBand()
 //  ---------------------------------------------------------------------------
 
 GeoRasterRasterBand::GeoRasterRasterBand( GeoRasterDataset *poGDS,
                                           int nBandIn,
-                                          int nLevel )
+                                          int nLevel,
+                                          GDALDataset* poJP2DatasetIn )
 {
     poDS                = (GDALDataset*) poGDS;
     poGeoRaster         = poGDS->poGeoRaster;
     this->nBand         = nBandIn;
     this->eDataType     = OWGetDataType( poGeoRaster->sCellDepth.c_str() );
     poColorTable        = new GDALColorTable();
-    poDefaultRAT        = NULL;
-    pszVATName          = NULL;
+    poDefaultRAT        = nullptr;
+    pszVATName          = nullptr;
     nRasterXSize        = poGeoRaster->nRasterColumns;
     nRasterYSize        = poGeoRaster->nRasterRows;
     nBlockXSize         = poGeoRaster->nColumnBlockSize;
@@ -58,11 +60,13 @@ GeoRasterRasterBand::GeoRasterRasterBand( GeoRasterDataset *poGDS,
     dfNoData            = 0.0;
     bValidStats         = false;
     nOverviewLevel      = nLevel;
-    papoOverviews       = NULL;
+    papoOverviews       = nullptr;
     nOverviewCount      = 0;
-    pahNoDataArray      = NULL;
+    pahNoDataArray      = nullptr;
     nNoDataArraySz      = 0;
     bHasNoDataArray     = false;
+   
+    poJP2Dataset        = poJP2DatasetIn;
 
     //  -----------------------------------------------------------------------
     //  Initialize overview list
@@ -76,7 +80,7 @@ GeoRasterRasterBand::GeoRasterRasterBand( GeoRasterDataset *poGDS,
         for( int i = 0; i < nOverviewCount; i++ )
         {
           papoOverviews[i] = new GeoRasterRasterBand(
-                (GeoRasterDataset*) poDS, nBand, i + 1 );
+                (GeoRasterDataset*) poDS, nBand, i + 1, poJP2Dataset );
         }
     }
 
@@ -105,7 +109,7 @@ GeoRasterRasterBand::GeoRasterRasterBand( GeoRasterDataset *poGDS,
 
     if( ( (GeoRasterDataset*) poDS)->bApplyNoDataArray )
     {
-        CPLList* psList = NULL;
+        CPLList* psList = nullptr;
         int nLayerCount = 0;
         int nObjCount = 0;
 
@@ -165,6 +169,7 @@ GeoRasterRasterBand::GeoRasterRasterBand( GeoRasterDataset *poGDS,
                      * Use the first value to assigned pixel values
                      * on method ApplyNoDataArray()
                      */
+                    
                     dfNoData = phItem->dfLower;
                 }
             }
@@ -182,7 +187,7 @@ GeoRasterRasterBand::~GeoRasterRasterBand()
 {
     delete poColorTable;
     delete poDefaultRAT;
-
+    
     CPLFree( pszVATName );
     CPLFree( pahNoDataArray );
 
@@ -205,6 +210,21 @@ CPLErr GeoRasterRasterBand::IReadBlock( int nBlockXOff,
                                         int nBlockYOff,
                                         void *pImage )
 {
+    if( poJP2Dataset )
+    {
+        int nXOff      = nBlockXOff * poGeoRaster->nColumnBlockSize;
+        int nYOff      = nBlockYOff * poGeoRaster->nRowBlockSize;
+        int nXSize     = poGeoRaster->nColumnBlockSize;
+        int nYSize     = poGeoRaster->nRowBlockSize;
+        int nBufXSize  = nBlockXSize;
+        int nBufYSize  = nBlockYSize;
+
+        return GDALDatasetRasterIO( poJP2Dataset, GF_Read,
+                    nXOff, nYOff, nXSize, nYSize, pImage, 
+                    nBufXSize, nBufYSize, eDataType,
+                    1, &nBand, 0, 0, 0 );
+    }
+
     if( poGeoRaster->GetDataBlock( nBand,
                                    nOverviewLevel,
                                    nBlockXOff,
@@ -236,6 +256,21 @@ CPLErr GeoRasterRasterBand::IWriteBlock( int nBlockXOff,
                                          int nBlockYOff,
                                          void *pImage )
 {
+    if( poJP2Dataset )
+    {
+        int nXOff      = nBlockXOff * poGeoRaster->nColumnBlockSize;
+        int nYOff      = nBlockYOff * poGeoRaster->nRowBlockSize;
+        int nXSize     = poGeoRaster->nColumnBlockSize;
+        int nYSize     = poGeoRaster->nRowBlockSize;
+        int nBufXSize  = nBlockXSize;
+        int nBufYSize  = nBlockYSize;
+
+        return GDALDatasetRasterIO( poJP2Dataset, GF_Write,
+                    nXOff, nYOff, nXSize, nYSize, pImage, 
+                    nBufXSize, nBufYSize, eDataType,
+                    1, &nBand, 0, 0, 0 );
+    }
+
     if( poGeoRaster->SetDataBlock( nBand,
                                    nOverviewLevel,
                                    nBlockXOff,
@@ -286,7 +321,7 @@ GDALColorInterp GeoRasterRasterBand::GetColorInterpretation()
             }
             else
             {
-                return GCI_GrayIndex;
+                return GCI_Undefined;
             }
         }
     }
@@ -311,7 +346,7 @@ GDALColorTable *GeoRasterRasterBand::GetColorTable()
 
     if( poColorTable->GetColorEntryCount() == 0 )
     {
-        return NULL;
+        return nullptr;
     }
 
     return poColorTable;
@@ -323,7 +358,7 @@ GDALColorTable *GeoRasterRasterBand::GetColorTable()
 
 CPLErr GeoRasterRasterBand::SetColorTable( GDALColorTable *poInColorTable )
 {
-    if( poInColorTable == NULL )
+    if( poInColorTable == nullptr )
     {
         return CE_None;
     }
@@ -518,7 +553,7 @@ CPLErr GeoRasterRasterBand::SetDefaultRAT( const GDALRasterAttributeTable *poRAT
     {
         delete poDefaultRAT;
 
-        poDefaultRAT = NULL;
+        poDefaultRAT = nullptr;
 
         return CE_None;
     }
@@ -569,7 +604,7 @@ CPLErr GeoRasterRasterBand::SetDefaultRAT( const GDALRasterAttributeTable *poRAT
     if( ! pszVATName )
     {
         pszVATName = CPLStrdup( CPLSPrintf(
-            "RAT_%s_%d_%d",
+            "RAT_%s_%lld_%d",
             poGeoRaster->sDataTable.c_str(),
             poGeoRaster->nRasterId,
             nBand ) );
@@ -641,7 +676,7 @@ CPLErr GeoRasterRasterBand::SetDefaultRAT( const GDALRasterAttributeTable *poRAT
                  (void*) VSIMalloc3(sizeof(double), sizeof(double), nEntryCount );
         }
     }
-
+    
     // ---------------------------
     // Load data to buffers
     // ---------------------------
@@ -681,7 +716,7 @@ CPLErr GeoRasterRasterBand::SetDefaultRAT( const GDALRasterAttributeTable *poRAT
     // ---------------------------
 
     CPLString osInsert = CPLSPrintf( "INSERT INTO %s VALUES (", pszVATName );
-
+    
     for( iCol = 0; iCol < ( nColunsCount + 1); iCol++ )
     {
         if( iCol > 0 )
@@ -699,7 +734,7 @@ CPLErr GeoRasterRasterBand::SetDefaultRAT( const GDALRasterAttributeTable *poRAT
     // ---------------------------
 
     poStmt->Bind((int*) papWriteFields[0]); // ID field
-
+    
     for(iCol = 0; iCol < nColunsCount; iCol++)
     {
         if( poRAT->GetTypeOfCol( iCol ) == GFT_String )
@@ -733,7 +768,7 @@ CPLErr GeoRasterRasterBand::SetDefaultRAT( const GDALRasterAttributeTable *poRAT
     {
         CPLFree( papWriteFields[iCol] );
     }
-
+    
     CPLFree( papWriteFields );
 
     delete poStmt;
@@ -764,18 +799,16 @@ GDALRasterAttributeTable *GeoRasterRasterBand::GetDefaultRAT()
 
     char* l_pszVATName = poGDS->poGeoRaster->GetVAT( nBand );
 
-    if( l_pszVATName == NULL )
+    if( l_pszVATName == nullptr )
     {
-        return NULL;
+        return nullptr;
     }
 
-    OCIParam* phDesc = NULL;
+    OCIParam* phDesc = poGDS->poGeoRaster->poConnection->GetDescription( l_pszVATName );
 
-    phDesc = poGDS->poGeoRaster->poConnection->GetDescription( l_pszVATName );
-
-    if( phDesc == NULL )
+    if( phDesc == nullptr )
     {
-        return NULL;
+        return nullptr;
     }
 
     // ----------------------------------------------------------
@@ -841,9 +874,7 @@ GDALRasterAttributeTable *GeoRasterRasterBand::GetDefaultRAT()
     // Read VAT and load RAT
     // ----------------------------------------------------------
 
-    OWStatement* poStmt = NULL;
-
-    poStmt = poGeoRaster->poConnection->CreateStatement( CPLSPrintf (
+    OWStatement* poStmt = poGeoRaster->poConnection->CreateStatement( CPLSPrintf (
         "SELECT %s FROM %s", szColumnList, l_pszVATName ) );
 
     char** papszValue = (char**) CPLMalloc( sizeof(char**) * iCol );
@@ -860,7 +891,7 @@ GDALRasterAttributeTable *GeoRasterRasterBand::GetDefaultRAT()
     {
         CPLError( CE_Failure, CPLE_AppDefined, "Error reading VAT %s",
             l_pszVATName );
-        return NULL;
+        return nullptr;
     }
 
     int iRow = 0;
@@ -906,7 +937,7 @@ GDALRasterBand* GeoRasterRasterBand::GetOverview( int nLevel )
     {
         return (GDALRasterBand*) papoOverviews[ nLevel ];
     }
-    return (GDALRasterBand*) NULL;
+    return (GDALRasterBand*) nullptr;
 }
 
 //  ---------------------------------------------------------------------------
@@ -931,12 +962,12 @@ GDALRasterBand* GeoRasterRasterBand::GetMaskBand()
 {
     GeoRasterDataset* poGDS = (GeoRasterDataset*) this->poDS;
 
-    if( poGDS->poMaskBand != NULL )
+    if( poGDS->poMaskBand != nullptr )
     {
         return (GDALRasterBand*) poGDS->poMaskBand;
     }
 
-    return (GDALRasterBand*) NULL;
+    return (GDALRasterBand*) nullptr;
 }
 
 //  ---------------------------------------------------------------------------
@@ -947,7 +978,7 @@ int GeoRasterRasterBand::GetMaskFlags()
 {
     GeoRasterDataset* poGDS = (GeoRasterDataset*) this->poDS;
 
-    if( poGDS->poMaskBand != NULL )
+    if( poGDS->poMaskBand != nullptr )
     {
         return GMF_PER_DATASET;
     }
@@ -959,7 +990,7 @@ int GeoRasterRasterBand::GetMaskFlags()
 //                                                            ApplyNoDataArry()
 //  ---------------------------------------------------------------------------
 
-void GeoRasterRasterBand::ApplyNoDataArry(void* pBuffer)
+void GeoRasterRasterBand::ApplyNoDataArry(void* pBuffer) const
 {
     int i = 0;
     int j = 0;

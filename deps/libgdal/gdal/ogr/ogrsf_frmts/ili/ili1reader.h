@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ili1reader.h 33713 2016-03-12 17:41:57Z goatbar $
+ * $Id: ili1reader.h 9ff6d46686d8c7c6b1b813179caebe45b0dea065 2018-04-02 16:59:04 +0200 Even Rouault $
  *
  * Project:  Interlis 1 Reader
  * Purpose:  Private Declarations for Reader code.
@@ -34,7 +34,7 @@
 
 class OGRILI1DataSource;
 
-class CPL_DLL IILI1Reader
+class IILI1Reader
 {
 public:
     virtual     ~IILI1Reader();

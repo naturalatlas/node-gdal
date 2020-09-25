@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogridbdriver.cpp 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRIDBDriver class.
@@ -31,7 +30,7 @@
 #include "ogr_idb.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogridbdriver.cpp 33714 2016-03-13 05:42:13Z goatbar $");
+CPL_CVSID("$Id: ogridbdriver.cpp ff8146d84de7cba8e09d212d5481ea7d2ede3e98 2017-06-27 20:47:31Z Even Rouault $")
 
 /************************************************************************/
 /*                            ~OGRIDBDriver()                            */

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrsuadriver.cpp 32110 2015-12-10 17:19:40Z goatbar $
  *
  * Project:  SUA Translator
  * Purpose:  Implements OGRSUADriver.
@@ -30,7 +29,7 @@
 #include "ogr_sua.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrsuadriver.cpp 32110 2015-12-10 17:19:40Z goatbar $");
+CPL_CVSID("$Id: ogrsuadriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 extern "C" void RegisterOGRSUA();
 
@@ -42,14 +41,14 @@ static GDALDataset *OGRSUADriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
     if( poOpenInfo->eAccess == GA_Update ||
-        poOpenInfo->fpL == NULL ||
+        poOpenInfo->fpL == nullptr ||
         !poOpenInfo->TryToIngest(10000) )
-        return NULL;
+        return nullptr;
 
-    int bIsSUA = ( strstr((const char*)poOpenInfo->pabyHeader, "\nTYPE=") != NULL &&
-            strstr((const char*)poOpenInfo->pabyHeader, "\nTITLE=") != NULL &&
-            (strstr((const char*)poOpenInfo->pabyHeader, "\nPOINT=") != NULL ||
-            strstr((const char*)poOpenInfo->pabyHeader, "\nCIRCLE ") != NULL));
+    int bIsSUA = ( strstr((const char*)poOpenInfo->pabyHeader, "\nTYPE=") != nullptr &&
+            strstr((const char*)poOpenInfo->pabyHeader, "\nTITLE=") != nullptr &&
+            (strstr((const char*)poOpenInfo->pabyHeader, "\nPOINT=") != nullptr ||
+            strstr((const char*)poOpenInfo->pabyHeader, "\nCIRCLE ") != nullptr));
     if( !bIsSUA )
     {
         /* Some files such http://soaringweb.org/Airspace/CZ/CZ_combined_2014_05_01.sua */
@@ -58,10 +57,10 @@ static GDALDataset *OGRSUADriverOpen( GDALOpenInfo* poOpenInfo )
         /* a candidate */
         int nLen = poOpenInfo->nHeaderBytes;
         if( nLen < 10000 )
-            return NULL;
+            return nullptr;
         /* Check the 'Airspace' word in the header */
-        if( strstr((const char*)poOpenInfo->pabyHeader, "Airspace") == NULL )
-            return NULL;
+        if( strstr((const char*)poOpenInfo->pabyHeader, "Airspace") == nullptr )
+            return nullptr;
         // Check that the header is at least UTF-8
         // but do not take into account partial UTF-8 characters at the end
         int nTruncated = 0;
@@ -74,18 +73,18 @@ static GDALDataset *OGRSUADriverOpen( GDALOpenInfo* poOpenInfo )
             nLen --;
             nTruncated ++;
             if( nTruncated == 7 )
-                return NULL;
+                return nullptr;
         }
         if( !CPLIsUTF8((const char*)poOpenInfo->pabyHeader, nLen) )
-            return NULL;
+            return nullptr;
         if( !poOpenInfo->TryToIngest(30000) )
-            return NULL;
-        bIsSUA = ( strstr((const char*)poOpenInfo->pabyHeader, "\nTYPE=") != NULL &&
-                   strstr((const char*)poOpenInfo->pabyHeader, "\nTITLE=") != NULL &&
-                   (strstr((const char*)poOpenInfo->pabyHeader, "\nPOINT=") != NULL ||
-                   strstr((const char*)poOpenInfo->pabyHeader, "\nCIRCLE ") != NULL) );
+            return nullptr;
+        bIsSUA = ( strstr((const char*)poOpenInfo->pabyHeader, "\nTYPE=") != nullptr &&
+                   strstr((const char*)poOpenInfo->pabyHeader, "\nTITLE=") != nullptr &&
+                   (strstr((const char*)poOpenInfo->pabyHeader, "\nPOINT=") != nullptr ||
+                   strstr((const char*)poOpenInfo->pabyHeader, "\nCIRCLE ") != nullptr) );
         if( !bIsSUA )
-            return NULL;
+            return nullptr;
     }
 
     OGRSUADataSource   *poDS = new OGRSUADataSource();
@@ -93,7 +92,7 @@ static GDALDataset *OGRSUADriverOpen( GDALOpenInfo* poOpenInfo )
     if( !poDS->Open( poOpenInfo->pszFilename ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
@@ -106,7 +105,7 @@ static GDALDataset *OGRSUADriverOpen( GDALOpenInfo* poOpenInfo )
 void RegisterOGRSUA()
 
 {
-    if( GDALGetDriverByName( "SUA" ) != NULL )
+    if( GDALGetDriverByName( "SUA" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();
@@ -125,4 +124,3 @@ void RegisterOGRSUA()
 
     GetGDALDriverManager()->RegisterDriver( poDriver );
 }
-

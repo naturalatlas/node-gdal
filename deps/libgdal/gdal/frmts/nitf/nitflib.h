@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: nitflib.h 33717 2016-03-14 06:29:14Z goatbar $
+ * $Id: nitflib.h d3a414fc105682de6bb8c1835b02ae78be2ec46f 2016-10-24 11:54:24Z Kurt Schwehr $
  *
  * Project:  NITF Read/Write Library
  * Purpose:  Main GDAL independent include file for NITF support.
@@ -125,7 +125,6 @@ typedef struct
   unsigned int     colorTableOffset;
   unsigned int     histogramTableOffset;
 } NITFColormapRecord;
-
 
 typedef struct {
     NITFFile  *psFile;
@@ -310,9 +309,9 @@ typedef enum {
 /*      RPC structure, and function to fill it.                         */
 /* -------------------------------------------------------------------- */
 typedef struct  {
-    int			SUCCESS;
+    int         SUCCESS;
 
-    double		ERR_BIAS;
+    double      ERR_BIAS;
     double      ERR_RAND;
 
     double      LINE_OFF;
@@ -333,6 +332,10 @@ typedef struct  {
     double      SAMP_DEN_COEFF[20];
 } NITFRPC00BInfo;
 
+char* NITFFormatRPC00BFromMetadata( char** papszRPC, int* pbPrecisionLoss );
+int NITFDeserializeRPC00B( const GByte* pabyTRE, NITFRPC00BInfo *psRPC,
+                           int bIsRPC00A  );
+
 int CPL_DLL NITFReadRPC00B( NITFImage *psImage, NITFRPC00BInfo * );
 int CPL_DLL NITFRPCGeoToImage(NITFRPC00BInfo *, double, double, double,
                               double *, double *);
@@ -341,46 +344,43 @@ int CPL_DLL NITFRPCGeoToImage(NITFRPC00BInfo *, double, double, double,
 /*      ICHIP structure, and function to fill it.                         */
 /* -------------------------------------------------------------------- */
 typedef struct {
-	int		XFRM_FLAG;
-	double	SCALE_FACTOR;
-	int		ANAMORPH_CORR;
-	int		SCANBLK_NUM;
+        int     XFRM_FLAG;
+        double  SCALE_FACTOR;
+        int     ANAMORPH_CORR;
+        int     SCANBLK_NUM;
 
-	double	OP_ROW_11;
-	double	OP_COL_11;
+        double  OP_ROW_11;
+        double  OP_COL_11;
 
-	double	OP_ROW_12;
-	double	OP_COL_12;
+        double  OP_ROW_12;
+        double  OP_COL_12;
 
-	double	OP_ROW_21;
-	double	OP_COL_21;
+        double  OP_ROW_21;
+        double  OP_COL_21;
 
-	double	OP_ROW_22;
-	double	OP_COL_22;
+        double  OP_ROW_22;
+        double  OP_COL_22;
 
-	double	FI_ROW_11;
-	double	FI_COL_11;
+        double  FI_ROW_11;
+        double  FI_COL_11;
 
-	double	FI_ROW_12;
-	double	FI_COL_12;
+        double  FI_ROW_12;
+        double  FI_COL_12;
 
-	double	FI_ROW_21;
-	double	FI_COL_21;
+        double  FI_ROW_21;
+        double  FI_COL_21;
 
-	double	FI_ROW_22;
-	double	FI_COL_22;
+        double  FI_ROW_22;
+        double  FI_COL_22;
 
-	int		FI_ROW;
-	int		FI_COL;
+        int     FI_ROW;
+        int     FI_COL;
 } NITFICHIPBInfo;
 
 int CPL_DLL NITFReadICHIPB( NITFImage *psImage, NITFICHIPBInfo * );
 
 double CPL_DLL
         NITF_WGS84_Geocentric_Latitude_To_Geodetic_Latitude( double dfLat );
-
-
-
 
 typedef struct
 {

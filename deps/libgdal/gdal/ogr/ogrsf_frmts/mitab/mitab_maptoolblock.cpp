@@ -1,5 +1,4 @@
 /**********************************************************************
- * $Id: mitab_maptoolblock.cpp,v 1.8 2010-07-07 19:00:15 aboudreault Exp $
  *
  * Name:     mitab_maptoollock.cpp
  * Project:  MapInfo TAB Read/Write library
@@ -29,58 +28,38 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
- **********************************************************************
- *
- * $Log: mitab_maptoolblock.cpp,v $
- * Revision 1.8  2010-07-07 19:00:15  aboudreault
- * Cleanup Win32 Compile Warnings (GDAL bug #2930)
- *
- * Revision 1.7  2006-11-28 18:49:08  dmorissette
- * Completed changes to split TABMAPObjectBlocks properly and produce an
- * optimal spatial index (bug 1585)
- *
- * Revision 1.6  2004/06/30 20:29:04  dmorissette
- * Fixed refs to old address danmo@videotron.ca
- *
- * Revision 1.5  2000/11/15 04:13:50  daniel
- * Fixed writing of TABMAPToolBlock to allocate a new block when full
- *
- * Revision 1.4  2000/02/28 17:03:30  daniel
- * Changed TABMAPBlockManager to TABBinBlockManager
- *
- * Revision 1.3  2000/01/15 22:30:44  daniel
- * Switch to MIT/X-Consortium OpenSource license
- *
- * Revision 1.2  1999/09/26 14:59:37  daniel
- * Implemented write support
- *
- * Revision 1.1  1999/09/16 02:39:17  daniel
- * Completed read support for most feature types
- *
  **********************************************************************/
 
+#include "cpl_port.h"
 #include "mitab.h"
+
+#include <cstddef>
+
+#include "cpl_conv.h"
+#include "cpl_error.h"
+#include "cpl_vsi.h"
+#include "mitab_priv.h"
+
+CPL_CVSID("$Id: mitab_maptoolblock.cpp fd5a52b3fb25239d417f2daed64aa6f8cbe38da9 2018-09-17 14:19:33 +0200 Even Rouault $")
 
 /*=====================================================================
  *                      class TABMAPToolBlock
  *====================================================================*/
 
-#define MAP_TOOL_HEADER_SIZE   8
+constexpr int MAP_TOOL_HEADER_SIZE = 8;
 
 /**********************************************************************
  *                   TABMAPToolBlock::TABMAPToolBlock()
  *
  * Constructor.
  **********************************************************************/
-TABMAPToolBlock::TABMAPToolBlock(TABAccess eAccessMode /*= TABRead*/):
-    TABRawBinBlock(eAccessMode, TRUE)
-{
-    m_nNextToolBlock = m_numDataBytes = 0;
-
-    m_numBlocksInChain = 1;  // Current block counts as 1
-
-    m_poBlockManagerRef = NULL;
-}
+TABMAPToolBlock::TABMAPToolBlock( TABAccess eAccessMode /*= TABRead*/ ) :
+    TABRawBinBlock(eAccessMode, TRUE),
+    m_numDataBytes(0),
+    m_nNextToolBlock(0),
+    m_numBlocksInChain(1),  // Current block counts as 1
+    m_poBlockManagerRef(nullptr)
+{}
 
 /**********************************************************************
  *                   TABMAPToolBlock::~TABMAPToolBlock()
@@ -88,7 +67,6 @@ TABMAPToolBlock::TABMAPToolBlock(TABAccess eAccessMode /*= TABRead*/):
  * Destructor.
  **********************************************************************/
 TABMAPToolBlock::~TABMAPToolBlock() {}
-
 
 /**********************************************************************
  *                   TABMAPToolBlock::EndOfChain()
@@ -124,13 +102,12 @@ int     TABMAPToolBlock::InitBlockFromData(GByte *pabyBuf,
                                            VSILFILE *fpSrc /* = NULL */,
                                            int nOffset /* = 0 */)
 {
-    int nStatus;
-
     /*-----------------------------------------------------------------
      * First of all, we must call the base class' InitBlockFromData()
      *----------------------------------------------------------------*/
-    nStatus = TABRawBinBlock::InitBlockFromData(pabyBuf, nBlockSize, nSizeUsed,
-                                                bMakeCopy, fpSrc, nOffset);
+    const int nStatus =
+        TABRawBinBlock::InitBlockFromData(pabyBuf, nBlockSize, nSizeUsed,
+                                          bMakeCopy, fpSrc, nOffset);
     if (nStatus != 0)
         return nStatus;
 
@@ -143,7 +120,7 @@ int     TABMAPToolBlock::InitBlockFromData(GByte *pabyBuf,
                  "InitBlockFromData(): Invalid Block Type: got %d expected %d",
                  m_nBlockType, TABMAP_TOOL_BLOCK);
         CPLFree(m_pabyBuf);
-        m_pabyBuf = NULL;
+        m_pabyBuf = nullptr;
         return -1;
     }
 
@@ -158,7 +135,7 @@ int     TABMAPToolBlock::InitBlockFromData(GByte *pabyBuf,
                  "TABMAPToolBlock::InitBlockFromData(): m_numDataBytes=%d incompatible with block size %d",
                  m_numDataBytes, nBlockSize);
         CPLFree(m_pabyBuf);
-        m_pabyBuf = NULL;
+        m_pabyBuf = nullptr;
         return -1;
     }
 
@@ -169,7 +146,7 @@ int     TABMAPToolBlock::InitBlockFromData(GByte *pabyBuf,
         CPLError(CE_Failure, CPLE_FileIO,
                  "InitBlockFromData(): self referencing block");
         CPLFree(m_pabyBuf);
-        m_pabyBuf = NULL;
+        m_pabyBuf = nullptr;
         return -1;
     }
 
@@ -196,9 +173,7 @@ int     TABMAPToolBlock::InitBlockFromData(GByte *pabyBuf,
  **********************************************************************/
 int     TABMAPToolBlock::CommitToFile()
 {
-    int nStatus = 0;
-
-    if ( m_pabyBuf == NULL )
+    if ( m_pabyBuf == nullptr )
     {
         CPLError(CE_Failure, CPLE_AssertionFailed,
                  "CommitToFile(): Block has not been initialized yet!");
@@ -218,10 +193,10 @@ int     TABMAPToolBlock::CommitToFile()
 
     WriteInt16(TABMAP_TOOL_BLOCK);    // Block type code
     CPLAssert(m_nSizeUsed >= MAP_TOOL_HEADER_SIZE && m_nSizeUsed < MAP_TOOL_HEADER_SIZE + 32768);
-    WriteInt16((GInt16)(m_nSizeUsed - MAP_TOOL_HEADER_SIZE)); // num. bytes used
+    WriteInt16(static_cast<GInt16>(m_nSizeUsed - MAP_TOOL_HEADER_SIZE)); // num. bytes used
     WriteInt32(m_nNextToolBlock);
 
-    nStatus = CPLGetLastErrorNo();
+    int nStatus = CPLGetLastErrorType() == CE_Failure ? -1 : 0;
 
     /*-----------------------------------------------------------------
      * OK, call the base class to write the block to disk.
@@ -282,7 +257,7 @@ int     TABMAPToolBlock::InitNewBlock(VSILFILE *fpSrc, int nBlockSize,
         WriteInt32(0);                 // Pointer to next tool block
     }
 
-    if (CPLGetLastErrorNo() != 0)
+    if (CPLGetLastErrorType() == CE_Failure)
         return -1;
 
     return 0;
@@ -309,8 +284,7 @@ void     TABMAPToolBlock::SetNextToolBlock(GInt32 nNextToolBlockAddress)
 void TABMAPToolBlock::SetMAPBlockManagerRef(TABBinBlockManager *poBlockMgr)
 {
     m_poBlockManagerRef = poBlockMgr;
-};
-
+}
 
 /**********************************************************************
  *                   TABMAPToolBlock::ReadBytes()
@@ -334,19 +308,21 @@ void TABMAPToolBlock::SetMAPBlockManagerRef(TABBinBlockManager *poBlockMgr)
  **********************************************************************/
 int     TABMAPToolBlock::ReadBytes(int numBytes, GByte *pabyDstBuf)
 {
-    int nStatus;
-
     if (m_pabyBuf &&
         m_nCurPos >= (m_numDataBytes+MAP_TOOL_HEADER_SIZE) &&
         m_nNextToolBlock > 0)
     {
-        if ( (nStatus=GotoByteInFile(m_nNextToolBlock)) != 0)
+        int nStatus = GotoByteInFile(m_nNextToolBlock);
+        if( nStatus != 0 )
         {
             // Failed.... an error has already been reported.
             return nStatus;
         }
 
         GotoByteInBlock(MAP_TOOL_HEADER_SIZE);  // Move pointer past header
+
+        // FIXME ? what about a corrupted tab file that would have more than
+        // 255 blocks
         m_numBlocksInChain++;
     }
 
@@ -375,6 +351,13 @@ int  TABMAPToolBlock::WriteBytes(int nBytesToWrite, const GByte *pabySrcBuf)
     if (m_eAccess == TABWrite && m_poBlockManagerRef &&
         (m_nBlockSize - m_nCurPos) < nBytesToWrite)
     {
+        if( m_numBlocksInChain >= 255 )
+        {
+            CPLError(CE_Failure, CPLE_NotSupported,
+                     "Maximum number of 255 tool blocks reached");
+            return -1;
+        }
+
         int nNewBlockOffset = m_poBlockManagerRef->AllocNewBlock("TOOL");
         SetNextToolBlock(nNewBlockOffset);
 
@@ -420,11 +403,17 @@ int  TABMAPToolBlock::CheckAvailableSpace(int nToolType)
         nBytesToWrite = 13;
         break;
       default:
-        CPLAssert(FALSE);
+        CPLAssert(false);
     }
 
     if (GetNumUnusedBytes() < nBytesToWrite)
     {
+        if( m_numBlocksInChain >= 255 )
+        {
+            CPLError(CE_Failure, CPLE_NotSupported,
+                     "Maximum number of 255 tool blocks reached");
+            return -1;
+        }
         int nNewBlockOffset = m_poBlockManagerRef->AllocNewBlock("TOOL");
         SetNextToolBlock(nNewBlockOffset);
 
@@ -441,9 +430,6 @@ int  TABMAPToolBlock::CheckAvailableSpace(int nToolType)
     return 0;
 }
 
-
-
-
 /**********************************************************************
  *                   TABMAPToolBlock::Dump()
  *
@@ -453,11 +439,11 @@ int  TABMAPToolBlock::CheckAvailableSpace(int nToolType)
 
 void TABMAPToolBlock::Dump(FILE *fpOut /*=NULL*/)
 {
-    if (fpOut == NULL)
+    if (fpOut == nullptr)
         fpOut = stdout;
 
     fprintf(fpOut, "----- TABMAPToolBlock::Dump() -----\n");
-    if (m_pabyBuf == NULL)
+    if (m_pabyBuf == nullptr)
     {
         fprintf(fpOut, "Block has not been initialized yet.");
     }

@@ -1,4 +1,5 @@
 /******************************************************************************
+ * $Id: gdal_simplesurf.h fe2d81c8819bf9794bce0210098e637565728350 2018-05-06 00:49:51 +0200 Even Rouault $
  * Project:  GDAL
  * Purpose:  Correlator
  * Author:   Andrew Migal, migal.drew@gmail.com
@@ -76,6 +77,7 @@ public:
     GDALFeaturePoint(int nX, int nY, int nScale, int nRadius, int nSign);
     virtual ~GDALFeaturePoint();
 
+    /** Assignment operator */
     GDALFeaturePoint& operator=(const GDALFeaturePoint& point);
 
     /**
@@ -89,7 +91,7 @@ public:
      */
     double& operator[](int nIndex);
 
-    // Descriptor length
+    /** Descriptor length */
     static const int DESC_SIZE = 64;
 
     /**
@@ -97,7 +99,7 @@ public:
      *
      * @return X-coordinate in pixels
      */
-    int GetX();
+    int GetX() const;
 
     /**
      * Set X coordinate of point
@@ -111,7 +113,7 @@ public:
      *
      * @return Y-coordinate in pixels.
      */
-    int  GetY();
+    int GetY() const;
 
     /**
      * Set Y coordinate of point.
@@ -125,7 +127,7 @@ public:
      *
      * @return Scale for this point.
      */
-    int  GetScale();
+    int GetScale() const ;
 
     /**
      * Set scale of point.
@@ -139,7 +141,7 @@ public:
      *
      * @return Radius for this point.
      */
-    int  GetRadius();
+    int  GetRadius() const;
 
     /**
      * Set radius of point.
@@ -153,7 +155,7 @@ public:
      *
      * @return Sign for this point.
      */
-    int  GetSign();
+    int GetSign() const;
 
     /**
      * Set sign of point.
@@ -185,6 +187,8 @@ private:
  */
 class GDALIntegralImage
 {
+    CPL_DISALLOW_COPY_ASSIGN(GDALIntegralImage)
+
 public:
     GDALIntegralImage();
     virtual ~GDALIntegralImage();
@@ -258,9 +262,9 @@ public:
     int GetWidth();
 
 private:
-    double **pMatrix;
-    int nWidth;
-    int nHeight;
+    double **pMatrix = nullptr;
+    int nWidth = 0;
+    int nHeight = 0;
 };
 
 /**
@@ -273,6 +277,8 @@ private:
  */
 class GDALOctaveLayer
 {
+    CPL_DISALLOW_COPY_ASSIGN(GDALOctaveLayer)
+
 public:
     GDALOctaveLayer();
 
@@ -340,6 +346,8 @@ public:
  */
 class GDALOctaveMap
 {
+    CPL_DISALLOW_COPY_ASSIGN( GDALOctaveMap )
+
 public:
     /**
      * Create octave space. Octave numbers are start with one. (1, 2, 3, 4, ... )
@@ -375,7 +383,7 @@ public:
      *
      * @return TRUE if candidate was evaluated as feature point or FALSE otherwise.
      */
-    bool PointIsExtremum(int row, int col, GDALOctaveLayer *bot,
+    static bool PointIsExtremum(int row, int col, GDALOctaveLayer *bot,
                          GDALOctaveLayer *mid, GDALOctaveLayer *top, double threshold);
 
     /**
@@ -420,17 +428,15 @@ private:
     class MatchedPointPairInfo
     {
     public:
-        MatchedPointPairInfo(int nInd_1, int nInd_2, double dfDist)
-            {
-                ind_1 = nInd_1;
-                ind_2 = nInd_2;
-                euclideanDist = dfDist;
-            }
+        MatchedPointPairInfo(int nInd_1, int nInd_2, double dfDist):
+            ind_1(nInd_1), ind_2(nInd_2), euclideanDist(dfDist) {}
 
         int ind_1;
         int ind_2;
         double euclideanDist;
     };
+
+    CPL_DISALLOW_COPY_ASSIGN( GDALSimpleSURF )
 
 public:
     /**
@@ -501,7 +507,7 @@ public:
      * Find corresponding points (equal points in two collections).
      *
      * @param poMatchPairs Resulting collection for matched points
-     * @param poSecondCollect Points on the first image
+     * @param poFirstCollect Points on the first image
      * @param poSecondCollect Points on the second image
      * @param dfThreshold Value from 0 to 1. Threshold affects to number of
      * matched points. If threshold is lower, amount of corresponding
@@ -541,14 +547,12 @@ private:
      * @param poPoint Feature point instance
      * @param poImg image where feature point was found
      */
-    void SetDescriptor(GDALFeaturePoint *poPoint, GDALIntegralImage *poImg);
-
+    static void SetDescriptor(GDALFeaturePoint *poPoint, GDALIntegralImage *poImg);
 
 private:
     int octaveStart;
     int octaveEnd;
     GDALOctaveMap *poOctMap;
 };
-
 
 #endif /* GDALSIMPLESURF_H_ */

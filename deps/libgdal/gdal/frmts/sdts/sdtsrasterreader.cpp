@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: sdtsrasterreader.cpp 31332 2015-11-03 17:34:39Z goatbar $
  *
  * Project:  SDTS Translator
  * Purpose:  Implementation of SDTSRasterReader class.
@@ -32,7 +31,7 @@
 
 #include <algorithm>
 
-CPL_CVSID("$Id: sdtsrasterreader.cpp 31332 2015-11-03 17:34:39Z goatbar $");
+CPL_CVSID("$Id: sdtsrasterreader.cpp 1d00777992650359787f9a0d393afbd596f5d2a5 2018-01-15 14:47:44Z Even Rouault $")
 
 /************************************************************************/
 /*                          SDTSRasterReader()                          */
@@ -47,6 +46,11 @@ SDTSRasterReader::SDTSRasterReader() :
     nYStart(0)
 {
     strcpy( szINTR, "CE" );
+    memset( szModule, 0, sizeof(szModule) );
+    memset( adfTransform, 0, sizeof(adfTransform) );
+    memset( szFMT, 0, sizeof(szFMT) );
+    memset( szUNITS, 0, sizeof(szUNITS) );
+    memset( szLabel, 0, sizeof(szLabel) );
 }
 
 /************************************************************************/
@@ -76,8 +80,7 @@ int SDTSRasterReader::Open( SDTS_CATD * poCATD, SDTS_IREF * poIREF,
                             const char * pszModule )
 
 {
-    strncpy( szModule, pszModule, sizeof(szModule) );
-    szModule[sizeof(szModule) - 1] = '\0';
+    snprintf( szModule, sizeof(szModule), "%s", pszModule );
 
 /* ==================================================================== */
 /*      Search the LDEF module for the requested cell module.           */
@@ -86,7 +89,7 @@ int SDTSRasterReader::Open( SDTS_CATD * poCATD, SDTS_IREF * poIREF,
 /* -------------------------------------------------------------------- */
 /*      Open the LDEF module, and report failure if it is missing.      */
 /* -------------------------------------------------------------------- */
-    if( poCATD->GetModuleFilePath("LDEF") == NULL )
+    if( poCATD->GetModuleFilePath("LDEF") == nullptr )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Can't find LDEF entry in CATD module ... "
@@ -101,20 +104,20 @@ int SDTSRasterReader::Open( SDTS_CATD * poCATD, SDTS_IREF * poIREF,
 /* -------------------------------------------------------------------- */
 /*      Read each record, till we find what we want.                    */
 /* -------------------------------------------------------------------- */
-    DDFRecord *poRecord;
-    while( (poRecord = oLDEF.ReadRecord() ) != NULL )
+    DDFRecord *poRecord = nullptr;
+    while( (poRecord = oLDEF.ReadRecord() ) != nullptr )
     {
         const char* pszCandidateModule = poRecord->GetStringSubfield("LDEF",0,"CMNM",0);
-        if( pszCandidateModule == NULL )
+        if( pszCandidateModule == nullptr )
         {
-            poRecord = NULL;
+            poRecord = nullptr;
             break;
         }
         if( EQUAL(pszCandidateModule, pszModule) )
             break;
     }
 
-    if( poRecord == NULL )
+    if( poRecord == nullptr )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Can't find module `%s' in LDEF file.\n",
@@ -136,14 +139,14 @@ int SDTSRasterReader::Open( SDTS_CATD * poCATD, SDTS_IREF * poIREF,
 /*      support top left and center.                                    */
 /* -------------------------------------------------------------------- */
     const char* pszINTR = poRecord->GetStringSubfield(  "LDEF", 0, "INTR", 0 );
-    if( pszINTR == NULL )
+    if( pszINTR == nullptr )
     {
         CPLError( CE_Failure, CPLE_AppDefined, "Can't find INTR subfield of LDEF field" );
         return FALSE;
     }
-    strcpy( szINTR, pszINTR );
+    snprintf( szINTR, sizeof(szINTR), "%s", pszINTR );
     if( EQUAL(szINTR,"") )
-        strcpy( szINTR, "CE" );
+        snprintf( szINTR, sizeof(szINTR), "%s", "CE" );
 
     if( !EQUAL(szINTR,"CE") && !EQUAL(szINTR,"TL") )
     {
@@ -151,7 +154,7 @@ int SDTSRasterReader::Open( SDTS_CATD * poCATD, SDTS_IREF * poIREF,
                   "Unsupported INTR value of `%s', assume CE.\n"
                   "Positions may be off by one pixel.\n",
                   szINTR );
-        strcpy( szINTR, "CE" );
+        snprintf( szINTR, sizeof(szINTR), "%s", "CE" );
     }
 
 /* -------------------------------------------------------------------- */
@@ -169,7 +172,7 @@ int SDTSRasterReader::Open( SDTS_CATD * poCATD, SDTS_IREF * poIREF,
 /* -------------------------------------------------------------------- */
 /*      Open the RSDF module, and report failure if it is missing.      */
 /* -------------------------------------------------------------------- */
-    if( poCATD->GetModuleFilePath("RSDF") == NULL )
+    if( poCATD->GetModuleFilePath("RSDF") == nullptr )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Can't find RSDF entry in CATD module ... "
@@ -184,13 +187,13 @@ int SDTSRasterReader::Open( SDTS_CATD * poCATD, SDTS_IREF * poIREF,
 /* -------------------------------------------------------------------- */
 /*      Read each record, till we find what we want.                    */
 /* -------------------------------------------------------------------- */
-    while( (poRecord = oRSDF.ReadRecord() ) != NULL )
+    while( (poRecord = oRSDF.ReadRecord() ) != nullptr )
     {
         if( poRecord->GetIntSubfield("LYID",0,"RCID",0) == nLDEF_RCID )
             break;
     }
 
-    if( poRecord == NULL )
+    if( poRecord == nullptr )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Can't find LDEF:%d record in RSDF file.\n",
@@ -202,7 +205,7 @@ int SDTSRasterReader::Open( SDTS_CATD * poCATD, SDTS_IREF * poIREF,
 /*      Establish the raster pixel/line to georef transformation.       */
 /* -------------------------------------------------------------------- */
 
-    if( poRecord->FindField( "SADR" ) == NULL )
+    if( poRecord->FindField( "SADR" ) == nullptr )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Can't find SADR field in RSDF record.\n" );
@@ -232,7 +235,7 @@ int SDTSRasterReader::Open( SDTS_CATD * poCATD, SDTS_IREF * poIREF,
 /*      Verify some other assumptions.                                  */
 /* -------------------------------------------------------------------- */
     const char *pszString = poRecord->GetStringSubfield( "RSDF", 0, "OBRP", 0);
-    if( pszString == NULL )
+    if( pszString == nullptr )
         pszString = "";
     if( !EQUAL(pszString, "G2") )
     {
@@ -243,7 +246,7 @@ int SDTSRasterReader::Open( SDTS_CATD * poCATD, SDTS_IREF * poIREF,
     }
 
     pszString = poRecord->GetStringSubfield( "RSDF", 0, "SCOR", 0);
-    if( pszString == NULL )
+    if( pszString == nullptr )
         pszString = "";
     if( !EQUAL(pszString,"TL") )
     {
@@ -273,7 +276,7 @@ int SDTSRasterReader::Open( SDTS_CATD * poCATD, SDTS_IREF * poIREF,
 /* -------------------------------------------------------------------- */
 /*      Open the DDSH module, and report failure if it is missing.      */
 /* -------------------------------------------------------------------- */
-    if( poCATD->GetModuleFilePath("DDSH") == NULL )
+    if( poCATD->GetModuleFilePath("DDSH") == nullptr )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Can't find DDSH entry in CATD module ... "
@@ -288,19 +291,19 @@ int SDTSRasterReader::Open( SDTS_CATD * poCATD, SDTS_IREF * poIREF,
 /* -------------------------------------------------------------------- */
 /*      Read each record, till we find what we want.                    */
 /* -------------------------------------------------------------------- */
-    while( (poRecord = oDDSH.ReadRecord() ) != NULL )
+    while( (poRecord = oDDSH.ReadRecord() ) != nullptr )
     {
         const char* pszName = poRecord->GetStringSubfield("DDSH",0,"NAME",0);
-        if( pszName == NULL )
+        if( pszName == nullptr )
         {
-            poRecord = NULL;
+            poRecord = nullptr;
             break;
         }
         if( EQUAL(pszName,pszModule) )
             break;
     }
 
-    if( poRecord == NULL )
+    if( poRecord == nullptr )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Can't find DDSH record for %s.\n",
@@ -311,25 +314,31 @@ int SDTSRasterReader::Open( SDTS_CATD * poCATD, SDTS_IREF * poIREF,
 /* -------------------------------------------------------------------- */
 /*      Get some values we are interested in.                           */
 /* -------------------------------------------------------------------- */
-    if( poRecord->GetStringSubfield("DDSH",0,"FMT",0) != NULL )
-        strcpy( szFMT, poRecord->GetStringSubfield("DDSH",0,"FMT",0) );
+    if( poRecord->GetStringSubfield("DDSH",0,"FMT",0) != nullptr )
+        snprintf( szFMT, sizeof(szFMT), "%s", poRecord->GetStringSubfield("DDSH",0,"FMT",0) );
     else
-        strcpy( szFMT, "BUI16" );
+        snprintf( szFMT, sizeof(szFMT), "%s", "BI16" );
+    if( !EQUAL(szFMT, "BI16") && !EQUAL(szFMT, "BFP32") )
+    {
+        CPLError( CE_Failure, CPLE_AppDefined,
+                  "Unhandled FMT=%s", szFMT );
+        return FALSE;
+    }
 
-    if( poRecord->GetStringSubfield("DDSH",0,"UNIT",0) != NULL )
-        strcpy( szUNITS, poRecord->GetStringSubfield("DDSH",0,"UNIT",0) );
+    if( poRecord->GetStringSubfield("DDSH",0,"UNIT",0) != nullptr )
+        snprintf( szUNITS, sizeof(szUNITS), "%s", poRecord->GetStringSubfield("DDSH",0,"UNIT",0) );
     else
-        strcpy( szUNITS, "METERS" );
+        snprintf( szUNITS, sizeof(szUNITS), "%s", "METERS" );
 
-    if( poRecord->GetStringSubfield("DDSH",0,"ATLB",0) != NULL )
-        strcpy( szLabel, poRecord->GetStringSubfield("DDSH",0,"ATLB",0) );
+    if( poRecord->GetStringSubfield("DDSH",0,"ATLB",0) != nullptr )
+        snprintf( szLabel, sizeof(szLabel), "%s", poRecord->GetStringSubfield("DDSH",0,"ATLB",0) );
     else
         strcpy( szLabel, "" );
 
 /* -------------------------------------------------------------------- */
 /*      Open the cell file.                                             */
 /* -------------------------------------------------------------------- */
-    return( oDDFModule.Open( poCATD->GetModuleFilePath(pszModule) ) );
+    return oDDFModule.Open( poCATD->GetModuleFilePath(pszModule) );
 }
 
 /************************************************************************/
@@ -340,7 +349,7 @@ int SDTSRasterReader::Open( SDTS_CATD * poCATD, SDTS_IREF * poIREF,
 /*      Currently we will always use sequential access.  In the         */
 /*      future we should modify the iso8211 library to support          */
 /*      seeking, and modify this to seek directly to the right          */
-/*      record once it's location is known.                             */
+/*      record once its location is known.                              */
 /************************************************************************/
 
 /**
@@ -376,7 +385,7 @@ int SDTSRasterReader::GetBlock( CPL_UNUSED int nXOffset,
     else
         nBytesPerValue = 4;
 
-    DDFRecord *poRecord = NULL;
+    DDFRecord *poRecord = nullptr;
 
     for( int iTry = 0; iTry < 2; iTry++ )
     {
@@ -384,7 +393,7 @@ int SDTSRasterReader::GetBlock( CPL_UNUSED int nXOffset,
     /*      Read through till we find the desired record.                   */
     /* -------------------------------------------------------------------- */
         CPLErrorReset();
-        while( (poRecord = oDDFModule.ReadRecord()) != NULL )
+        while( (poRecord = oDDFModule.ReadRecord()) != nullptr )
         {
             if( poRecord->GetIntSubfield( "CELL", 0, "ROWI", 0 )
                 == nYOffset + nYStart )
@@ -399,7 +408,7 @@ int SDTSRasterReader::GetBlock( CPL_UNUSED int nXOffset,
     /* -------------------------------------------------------------------- */
     /*      If we didn't get what we needed just start over.                */
     /* -------------------------------------------------------------------- */
-        if( poRecord == NULL )
+        if( poRecord == nullptr )
         {
             if (iTry == 0)
                 oDDFModule.Rewind();
@@ -422,7 +431,7 @@ int SDTSRasterReader::GetBlock( CPL_UNUSED int nXOffset,
 /*      scanline?                                                       */
 /* -------------------------------------------------------------------- */
     DDFField *poCVLS = poRecord->FindField( "CVLS" );
-    if( poCVLS == NULL )
+    if( poCVLS == nullptr )
         return FALSE;
 
     if( poCVLS->GetRepeatCount() != nXSize )
@@ -526,9 +535,9 @@ int SDTSRasterReader::GetRasterType()
 
 {
     if( EQUAL(szFMT,"BFP32") )
-        return 6;
+        return SDTS_RT_FLOAT32;
 
-    return 1;
+    return SDTS_RT_INT16;
 }
 
 /************************************************************************/

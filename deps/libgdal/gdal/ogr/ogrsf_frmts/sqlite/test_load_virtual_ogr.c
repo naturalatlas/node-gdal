@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: test_load_virtual_ogr.c 33714 2016-03-13 05:42:13Z goatbar $
+ * $Id: test_load_virtual_ogr.c a5e7f143716411041a782228fde5f9935c11d428 2016-03-13 05:42:13Z Kurt Schwehr $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Test dynamic loading of SQLite Virtual Table module using OGR layers

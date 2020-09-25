@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cpl_odbc.h 33666 2016-03-07 05:21:07Z goatbar $
+ * $Id: cpl_odbc.h 97890c6814b40588defbe147a3189f056d50cf97 2018-05-14 20:12:48 +0200 KovBal $
  *
  * Project:  OGR ODBC Driver
  * Purpose:  Declarations for ODBC Access Cover API.
@@ -41,12 +41,13 @@
 #include <odbcinst.h>
 #include "cpl_string.h"
 
+/*! @cond Doxygen_Suppress */
 #ifdef PATH_MAX
 #  define ODBC_FILENAME_MAX PATH_MAX
 #else
 #  define ODBC_FILENAME_MAX (255 + 1) /* Max path length */
 #endif
-
+/*! @endcond */
 
 /**
  * \file cpl_odbc.h
@@ -68,7 +69,6 @@ class CPL_DLL CPLODBCDriverInstaller
 
     // Default constructor.
     CPLODBCDriverInstaller();
-
 
     /**
      * Installs ODBC driver or updates definition of already installed driver.
@@ -108,26 +108,26 @@ class CPL_DLL CPLODBCDriverInstaller
      */
     int RemoveDriver( const char* pszDriverName, int fRemoveDSN = FALSE );
 
-
-    // The usage count of the driver after this function has been called
+    /** The usage count of the driver after this function has been called */
     int GetUsageCount() const {  return m_nUsageCount; }
 
-
-    // Path of the target directory where the driver should be installed.
-    // For details, see ODBC API Reference and lpszPathOut
-    // parameter of SQLInstallDriverEx
+    /** Path of the target directory where the driver should be installed.
+     * For details, see ODBC API Reference and lpszPathOut
+     * parameter of SQLInstallDriverEx
+     */
     const char* GetPathOut() const { return m_szPathOut; }
 
-
-    // If InstallDriver returns FALSE, then GetLastError then
-    // error message can be obtained by calling this function.
-    // Internally, it calls ODBC's SQLInstallerError function.
+    /** If InstallDriver returns FALSE, then GetLastError then
+     * error message can be obtained by calling this function.
+     * Internally, it calls ODBC's SQLInstallerError function.
+     */
     const char* GetLastError() const { return m_szError; }
 
-    // If InstallDriver returns FALSE, then GetLastErrorCode then
-    // error code can be obtained by calling this function.
-    // Internally, it calls ODBC's SQLInstallerError function.
-    // See ODBC API Reference for possible error flags.
+    /** If InstallDriver returns FALSE, then GetLastErrorCode then
+     * error code can be obtained by calling this function.
+     * Internally, it calls ODBC's SQLInstallerError function.
+     * See ODBC API Reference for possible error flags.
+     */
     DWORD GetLastErrorCode() const { return m_nErrorCode; }
 };
 
@@ -141,6 +141,7 @@ class CPLODBCStatement;
 #  define MISSING_SQLULEN
 #endif
 
+/*! @cond Doxygen_Suppress */
 #if !defined(MISSING_SQLULEN)
 /* ODBC types to support 64 bit compilation */
 #  define CPL_SQLULEN SQLULEN
@@ -148,8 +149,8 @@ class CPLODBCStatement;
 #else
 #  define CPL_SQLULEN SQLUINTEGER
 #  define CPL_SQLLEN  SQLINTEGER
-#endif	/* ifdef SQLULEN */
-
+#endif  /* ifdef SQLULEN */
+/*! @endcond */
 
 /**
  * A class representing an ODBC database session.
@@ -158,11 +159,14 @@ class CPLODBCStatement;
  */
 
 class CPL_DLL CPLODBCSession {
-    char      m_szLastError[SQL_MAX_MESSAGE_LENGTH + 1];
-    HENV      m_hEnv;
-    HDBC      m_hDBC;
-    int       m_bInTransaction;
-    int       m_bAutoCommit;
+
+    CPL_DISALLOW_COPY_ASSIGN(CPLODBCSession)
+
+    CPLString m_osLastError{};
+    HENV      m_hEnv = nullptr;
+    HDBC      m_hDBC = nullptr;
+    int       m_bInTransaction = false;
+    int       m_bAutoCommit = true;
 
   public:
     CPLODBCSession();
@@ -179,14 +183,17 @@ class CPL_DLL CPLODBCSession {
     int         BeginTransaction();
     int         CommitTransaction();
     int         RollbackTransaction();
+    /** Returns whether a transaction is active */
     int         IsInTransaction() { return m_bInTransaction; }
 
     // Essentially internal.
 
     int         CloseSession();
 
-    int         Failed( int, HSTMT = NULL );
+    int         Failed( int, HSTMT = nullptr );
+    /** Return connection handle */
     HDBC        GetConnection() { return m_hDBC; }
+    /** Return GetEnvironment handle */
     HENV        GetEnvironment()  { return m_hEnv; }
 };
 
@@ -201,31 +208,34 @@ class CPL_DLL CPLODBCSession {
 
 class CPL_DLL CPLODBCStatement {
 
-    CPLODBCSession     *m_poSession;
-    HSTMT               m_hStmt;
+    CPL_DISALLOW_COPY_ASSIGN(CPLODBCStatement)
 
-    SQLSMALLINT    m_nColCount;
-    char         **m_papszColNames;
-    SQLSMALLINT   *m_panColType;
-    char         **m_papszColTypeNames;
-    CPL_SQLULEN      *m_panColSize;
-    SQLSMALLINT   *m_panColPrecision;
-    SQLSMALLINT   *m_panColNullable;
-    char         **m_papszColColumnDef;
+    CPLODBCSession     *m_poSession = nullptr;
+    HSTMT               m_hStmt = nullptr;
 
-    char         **m_papszColValues;
-    CPL_SQLLEN       *m_panColValueLengths;
+    SQLSMALLINT    m_nColCount = 0;
+    char         **m_papszColNames = nullptr;
+    SQLSMALLINT   *m_panColType = nullptr;
+    char         **m_papszColTypeNames = nullptr;
+    CPL_SQLULEN      *m_panColSize = nullptr;
+    SQLSMALLINT   *m_panColPrecision = nullptr;
+    SQLSMALLINT   *m_panColNullable = nullptr;
+    char         **m_papszColColumnDef = nullptr;
+
+    char         **m_papszColValues = nullptr;
+    CPL_SQLLEN       *m_panColValueLengths = nullptr;
 
     int            Failed( int );
 
-    char          *m_pszStatement;
-    size_t         m_nStatementMax;
-    size_t         m_nStatementLen;
+    char          *m_pszStatement = nullptr;
+    size_t         m_nStatementMax = 0;
+    size_t         m_nStatementLen = 0;
 
   public:
-    CPLODBCStatement( CPLODBCSession * );
+    explicit CPLODBCStatement( CPLODBCSession * );
     ~CPLODBCStatement();
 
+    /** Return statement handle */
     HSTMT          GetStatement() { return m_hStmt; }
 
     // Command buffer related.
@@ -234,10 +244,11 @@ class CPL_DLL CPLODBCStatement {
     void           Append( const char * );
     void           Append( int );
     void           Append( double );
-    int            Appendf( const char *, ... ) CPL_PRINT_FUNC_FORMAT (2, 3);
+    int            Appendf( CPL_FORMAT_STRING(const char *), ... ) CPL_PRINT_FUNC_FORMAT (2, 3);
+    /** Return statement string */
     const char    *GetCommand() { return m_pszStatement; }
 
-    int            ExecuteSQL( const char * = NULL );
+    int            ExecuteSQL( const char * = nullptr );
 
     // Results fetching
     int            Fetch( int nOrientation = SQL_FETCH_NEXT,
@@ -254,21 +265,21 @@ class CPL_DLL CPLODBCStatement {
     const char    *GetColColumnDef( int );
 
     int            GetColId( const char * );
-    const char    *GetColData( int, const char * = NULL );
-    const char    *GetColData( const char *, const char * = NULL );
+    const char    *GetColData( int, const char * = nullptr );
+    const char    *GetColData( const char *, const char * = nullptr );
     int            GetColDataLength( int );
     int            GetRowCountAffected();
 
     // Fetch special metadata.
     int            GetColumns( const char *pszTable,
-                               const char *pszCatalog = NULL,
-                               const char *pszSchema = NULL );
+                               const char *pszCatalog = nullptr,
+                               const char *pszSchema = nullptr );
     int            GetPrimaryKeys( const char *pszTable,
-                                   const char *pszCatalog = NULL,
-                                   const char *pszSchema = NULL );
+                                   const char *pszCatalog = nullptr,
+                                   const char *pszSchema = nullptr );
 
-    int            GetTables( const char *pszCatalog = NULL,
-                              const char *pszSchema = NULL );
+    int            GetTables( const char *pszCatalog = nullptr,
+                              const char *pszSchema = nullptr );
 
     void           DumpResult( FILE *fp, int bShowSchema = FALSE );
 

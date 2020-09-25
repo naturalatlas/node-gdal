@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogravcdatasource.cpp 32122 2015-12-11 16:01:28Z goatbar $
  *
  * Project:  OGR
  * Purpose:  Implements OGRAVCDataSource class.
@@ -29,15 +28,15 @@
 
 #include "ogr_avc.h"
 
-CPL_CVSID("$Id: ogravcdatasource.cpp 32122 2015-12-11 16:01:28Z goatbar $");
+CPL_CVSID("$Id: ogravcdatasource.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                          OGRAVCDataSource()                          */
 /************************************************************************/
 
 OGRAVCDataSource::OGRAVCDataSource() :
-    poSRS(NULL),
-    pszCoverageName(NULL)
+    poSRS(nullptr),
+    pszCoverageName(nullptr)
 {}
 
 /************************************************************************/
@@ -69,7 +68,7 @@ OGRSpatialReference *OGRAVCDataSource::GetSpatialRef()
 const char *OGRAVCDataSource::GetCoverageName()
 
 {
-    if( pszCoverageName == NULL )
+    if( pszCoverageName == nullptr )
         return "";
 
     return pszCoverageName;

@@ -71,7 +71,7 @@
 
 
 /******************************************************************************
- * $Id: osr_cs_wkt_parser.c 33713 2016-03-12 17:41:57Z goatbar $
+ * $Id: osr_cs_wkt_parser.c 002b050d9a9ef403a732c1210784736ef97216d4 2018-04-09 21:34:55 +0200 Even Rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  CS WKT parser grammar
@@ -955,7 +955,7 @@ yystpcpy (char *yydest, const char *yysrc)
 
 # ifndef yytnamerr
 /* Copy to YYRES the contents of YYSTR after stripping away unnecessary
-   quotes and backslashes, so that it's suitable for yyerror.  The
+   quotes and backslashes, so that it is suitable for yyerror.  The
    heuristic is that double-quoting is unnecessary unless the string
    contains an apostrophe, a comma, or backslash (other than
    backslash-backslash).  YYSTR is taken from yytname.  If YYRES is

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrntffeatureclasslayer.cpp 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  UK NTF Reader
  * Purpose:  Implements OGRNTFFeatureClassLayer class.
@@ -30,7 +29,7 @@
 #include "ntf.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrntffeatureclasslayer.cpp 33714 2016-03-13 05:42:13Z goatbar $");
+CPL_CVSID("$Id: ogrntffeatureclasslayer.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                      OGRNTFFeatureClassLayer()                       */
@@ -39,29 +38,25 @@ CPL_CVSID("$Id: ogrntffeatureclasslayer.cpp 33714 2016-03-13 05:42:13Z goatbar $
 /*      OGRFeatureDefn object.                                          */
 /************************************************************************/
 
-OGRNTFFeatureClassLayer::OGRNTFFeatureClassLayer( OGRNTFDataSource *poDSIn )
-
+OGRNTFFeatureClassLayer::OGRNTFFeatureClassLayer( OGRNTFDataSource *poDSIn ) :
+    poFeatureDefn(new OGRFeatureDefn("FEATURE_CLASSES")),
+    poFilterGeom(nullptr),
+    poDS(poDSIn),
+    iCurrentFC(0)
 {
-    poFilterGeom = NULL;
-
-    poDS = poDSIn;
-
-    iCurrentFC = 0;
-
 /* -------------------------------------------------------------------- */
 /*      Establish the schema.                                           */
 /* -------------------------------------------------------------------- */
-    poFeatureDefn = new OGRFeatureDefn( "FEATURE_CLASSES" );
     SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->SetGeomType( wkbNone );
     poFeatureDefn->Reference();
 
-    OGRFieldDefn      oFCNum( "FEAT_CODE", OFTString );
+    OGRFieldDefn oFCNum( "FEAT_CODE", OFTString );
 
     oFCNum.SetWidth( 4 );
     poFeatureDefn->AddFieldDefn( &oFCNum );
 
-    OGRFieldDefn      oFCName( "FC_NAME", OFTString );
+    OGRFieldDefn oFCName( "FC_NAME", OFTString );
 
     oFCNum.SetWidth( 80 );
     poFeatureDefn->AddFieldDefn( &oFCName );
@@ -77,7 +72,7 @@ OGRNTFFeatureClassLayer::~OGRNTFFeatureClassLayer()
     if( poFeatureDefn )
         poFeatureDefn->Release();
 
-    if( poFilterGeom != NULL )
+    if( poFilterGeom != nullptr )
         delete poFilterGeom;
 }
 
@@ -88,13 +83,13 @@ OGRNTFFeatureClassLayer::~OGRNTFFeatureClassLayer()
 void OGRNTFFeatureClassLayer::SetSpatialFilter( OGRGeometry * poGeomIn )
 
 {
-    if( poFilterGeom != NULL )
+    if( poFilterGeom != nullptr )
     {
         delete poFilterGeom;
-        poFilterGeom = NULL;
+        poFilterGeom = nullptr;
     }
 
-    if( poGeomIn != NULL )
+    if( poGeomIn != nullptr )
         poFilterGeom = poGeomIn->clone();
 }
 
@@ -116,7 +111,7 @@ OGRFeature *OGRNTFFeatureClassLayer::GetNextFeature()
 
 {
     if( iCurrentFC >= GetFeatureCount() )
-        return NULL;
+        return nullptr;
 
     return GetFeature( (long) iCurrentFC++ );
 }
@@ -131,7 +126,7 @@ OGRFeature *OGRNTFFeatureClassLayer::GetFeature( GIntBig nFeatureId )
     char        *pszFCName, *pszFCId;
 
     if( nFeatureId < 0 || nFeatureId >= poDS->GetFCCount() )
-        return NULL;
+        return nullptr;
 
     poDS->GetFeatureClass( (int)nFeatureId, &pszFCId, &pszFCName );
 

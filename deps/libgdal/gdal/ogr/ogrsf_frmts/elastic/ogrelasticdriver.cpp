@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrelasticdriver.cpp 32110 2015-12-10 17:19:40Z goatbar $
  *
  * Project:  ElasticSearch Translator
  * Purpose:
@@ -30,7 +29,7 @@
 #include "ogr_elastic.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrelasticdriver.cpp 32110 2015-12-10 17:19:40Z goatbar $");
+CPL_CVSID("$Id: ogrelasticdriver.cpp 0143e15c994333ffb95ba270d113ce300661c970 2018-08-10 15:17:07 +0200 Even Rouault $")
 
 /************************************************************************/
 /*                   OGRElasticSearchDriverIdentify()                   */
@@ -50,12 +49,12 @@ static GDALDataset* OGRElasticSearchDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
     if( !OGRElasticSearchDriverIdentify(poOpenInfo) )
-        return NULL;
+        return nullptr;
 
     OGRElasticDataSource *poDS = new OGRElasticDataSource();
     if (!poDS->Open(poOpenInfo)) {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
@@ -75,7 +74,7 @@ static GDALDataset* OGRElasticSearchDriverCreate( const char * pszName,
 
     if (!poDS->Create(pszName, papszOptions)) {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
@@ -89,7 +88,7 @@ void RegisterOGRElastic() {
     if (!GDAL_CHECK_VERSION("OGR/Elastic Search driver"))
         return;
 
-    if( GDALGetDriverByName( "ElasticSearch" ) != NULL )
+    if( GDALGetDriverByName( "ElasticSearch" ) != nullptr )
       return;
 
     GDALDriver  *poDriver = new GDALDriver();
@@ -105,10 +104,12 @@ void RegisterOGRElastic() {
     poDriver->SetMetadataItem( GDAL_DS_LAYER_CREATIONOPTIONLIST,
     "<LayerCreationOptionList>"
     "  <Option name='INDEX_NAME' type='string' description='Name of the index to create (or reuse). By default the index name is the layer name.'/>"
+    "  <Option name='INDEX_DEFINITION' type='string' description='Filename from which to read a user-defined index definition, or index definition as serialized JSon.'/>"
     "  <Option name='MAPPING_NAME' type='string' description='Name of the mapping type within the index.' default='FeatureCollection'/>"
     "  <Option name='MAPPING' type='string' description='Filename from which to read a user-defined mapping, or mapping as serialized JSon.'/>"
     "  <Option name='WRITE_MAPPING' type='string' description='Filename where to write the OGR generated mapping.'/>"
-    "  <Option name='OVERWRITE' type='boolean' description='Whether to overwrite an existing collection with the layer name to be created' default='NO'/>"
+    "  <Option name='OVERWRITE' type='boolean' description='Whether to overwrite an existing type mapping with the layer name to be created' default='NO'/>"
+    "  <Option name='OVERWRITE_INDEX' type='boolean' description='Whether to overwrite the whole index to which the layer belongs to' default='NO'/>"
     "  <Option name='GEOMETRY_NAME' type='string' description='Name of geometry column.' default='geometry'/>"
     "  <Option name='GEOM_MAPPING_TYPE' type='string-select' description='Mapping type for geometry fields' default='AUTO'>"
     "    <Value>AUTO</Value>"
@@ -118,8 +119,9 @@ void RegisterOGRElastic() {
     "  <Option name='GEOM_PRECISION' type='string' description='Desired geometry precision. Number followed by unit. For example 1m'/>"
     "  <Option name='STORE_FIELDS' type='boolean' description='Whether fields should be stored in the index' default='NO'/>"
     "  <Option name='STORED_FIELDS' type='string' description='List of comma separated field names that should be stored in the index'/>"
-    "  <Option name='NOT_ANALYZED_FIELDS' type='string' description='List of comma separated field names that should not be analyzed during indexing'/>"
+    "  <Option name='NOT_ANALYZED_FIELDS' type='string' description='List of comma separated field names that should not be analyzed during indexing, or {ALL}'/>"
     "  <Option name='NOT_INDEXED_FIELDS' type='string' description='List of comma separated field names that should not be indexed'/>"
+    "  <Option name='FIELDS_WITH_RAW_VALUE' type='string' description='List of comma separated field names (of type string) that should have an additional raw/not_analyzed field, or {ALL}'/>"
     "  <Option name='BULK_INSERT' type='boolean' description='Whether to use bulk insert for feature creation' default='YES'/>"
     "  <Option name='BULK_SIZE' type='integer' description='Size in bytes of the buffer for bulk upload' default='1000000'/>"
     "  <Option name='DOT_AS_NESTED_FIELD' type='boolean' description='Whether to consider dot character in field name as sub-document' default='YES'/>"
@@ -131,6 +133,9 @@ void RegisterOGRElastic() {
 "<OpenOptionList>"
 "  <Option name='HOST' type='string' description='Server hostname' default='localhost'/>"
 "  <Option name='PORT' type='integer' description='Server port' default='9200'/>"
+"  <Option name='USERPWD' type='string' "
+        "description='Basic authentication as username:password'/>"
+"  <Option name='LAYER' type='string' description='Index name or index_mapping to use for restricting layer listing'/>"
 "  <Option name='BATCH_SIZE' type='integer' description='Number of features to retrieve per batch' default='100'/>"
 "  <Option name='FEATURE_COUNT_TO_ESTABLISH_FEATURE_DEFN' type='integer' description='Number of features to retrieve to establish feature definition. -1 = unlimited' default='100'/>"
 "  <Option name='JSON_FIELD' type='boolean' description='Whether to include a field with the full document as JSON' default='NO'/>"

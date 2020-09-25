@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ograeronavfaadatasource.cpp 32247 2015-12-19 07:05:52Z goatbar $
  *
  * Project:  AeronavFAA Translator
  * Purpose:  Implements OGRAeronavFAADataSource class
@@ -31,15 +30,15 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ograeronavfaadatasource.cpp 32247 2015-12-19 07:05:52Z goatbar $");
+CPL_CVSID("$Id: ograeronavfaadatasource.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                      OGRAeronavFAADataSource()                       */
 /************************************************************************/
 
 OGRAeronavFAADataSource::OGRAeronavFAADataSource() :
-    pszName(NULL),
-    papoLayers(NULL),
+    pszName(nullptr),
+    papoLayers(nullptr),
     nLayers(0)
 {}
 
@@ -74,7 +73,7 @@ OGRLayer *OGRAeronavFAADataSource::GetLayer( int iLayer )
 
 {
     if( iLayer < 0 || iLayer >= nLayers )
-        return NULL;
+        return nullptr;
     else
         return papoLayers[iLayer];
 }
@@ -93,43 +92,56 @@ int OGRAeronavFAADataSource::Open( const char * pszFilename )
 // --------------------------------------------------------------------
 
     VSILFILE* fp = VSIFOpenL(pszFilename, "rb");
-    if (fp == NULL)
+    if (fp == nullptr)
         return FALSE;
 
     char szBuffer[10000];
-    int nbRead = (int)VSIFReadL(szBuffer, 1, sizeof(szBuffer) - 1, fp);
+    const int nbRead = static_cast<int>(
+        VSIFReadL(szBuffer, 1, sizeof(szBuffer) - 1, fp));
     szBuffer[nbRead] = '\0';
 
-    int bIsDOF = (szBuffer[128] == 13 && szBuffer[128+1] == 10 &&
-                  szBuffer[130+128] == 13 && szBuffer[130+129] == 10 &&
-                  szBuffer[2*130+128] == 13 && szBuffer[2*130+129] == 10 &&
-                  STARTS_WITH(szBuffer + 3 * 130, "------------------------------------------------------------------------------------------------------------------------- "));
+    const bool bIsDOF =
+        szBuffer[128] == 13 && szBuffer[128+1] == 10 &&
+        szBuffer[130+128] == 13 && szBuffer[130+129] == 10 &&
+        szBuffer[2*130+128] == 13 && szBuffer[2*130+129] == 10 &&
+        STARTS_WITH(
+            szBuffer + 3 * 130,
+            "-----------------------------------------------------------------"
+            "-------------------------------------------------------- ");
 
-    int bIsNAVAID = (szBuffer[132] == 13 && szBuffer[132+1] == 10 &&
-                     STARTS_WITH(szBuffer + 20 - 1, "CREATION DATE") &&
-                     szBuffer[134 + 132] == 13 && szBuffer[134 + 132+1] == 10);
+    const bool bIsNAVAID =
+        szBuffer[132] == 13 && szBuffer[132+1] == 10 &&
+        STARTS_WITH(szBuffer + 20 - 1, "CREATION DATE") &&
+        szBuffer[134 + 132] == 13 && szBuffer[134 + 132+1] == 10;
 
-    int bIsROUTE = STARTS_WITH(szBuffer, "           UNITED STATES GOVERNMENT FLIGHT INFORMATION PUBLICATION             149343") &&
-                   szBuffer[85] == 13 && szBuffer[85+1] == 10;
+    const bool bIsIAP =
+        strstr(szBuffer,
+               "INSTRUMENT APPROACH PROCEDURE NAVAID & FIX DATA") != nullptr &&
+        szBuffer[85] == 13 && szBuffer[85+1] == 10;
 
-    int bIsIAP = strstr(szBuffer, "INSTRUMENT APPROACH PROCEDURE NAVAID & FIX DATA") != NULL &&
-                   szBuffer[85] == 13 && szBuffer[85+1] == 10;
-    if (bIsIAP)
-        bIsROUTE = FALSE;
+    bool bIsROUTE = STARTS_WITH(
+        szBuffer,
+        "           UNITED STATES GOVERNMENT FLIGHT INFORMATION PUBLICATION"
+        "             149343") &&
+        szBuffer[85] == 13 && szBuffer[85+1] == 10;
 
-    if (bIsDOF)
+    // TODO(schwehr): Fold into bool bIsROUTE so it can be const.
+    if( bIsIAP )
+        bIsROUTE = false;
+
+    if( bIsDOF )
     {
         VSIFSeekL( fp, 0, SEEK_SET );
         nLayers = 1;
-        papoLayers = (OGRLayer**) CPLMalloc(sizeof(OGRLayer*));
+        papoLayers = static_cast<OGRLayer **>(CPLMalloc(sizeof(OGRLayer*)));
         papoLayers[0] = new OGRAeronavFAADOFLayer(fp, CPLGetBasename(pszFilename));
         return TRUE;
     }
-    else if (bIsNAVAID)
+    else if( bIsNAVAID )
     {
         VSIFSeekL( fp, 0, SEEK_SET );
         nLayers = 1;
-        papoLayers = (OGRLayer**) CPLMalloc(sizeof(OGRLayer*));
+        papoLayers = static_cast<OGRLayer **>(CPLMalloc(sizeof(OGRLayer*)));
         papoLayers[0] = new OGRAeronavFAANAVAIDLayer(fp, CPLGetBasename(pszFilename));
         return TRUE;
     }
@@ -137,17 +149,18 @@ int OGRAeronavFAADataSource::Open( const char * pszFilename )
     {
         VSIFSeekL( fp, 0, SEEK_SET );
         nLayers = 1;
-        papoLayers = (OGRLayer**) CPLMalloc(sizeof(OGRLayer*));
+        papoLayers = static_cast<OGRLayer **>(CPLMalloc(sizeof(OGRLayer*)));
         papoLayers[0] = new OGRAeronavFAAIAPLayer(fp, CPLGetBasename(pszFilename));
         return TRUE;
     }
     else if (bIsROUTE)
     {
-        int bIsDPOrSTARS = strstr(szBuffer, "DPs - DEPARTURE PROCEDURES") != NULL ||
-                           strstr(szBuffer, "STARS - STANDARD TERMINAL ARRIVALS") != NULL;
+        const bool bIsDPOrSTARS =
+            strstr(szBuffer, "DPs - DEPARTURE PROCEDURES") != nullptr ||
+            strstr(szBuffer, "STARS - STANDARD TERMINAL ARRIVALS") != nullptr;
         VSIFSeekL( fp, 0, SEEK_SET );
         nLayers = 1;
-        papoLayers = (OGRLayer**) CPLMalloc(sizeof(OGRLayer*));
+        papoLayers = static_cast<OGRLayer **>(CPLMalloc(sizeof(OGRLayer*)));
         papoLayers[0] = new OGRAeronavFAARouteLayer(fp, CPLGetBasename(pszFilename), bIsDPOrSTARS);
         return TRUE;
     }

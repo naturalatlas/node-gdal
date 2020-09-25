@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id$
  *
  * Project:  GDAL Core
  * Purpose:  Read metadata from RapidEye imagery.
@@ -30,6 +29,15 @@
 
 #include "reader_rapid_eye.h"
 
+#include <ctime>
+
+#include "cpl_conv.h"
+#include "cpl_error.h"
+#include "cpl_minixml.h"
+#include "cpl_string.h"
+
+CPL_CVSID("$Id: reader_rapid_eye.cpp ec7b85e6bb8f9737693a31f0bf7166e31e10992e 2018-04-16 00:08:36 +0200 Even Rouault $")
+
 /**
  * GDALMDReaderRapidEye()
  */
@@ -39,25 +47,25 @@ GDALMDReaderRapidEye::GDALMDReaderRapidEye(const char *pszPath,
     const char* pszDirName = CPLGetDirname(pszPath);
     const char* pszBaseName = CPLGetBasename(pszPath);
 
-    const char* pszIMDSourceFilename = CPLFormFilename( pszDirName,
+    CPLString osIMDSourceFilename = CPLFormFilename( pszDirName,
                                                         CPLSPrintf("%s_metadata",
                                                         pszBaseName), "xml" );
-    if (CPLCheckForFile((char*)pszIMDSourceFilename, papszSiblingFiles))
+    if (CPLCheckForFile(&osIMDSourceFilename[0], papszSiblingFiles))
     {
-        m_osXMLSourceFilename = pszIMDSourceFilename;
+        m_osXMLSourceFilename = osIMDSourceFilename;
     }
     else
     {
-        pszIMDSourceFilename = CPLFormFilename( pszDirName,
+        osIMDSourceFilename = CPLFormFilename( pszDirName,
                                                 CPLSPrintf("%s_METADATA",
                                                 pszBaseName), "XML" );
-        if (CPLCheckForFile((char*)pszIMDSourceFilename, papszSiblingFiles))
+        if (CPLCheckForFile(&osIMDSourceFilename[0], papszSiblingFiles))
         {
-            m_osXMLSourceFilename = pszIMDSourceFilename;
+            m_osXMLSourceFilename = osIMDSourceFilename;
         }
     }
 
-    if(m_osXMLSourceFilename.size())
+    if(!m_osXMLSourceFilename.empty() )
         CPLDebug( "MDReaderRapidEye", "XML Filename: %s",
               m_osXMLSourceFilename.c_str() );
 }
@@ -87,7 +95,7 @@ bool GDALMDReaderRapidEye::HasRequiredFiles() const
  */
 char** GDALMDReaderRapidEye::GetMetadataFiles() const
 {
-    char **papszFileList = NULL;
+    char **papszFileList = nullptr;
     if(!m_osXMLSourceFilename.empty())
         papszFileList= CSLAddString( papszFileList, m_osXMLSourceFilename );
 
@@ -104,11 +112,11 @@ void GDALMDReaderRapidEye::LoadMetadata()
 
     CPLXMLNode* psNode = CPLParseXMLFile(m_osXMLSourceFilename);
 
-    if(psNode != NULL)
+    if(psNode != nullptr)
     {
         CPLXMLNode* pRootNode = CPLSearchXMLNode(psNode, "=re:EarthObservation");
 
-        if(pRootNode != NULL)
+        if(pRootNode != nullptr)
         {
             m_papszIMDMD = ReadXMLToList(pRootNode->psChild, m_papszIMDMD);
         }
@@ -119,7 +127,7 @@ void GDALMDReaderRapidEye::LoadMetadata()
 
     m_bIsMetadataLoad = true;
 
-    if(NULL == m_papszIMDMD)
+    if(nullptr == m_papszIMDMD)
     {
         return;
     }
@@ -127,7 +135,7 @@ void GDALMDReaderRapidEye::LoadMetadata()
     //extract imagery metadata
     const char* pszSatId = CSLFetchNameValue(m_papszIMDMD,
     "gml:using.eop:EarthObservationEquipment.eop:platform.eop:Platform.eop:serialIdentifier");
-    if(NULL != pszSatId)
+    if(nullptr != pszSatId)
     {
         m_papszIMAGERYMD = CSLAddNameValue(m_papszIMAGERYMD,
                                 MD_NAME_SATELLITE, CPLStripQuotes(pszSatId));
@@ -135,7 +143,7 @@ void GDALMDReaderRapidEye::LoadMetadata()
 
     const char* pszDateTime = CSLFetchNameValue(m_papszIMDMD,
     "gml:using.eop:EarthObservationEquipment.eop:acquisitionParameters.re:Acquisition.re:acquisitionDateTime");
-    if(NULL != pszDateTime)
+    if(nullptr != pszDateTime)
     {
         char buffer[80];
         time_t timeMid = GetAcquisitionTimeFromString(pszDateTime);
@@ -146,10 +154,9 @@ void GDALMDReaderRapidEye::LoadMetadata()
 
     const char* pszCC = CSLFetchNameValue(m_papszIMDMD,
     "gml:resultOf.re:EarthObservationResult.opt:cloudCoverPercentage");
-    if(NULL != pszSatId)
+    if(nullptr != pszSatId)
     {
         m_papszIMAGERYMD = CSLAddNameValue(m_papszIMAGERYMD,
                                 MD_NAME_CLOUDCOVER, pszCC);
     }
-
 }

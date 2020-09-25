@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: northwood.h 31749 2015-11-25 02:32:55Z goatbar $
+ * $Id: northwood.h d3a414fc105682de6bb8c1835b02ae78be2ec46f 2016-10-24 11:54:24Z Kurt Schwehr $
  *
  * Project:  GRC/GRD Reader
  * Purpose:  Northwood Technologies Grid format declarations
@@ -88,6 +88,17 @@ typedef struct
     NWT_CLASSIFIED_ITEM **stClassifedItem;    //hack - it could be up to 64K
 } NWT_CLASSIFIED_DICT;
 
+typedef struct {
+    int iBrightness;
+    int iContrast;
+    bool bGreyscale;
+    bool bGrey;
+    bool bColour;
+    bool bTransparent;
+    int iTransColour;
+    int iTranslucency;
+} RASTER_STYLE;
+
 typedef struct
 {
     char szFileName[256];
@@ -121,6 +132,7 @@ typedef struct
     float fHillShadeAngle;
     NWT_CLASSIFIED_DICT *stClassDict;
     NWT_RGB_ROW stRGBRow;
+    RASTER_STYLE style;
 } NWT_GRID;
 
 int nwt_ParseHeader( NWT_GRID * pGrd, char *nwHeader );

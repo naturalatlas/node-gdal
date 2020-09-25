@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdal_rat.h 33773 2016-03-23 18:39:47Z goatbar $
+ * $Id: gdal_rat.h 2519a7eb0e1649dbf8625ae8ffc7bb7c3ef9514b 2018-07-10 12:05:23 +0100 Robert Coup $
  *
  * Project:  GDAL Core
  * Purpose:  GDALRasterAttributeTable class declarations.
@@ -31,6 +31,7 @@
 #define GDAL_RAT_H_INCLUDED
 
 #include "cpl_minixml.h"
+#include "gdal_priv.h"
 
 // Clone and Serialize are allowed to fail if GetRowCount()*GetColCount()
 // greater than this number
@@ -52,14 +53,14 @@ public:
      *
      * Creates a new copy of an existing raster attribute table.  The new copy
      * becomes the responsibility of the caller to destroy.
-     * May fail (return NULL) if the attribute table is too large to clone
+     * May fail (return nullptr) if the attribute table is too large to clone
      * (GetRowCount() * GetColCount() > RAT_MAX_ELEM_FOR_CLONE)
      *
      * This method is the same as the C function GDALRATClone().
      *
      * @return new copy of the RAT as an in-memory implementation.
      */
-    virtual GDALDefaultRasterAttributeTable *Clone() const = 0;
+    virtual GDALRasterAttributeTable *Clone() const = 0;
 
     /**
      * \brief Fetch table column count.
@@ -79,7 +80,7 @@ public:
      *
      * @return the column name or an empty string for invalid column numbers.
      */
-    virtual const char   *GetNameOfCol( int ) const = 0;
+    virtual const char   *GetNameOfCol( int iCol ) const = 0;
 
     /**
      * \brief Fetch column usage value.
@@ -90,7 +91,7 @@ public:
      *
      * @return the column usage, or GFU_Generic for improper column numbers.
      */
-    virtual GDALRATFieldUsage GetUsageOfCol( int ) const = 0;
+    virtual GDALRATFieldUsage GetUsageOfCol( int iCol ) const = 0;
 
     /**
      * \brief Fetch column type.
@@ -101,7 +102,7 @@ public:
      *
      * @return column type or GFT_Integer if the column index is illegal.
      */
-    virtual GDALRATFieldType GetTypeOfCol( int ) const = 0;
+    virtual GDALRATFieldType GetTypeOfCol( int iCol ) const = 0;
 
     /**
      * \brief Fetch column index for given usage.
@@ -115,7 +116,7 @@ public:
      *
      * @return column index, or -1 on failure.
      */
-    virtual int           GetColOfUsage( GDALRATFieldUsage ) const = 0;
+    virtual int           GetColOfUsage( GDALRATFieldUsage eUsage ) const = 0;
 
     /**
      * \brief Fetch row count.
@@ -237,6 +238,25 @@ public:
      */
     virtual int           ChangesAreWrittenToFile() = 0;
 
+    /**
+     * \brief Set the RAT table type.
+     *
+     * Set whether the RAT is thematic or athematic (continuous).
+     *
+     * @since GDAL 2.4
+     */
+    virtual CPLErr        SetTableType(const GDALRATTableType eInTableType) = 0;
+
+    /**
+     * \brief Get the RAT table type.
+     *
+     * Indicates whether the RAT is thematic or athematic (continuous).
+     *
+     * @since GDAL 2.4
+     * @return table type
+     */
+    virtual GDALRATTableType GetTableType() const = 0;
+
     virtual CPLErr        ValuesIO( GDALRWFlag eRWFlag, int iField,
                                     int iStartRow, int iLength,
                                     double *pdfData);
@@ -261,7 +281,7 @@ public:
     /**
      * \brief Serialize
      *
-     * May fail (return NULL) if the attribute table is too large to serialize
+     * May fail (return nullptr) if the attribute table is too large to serialize
      * (GetRowCount() * GetColCount() > RAT_MAX_ELEM_FOR_CLONE)
      */
     virtual CPLXMLNode   *Serialize() const;
@@ -271,7 +291,26 @@ public:
     virtual CPLErr        InitializeFromColorTable( const GDALColorTable * );
     virtual GDALColorTable *TranslateToColorTable( int nEntryCount = -1 );
 
-    virtual void          DumpReadable( FILE * = NULL );
+    virtual void          DumpReadable( FILE * = nullptr );
+
+    /** Convert a GDALRasterAttributeTable* to a GDALRasterAttributeTableH.
+     * @since GDAL 2.3
+     */
+    static inline GDALRasterAttributeTableH ToHandle(GDALRasterAttributeTable* poRAT)
+        { return static_cast<GDALRasterAttributeTableH>(poRAT); }
+
+    /** Convert a GDALRasterAttributeTableH to a GDALRasterAttributeTable*.
+     * @since GDAL 2.3
+     */
+    static inline GDALRasterAttributeTable* FromHandle(GDALRasterAttributeTableH hRAT)
+        { return static_cast<GDALRasterAttributeTable*>(hRAT); }
+
+    /**
+     * \brief Remove statistics from the RAT.
+     *
+     * @since GDAL 2.4
+     */
+    virtual void          RemoveStatistics() = 0;
 };
 
 /************************************************************************/
@@ -279,20 +318,21 @@ public:
 /*                                                                      */
 /*      (private)                                                       */
 /************************************************************************/
-
+//! @cond Doxygen_Suppress
 class GDALRasterAttributeField
 {
  public:
-    CPLString         sName;
+    CPLString         sName{};
 
-    GDALRATFieldType  eType;
+    GDALRATFieldType  eType = GFT_Integer;
 
-    GDALRATFieldUsage eUsage;
+    GDALRATFieldUsage eUsage = GFU_Generic;
 
-    std::vector<GInt32> anValues;
-    std::vector<double> adfValues;
-    std::vector<CPLString> aosValues;
+    std::vector<GInt32> anValues{};
+    std::vector<double> adfValues{};
+    std::vector<CPLString> aosValues{};
 };
+//! @endcond
 
 /************************************************************************/
 /*                    GDALDefaultRasterAttributeTable                   */
@@ -303,60 +343,66 @@ class GDALRasterAttributeField
 class CPL_DLL GDALDefaultRasterAttributeTable : public GDALRasterAttributeTable
 {
  private:
-    std::vector<GDALRasterAttributeField> aoFields;
+    std::vector<GDALRasterAttributeField> aoFields{};
 
-    int bLinearBinning;  // TODO(schwehr): Can this be a bool?
-    double dfRow0Min;
-    double dfBinSize;
+    int bLinearBinning = false;  // TODO(schwehr): Can this be a bool?
+    double dfRow0Min = -0.5;
+    double dfBinSize = 1.0;
+
+    GDALRATTableType eTableType;
 
     void  AnalyseColumns();
-    int   bColumnsAnalysed;  // TODO(schwehr): Can this be a bool?
-    int   nMinCol;
-    int   nMaxCol;
+    int   bColumnsAnalysed = false;  // TODO(schwehr): Can this be a bool?
+    int   nMinCol = -1;
+    int   nMaxCol = -1;
 
-    int   nRowCount;
+    int   nRowCount = 0;
 
-    CPLString osWorkingResult;
+    CPLString osWorkingResult{};
 
  public:
     GDALDefaultRasterAttributeTable();
-    GDALDefaultRasterAttributeTable( const GDALDefaultRasterAttributeTable& );
-    ~GDALDefaultRasterAttributeTable();
+    ~GDALDefaultRasterAttributeTable() override;
 
-    GDALDefaultRasterAttributeTable *Clone() const;
+    GDALDefaultRasterAttributeTable *Clone() const override;
 
-    virtual int           GetColumnCount() const;
+    int GetColumnCount() const override;
 
-    virtual const char   *GetNameOfCol( int ) const;
-    virtual GDALRATFieldUsage GetUsageOfCol( int ) const;
-    virtual GDALRATFieldType GetTypeOfCol( int ) const;
+    const char *GetNameOfCol( int ) const override;
+    GDALRATFieldUsage GetUsageOfCol( int ) const override;
+    GDALRATFieldType GetTypeOfCol( int ) const override;
 
-    virtual int           GetColOfUsage( GDALRATFieldUsage ) const;
+    int GetColOfUsage( GDALRATFieldUsage ) const override;
 
-    virtual int           GetRowCount() const;
+    int GetRowCount() const override;
 
-    virtual const char   *GetValueAsString( int iRow, int iField ) const;
-    virtual int           GetValueAsInt( int iRow, int iField ) const;
-    virtual double        GetValueAsDouble( int iRow, int iField ) const;
+    const char *GetValueAsString( int iRow, int iField ) const override;
+    int GetValueAsInt( int iRow, int iField ) const override;
+    double GetValueAsDouble( int iRow, int iField ) const override;
 
-    virtual void          SetValue( int iRow, int iField,
-                                    const char *pszValue );
-    virtual void          SetValue( int iRow, int iField, double dfValue);
-    virtual void          SetValue( int iRow, int iField, int nValue );
+    void SetValue( int iRow, int iField,
+                   const char *pszValue ) override;
+    void SetValue( int iRow, int iField, double dfValue) override;
+    void SetValue( int iRow, int iField, int nValue ) override;
 
-    virtual int           ChangesAreWrittenToFile();
-    virtual void          SetRowCount( int iCount );
+    int ChangesAreWrittenToFile() override;
+    void SetRowCount( int iCount ) override;
 
-    virtual int           GetRowOfValue( double dfValue ) const;
-    virtual int           GetRowOfValue( int nValue ) const;
+    int GetRowOfValue( double dfValue ) const override;
+    int GetRowOfValue( int nValue ) const override;
 
-    virtual CPLErr        CreateColumn( const char *pszFieldName,
-                                        GDALRATFieldType eFieldType,
-                                        GDALRATFieldUsage eFieldUsage );
-    virtual CPLErr        SetLinearBinning( double dfRow0Min,
-                                            double dfBinSize );
-    virtual int           GetLinearBinning( double *pdfRow0Min,
-                                            double *pdfBinSize ) const;
+    CPLErr CreateColumn( const char *pszFieldName,
+                         GDALRATFieldType eFieldType,
+                         GDALRATFieldUsage eFieldUsage ) override;
+    CPLErr SetLinearBinning( double dfRow0Min,
+                             double dfBinSize ) override;
+    int GetLinearBinning( double *pdfRow0Min,
+                          double *pdfBinSize ) const override;
+
+    CPLErr        SetTableType(const GDALRATTableType eInTableType) override;
+    GDALRATTableType GetTableType() const override;
+
+    void          RemoveStatistics() override;
 };
 
 #endif /* ndef GDAL_RAT_H_INCLUDED */

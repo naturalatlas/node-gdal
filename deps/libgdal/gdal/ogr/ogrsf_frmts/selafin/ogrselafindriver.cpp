@@ -30,13 +30,15 @@
 #include "cpl_string.h"
 #include "io_selafin.h"
 
+CPL_CVSID("$Id: ogrselafindriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
+
 /************************************************************************/
 /*                     OGRSelafinDriverIdentify()                       */
 /************************************************************************/
 
-static int OGRSelafinDriverIdentify( GDALOpenInfo* poOpenInfo ) {
-
-    if( poOpenInfo->fpL != NULL )
+static int OGRSelafinDriverIdentify( GDALOpenInfo* poOpenInfo )
+{
+    if( poOpenInfo->fpL != nullptr )
     {
         if( poOpenInfo->nHeaderBytes < 84 + 8 )
             return FALSE;
@@ -62,12 +64,14 @@ static int OGRSelafinDriverIdentify( GDALOpenInfo* poOpenInfo ) {
 static GDALDataset *OGRSelafinDriverOpen( GDALOpenInfo* poOpenInfo ) {
 
     if( OGRSelafinDriverIdentify(poOpenInfo) == 0 )
-        return NULL;
+        return nullptr;
 
     OGRSelafinDataSource *poDS = new OGRSelafinDataSource();
-    if( !poDS->Open(poOpenInfo->pszFilename, poOpenInfo->eAccess == GA_Update, FALSE) ) {
+    if( !poDS->Open(poOpenInfo->pszFilename, poOpenInfo->eAccess == GA_Update,
+                    FALSE) )
+    {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
     return poDS;
 }
@@ -87,15 +91,15 @@ static GDALDataset *OGRSelafinDriverCreate( const char * pszName,
     if (strcmp(pszName, "/dev/stdout") == 0) pszName = "/vsistdout/";
     if( VSIStatL( pszName, &sStatBuf ) == 0 ) {
         CPLError(CE_Failure, CPLE_AppDefined,"It seems a file system object called '%s' already exists.",pszName);
-        return NULL;
+        return nullptr;
     }
     // Parse options
     const char *pszTemp=CSLFetchNameValue(papszOptions,"TITLE");
     char pszTitle[81];
     int pnDate[6]={-1,0};
-    if (pszTemp!=NULL) strncpy(pszTitle,pszTemp,72); else memset(pszTitle,' ',72);
+    if (pszTemp!=nullptr) strncpy(pszTitle,pszTemp,72); else memset(pszTitle,' ',72);
     pszTemp=CSLFetchNameValue(papszOptions,"DATE");
-    if (pszTemp!=NULL) {
+    if (pszTemp!=nullptr) {
         const char* pszErrorMessage="Wrong format for date parameter: must be \"%%Y-%%m-%%d_%%H:%%M:%%S\", ignored";
         const char *pszc=pszTemp;
         pnDate[0]=atoi(pszTemp);
@@ -120,9 +124,9 @@ static GDALDataset *OGRSelafinDriverCreate( const char * pszName,
     }
     // Create the skeleton of a Selafin file
     VSILFILE *fp=VSIFOpenL(pszName,"wb");
-    if (fp==NULL) {
+    if (fp==nullptr) {
         CPLError(CE_Failure, CPLE_AppDefined,"Unable to open %s with write access.",pszName);
-        return NULL;
+        return nullptr;
     }
     strncpy(pszTitle+72,"SERAPHIN",9);
     bool bError=false;
@@ -138,18 +142,19 @@ static GDALDataset *OGRSelafinDriverCreate( const char * pszName,
     if (Selafin::write_intarray(fp,pnTemp,4)==0) bError=true;
     if (Selafin::write_intarray(fp,pnTemp,0)==0) bError=true;
     if (Selafin::write_intarray(fp,pnTemp,0)==0) bError=true;
-    if (Selafin::write_floatarray(fp,NULL,0)==0) bError=true;
-    if (Selafin::write_floatarray(fp,NULL,0)==0) bError=true;
+    if (Selafin::write_floatarray(fp,nullptr,0)==0) bError=true;
+    if (Selafin::write_floatarray(fp,nullptr,0)==0) bError=true;
     VSIFCloseL(fp);
     if (bError) {
         CPLError(CE_Failure, CPLE_AppDefined,"Error writing to file %s.",pszName);
-        return NULL;
+        return nullptr;
     }
     // Force it to open as a datasource
     OGRSelafinDataSource *poDS = new OGRSelafinDataSource();
-    if( !poDS->Open( pszName, TRUE, TRUE ) ) {
+    if( !poDS->Open( pszName, TRUE, TRUE ) )
+    {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
     return poDS;
 }
@@ -168,7 +173,7 @@ static CPLErr OGRSelafinDriverDelete( const char *pszFilename ) {
 
 void RegisterOGRSelafin() {
 
-    if( GDALGetDriverByName( "Selafin" ) != NULL )
+    if( GDALGetDriverByName( "Selafin" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

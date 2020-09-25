@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogr_attrind.cpp 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implementation of OGRLayerAttrIndex and OGRAttrIndex base classes.
@@ -30,7 +29,9 @@
 #include "ogr_attrind.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogr_attrind.cpp 33714 2016-03-13 05:42:13Z goatbar $");
+CPL_CVSID("$Id: ogr_attrind.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
+
+//! @cond Doxygen_Suppress
 
 /************************************************************************/
 /* ==================================================================== */
@@ -42,12 +43,10 @@ CPL_CVSID("$Id: ogr_attrind.cpp 33714 2016-03-13 05:42:13Z goatbar $");
 /*                         OGRLayerAttrIndex()                          */
 /************************************************************************/
 
-OGRLayerAttrIndex::OGRLayerAttrIndex()
-
-{
-    poLayer = NULL;
-    pszIndexPath = NULL;
-}
+OGRLayerAttrIndex::OGRLayerAttrIndex() :
+    poLayer(nullptr),
+    pszIndexPath(nullptr)
+{}
 
 /************************************************************************/
 /*                         ~OGRLayerAttrIndex()                         */
@@ -57,7 +56,7 @@ OGRLayerAttrIndex::~OGRLayerAttrIndex()
 
 {
     CPLFree( pszIndexPath );
-    pszIndexPath = NULL;
+    pszIndexPath = nullptr;
 }
 
 /************************************************************************/
@@ -70,15 +69,12 @@ OGRLayerAttrIndex::~OGRLayerAttrIndex()
 /*                            OGRAttrIndex()                            */
 /************************************************************************/
 
-OGRAttrIndex::OGRAttrIndex()
-
-{
-}
+OGRAttrIndex::OGRAttrIndex() {}
 
 /************************************************************************/
 /*                           ~OGRAttrIndex()                            */
 /************************************************************************/
 
-OGRAttrIndex::~OGRAttrIndex()
-{
-}
+OGRAttrIndex::~OGRAttrIndex() {}
+
+//! @endcond

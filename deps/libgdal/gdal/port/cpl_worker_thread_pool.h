@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: cpl_worker_thread_pool.h 33666 2016-03-07 05:21:07Z goatbar $
+ * $Id: cpl_worker_thread_pool.h 9b93d5aaef0e512d52da849390cb72856db540b6 2018-07-01 22:10:36 +0200 Even Rouault $
  *
  * Project:  CPL - Common Portability Library
  * Purpose:  CPL worker thread pool
@@ -41,6 +41,7 @@
  * @since GDAL 2.1
  */
 
+#ifndef DOXYGEN_SKIP
 class CPLWorkerThreadPool;
 
 typedef struct
@@ -56,7 +57,7 @@ typedef struct
     CPLWorkerThreadPool *poTP;
     CPLJoinableThread   *hThread;
     int                  bMarkedAsWaiting;
-    //CPLWorkerThreadJob  *psNextJob;
+    // CPLWorkerThreadJob  *psNextJob;
 
     CPLMutex            *hMutex;
     CPLCond             *hCond;
@@ -68,18 +69,22 @@ typedef enum
     CPLWTS_STOP,
     CPLWTS_ERROR
 } CPLWorkerThreadState;
+#endif  // ndef DOXYGEN_SKIP
 
+/** Pool of worker threads */
 class CPL_DLL CPLWorkerThreadPool
 {
-        std::vector<CPLWorkerThread> aWT;
-        CPLCond* hCond;
-        CPLMutex* hMutex;
-        volatile CPLWorkerThreadState eState;
-        CPLList* psJobQueue;
-        volatile int nPendingJobs;
+        CPL_DISALLOW_COPY_ASSIGN(CPLWorkerThreadPool)
 
-        CPLList* psWaitingWorkerThreadsList;
-        int nWaitingWorkerThreads;
+        std::vector<CPLWorkerThread> aWT{};
+        CPLCond* hCond = nullptr;
+        CPLMutex* hMutex = nullptr;
+        volatile CPLWorkerThreadState eState = CPLWTS_OK;
+        CPLList* psJobQueue = nullptr;
+        volatile int nPendingJobs = 0;
+
+        CPLList* psWaitingWorkerThreadsList = nullptr;
+        int nWaitingWorkerThreads = 0;
 
         static void WorkerThreadFunction(void* user_data);
 
@@ -93,11 +98,17 @@ class CPL_DLL CPLWorkerThreadPool
         bool Setup(int nThreads,
                    CPLThreadFunc pfnInitFunc,
                    void** pasInitData);
+        bool Setup(int nThreads,
+                   CPLThreadFunc pfnInitFunc,
+                   void** pasInitData,
+                   bool bWaitallStarted);
         bool SubmitJob(CPLThreadFunc pfnFunc, void* pData);
         bool SubmitJobs(CPLThreadFunc pfnFunc, const std::vector<void*>& apData);
         void WaitCompletion(int nMaxRemainingJobs = 0);
+        void WaitEvent();
 
-        int GetThreadCount() const { return (int)aWT.size(); }
+        /** Return the number of threads setup */
+        int GetThreadCount() const { return static_cast<int>(aWT.size()); }
 };
 
 #endif // CPL_WORKER_THREAD_POOL_H_INCLUDED_

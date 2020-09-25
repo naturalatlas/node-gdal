@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: sdtsxref.cpp 33717 2016-03-14 06:29:14Z goatbar $
  *
  * Project:  SDTS Translator
  * Purpose:  Implementation of SDTS_XREF class for reading XREF module.
@@ -29,7 +28,7 @@
 
 #include "sdts_al.h"
 
-CPL_CVSID("$Id: sdtsxref.cpp 33717 2016-03-14 06:29:14Z goatbar $");
+CPL_CVSID("$Id: sdtsxref.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                             SDTS_XREF()                              */
@@ -71,10 +70,10 @@ int SDTS_XREF::Read( const char * pszFilename )
 /*      Read the first record, and verify that this is an XREF record.  */
 /* -------------------------------------------------------------------- */
     DDFRecord *poRecord = oXREFFile.ReadRecord();
-    if( poRecord == NULL )
+    if( poRecord == nullptr )
         return FALSE;
 
-    if( poRecord->GetStringSubfield( "XREF", 0, "MODN", 0 ) == NULL )
+    if( poRecord->GetStringSubfield( "XREF", 0, "MODN", 0 ) == nullptr )
         return FALSE;
 
 /* -------------------------------------------------------------------- */

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id$
+ * $Id: gnm_frmts.h 56bc266446eec2ec791b400736f2a9626134d5d9 2015-07-31 18:36:42Z Dmitry Baryshnikov $
  *
  * Project:  GDAL/OGR Geography Network support (Geographic Network Model)
  * Purpose:  Classes related to format registration, and file opening.

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: gdal_edb.cpp 33720 2016-03-15 00:39:53Z goatbar $
  *
  * Project:  PCIDSK Database File
  * Purpose:  External Database access interface implementation (EDBFile).
@@ -32,7 +31,7 @@
 #include "gdal_priv.h"
 #include "pcidsk.h"
 
-CPL_CVSID("$Id: gdal_edb.cpp 33720 2016-03-15 00:39:53Z goatbar $");
+CPL_CVSID("$Id: gdal_edb.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 using PCIDSK::EDBFile;
 using PCIDSK::eChanType;
@@ -44,7 +43,7 @@ using PCIDSK::CHN_32R;
 using PCIDSK::CHN_C16S;
 using PCIDSK::CHN_UNKNOWN;
 
-EDBFile *GDAL_EDBOpen( std::string osFilename, std::string osAccess );
+EDBFile *GDAL_EDBOpen( const std::string& osFilename, const std::string& osAccess );
 
 /************************************************************************/
 /* ==================================================================== */
@@ -61,35 +60,35 @@ public:
     explicit GDAL_EDBFile( GDALDataset *poDSIn ) { poDS = poDSIn; }
     ~GDAL_EDBFile() { if( poDS ) Close(); }
 
-    int Close() const;
-    int GetWidth() const;
-    int GetHeight() const;
-    int GetChannels() const;
-    int GetBlockWidth(int channel ) const;
-    int GetBlockHeight(int channel ) const;
-    eChanType GetType(int channel ) const;
+    int Close() const override;
+    int GetWidth() const override;
+    int GetHeight() const override;
+    int GetChannels() const override;
+    int GetBlockWidth(int channel ) const override;
+    int GetBlockHeight(int channel ) const override;
+    eChanType GetType(int channel ) const override;
     int ReadBlock(int channel,
                   int block_index, void *buffer,
                   int win_xoff, int win_yoff,
-                  int win_xsize, int win_ysize );
-    int WriteBlock( int channel, int block_index, void *buffer);
+                  int win_xsize, int win_ysize ) override;
+    int WriteBlock( int channel, int block_index, void *buffer) override;
 };
 
 /************************************************************************/
 /*                            GDAL_EDBOpen()                            */
 /************************************************************************/
 
-EDBFile *GDAL_EDBOpen( std::string osFilename, std::string osAccess )
+EDBFile *GDAL_EDBOpen( const std::string& osFilename, const std::string& osAccess )
 
 {
-    GDALDataset *poDS;
+    GDALDataset *poDS = nullptr;
 
     if( osAccess == "r" )
         poDS = reinterpret_cast<GDALDataset *>( GDALOpen( osFilename.c_str(), GA_ReadOnly )) ;
     else
         poDS = reinterpret_cast<GDALDataset *>( GDALOpen( osFilename.c_str(), GA_Update ) );
 
-    if( poDS == NULL )
+    if( poDS == nullptr )
         ThrowPCIDSKException( "%s", CPLGetLastErrorMsg() );
 
     return new GDAL_EDBFile( poDS );
@@ -102,10 +101,10 @@ EDBFile *GDAL_EDBOpen( std::string osFilename, std::string osAccess )
 int GDAL_EDBFile::Close() const
 
 {
-    if( poDS != NULL )
+    if( poDS != nullptr )
     {
         delete poDS;
-        const_cast<GDAL_EDBFile*>( this )->poDS = NULL;
+        const_cast<GDAL_EDBFile*>( this )->poDS = nullptr;
     }
 
     return 1;
@@ -242,7 +241,7 @@ int GDAL_EDBFile::ReadBlock( int channel,
                                     win_xsize, win_ysize,
                                     buffer, win_xsize, win_ysize,
                                     poBand->GetRasterDataType(),
-                                    nPixelOffset, nLineOffset, NULL );
+                                    nPixelOffset, nLineOffset, nullptr );
 
     if( eErr != CE_None )
     {
@@ -296,7 +295,7 @@ int GDAL_EDBFile::WriteBlock( int channel, int block_index, void *buffer)
                                     nBlockY * nBlockYSize,
                                     nWinXSize, nWinYSize,
                                     buffer, nWinXSize, nWinYSize,
-                                    poBand->GetRasterDataType(), 0, 0, NULL );
+                                    poBand->GetRasterDataType(), 0, 0, nullptr );
 
     if( eErr != CE_None )
     {

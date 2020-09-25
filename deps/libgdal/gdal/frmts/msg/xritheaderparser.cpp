@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: xritheaderparser.cpp 33720 2016-03-15 00:39:53Z goatbar $
  *
  * Purpose:  Implementation of XRITHeaderParser class. Parse the header
  *           of the combined XRIT header/data files.
@@ -27,9 +26,13 @@
  * DEALINGS IN THE SOFTWARE.
  ******************************************************************************/
 
+ #include "cpl_port.h"  // Must be first.
+
 #include "xritheaderparser.h"
 #include <cstdlib> // malloc, free
 #include <cstring> // memcpy
+
+CPL_CVSID("$Id: xritheaderparser.cpp 005da33513859a66dce5bc7a938ecffa93386460 2018-03-17 15:54:12Z Even Rouault $")
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -69,18 +72,11 @@ XRITHeaderParser::XRITHeaderParser(std::ifstream & ifile)
 
   if (!m_isValid) // seek back to original position
   {
-#if _MSC_VER > 1000 && _MSC_VER < 1300
-    ifile.seekg(-probeSize, std::ios_base::seekdir::cur);
-#else
     ifile.seekg(-probeSize, std::ios_base::cur);
-#endif
   }
 }
 
-XRITHeaderParser::~XRITHeaderParser()
-{
-
-}
+XRITHeaderParser::~XRITHeaderParser() {}
 
 int XRITHeaderParser::parseInt16(unsigned char * num)
 {
@@ -94,7 +90,7 @@ long XRITHeaderParser::parseInt32(unsigned char * num)
 
 void XRITHeaderParser::parseHeader(unsigned char * buf, long totalHeaderLength)
 {
-  int remainingHeaderLength = totalHeaderLength;
+  int remainingHeaderLength = static_cast<int>(totalHeaderLength);
 
   while (remainingHeaderLength > 0)
   {
@@ -123,10 +119,10 @@ void XRITHeaderParser::parseHeader(unsigned char * buf, long totalHeaderLength)
         break;
       case 2: // image navigation
         {
-          long cfac = parseInt32(&buf[35]); // column scaling factor
+          /*long cfac =*/ parseInt32(&buf[35]); // column scaling factor
           long lfac = parseInt32(&buf[39]); // line scaling factor
-          long coff = parseInt32(&buf[43]); // column offset
-          long loff = parseInt32(&buf[47]); // line offset
+          /*long coff =*/ parseInt32(&buf[43]); // column offset
+          /*long loff =*/ parseInt32(&buf[47]); // line offset
           if (lfac >= 0)
             m_scanNorth = true;
           else

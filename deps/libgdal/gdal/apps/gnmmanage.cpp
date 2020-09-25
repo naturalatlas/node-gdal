@@ -27,16 +27,18 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#include "gdal.h"
 #include "commonutils.h"
 #include "cpl_string.h"
+#include "gdal_version.h"
+#include "gdal.h"
 #include "gnm.h"
+#include "gnm_priv.h"
 
 //#include "ogr_p.h"
 //#include "gnm.h"
 //#include "gnm_api.h"
 
-CPL_CVSID("$Id$");
+CPL_CVSID("$Id: gnmmanage.cpp 5da1c4d1b6c7e38f7f5917fff3ddbc8ad42af7aa 2018-03-30 21:59:13 +0200 Even Rouault $")
 
 enum operation
 {
@@ -91,29 +93,29 @@ static void Usage(const char* pszAdditionalMsg, int bShort)
         GDALDriverH hDriver = GDALGetDriver(iDr);
 
         const char *pszRFlag = "", *pszWFlag, *pszVirtualIO, *pszSubdatasets;
-        char** papszMD = GDALGetMetadata( hDriver, NULL );
+        char** papszMD = GDALGetMetadata( hDriver, nullptr );
 
-        if( CSLFetchBoolean( papszMD, GDAL_DCAP_RASTER, FALSE ) )
+        if( CPLFetchBool( papszMD, GDAL_DCAP_RASTER, false ) )
             continue;
-        if( CSLFetchBoolean( papszMD, GDAL_DCAP_VECTOR, FALSE ) )
+        if( CPLFetchBool( papszMD, GDAL_DCAP_VECTOR, false ) )
             continue;
 
-        if( CSLFetchBoolean( papszMD, GDAL_DCAP_OPEN, FALSE ) )
+        if( CPLFetchBool( papszMD, GDAL_DCAP_OPEN, false ) )
             pszRFlag = "r";
 
-        if( CSLFetchBoolean( papszMD, GDAL_DCAP_CREATE, FALSE ) )
+        if( CPLFetchBool( papszMD, GDAL_DCAP_CREATE, false ) )
             pszWFlag = "w+";
-        else if( CSLFetchBoolean( papszMD, GDAL_DCAP_CREATECOPY, FALSE ) )
+        else if( CPLFetchBool( papszMD, GDAL_DCAP_CREATECOPY, false ) )
             pszWFlag = "w";
         else
             pszWFlag = "o";
 
-        if( CSLFetchBoolean( papszMD, GDAL_DCAP_VIRTUALIO, FALSE ) )
+        if( CPLFetchBool( papszMD, GDAL_DCAP_VIRTUALIO, false ) )
             pszVirtualIO = "v";
         else
             pszVirtualIO = "";
 
-        if( CSLFetchBoolean( papszMD, GDAL_DMD_SUBDATASETS, FALSE ) )
+        if( CPLFetchBool( papszMD, GDAL_DMD_SUBDATASETS, false ) )
             pszSubdatasets = "s";
         else
             pszSubdatasets = "";
@@ -150,9 +152,8 @@ static void Usage(const char* pszAdditionalMsg, int bShort)
 
 static void Usage(int bShort = TRUE)
 {
-    Usage(NULL, bShort);
+    Usage(nullptr, bShort);
 }
-
 
 /************************************************************************/
 /*                                main()                                */
@@ -160,14 +161,15 @@ static void Usage(int bShort = TRUE)
 
 #define CHECK_HAS_ENOUGH_ADDITIONAL_ARGS(nExtraArg) \
     do { if (iArg + nExtraArg >= nArgc) \
-        Usage(CPLSPrintf("%s option requires %d argument(s)", papszArgv[iArg], nExtraArg)); } while(0)
+        Usage(CPLSPrintf("%s option requires %d argument(s)", \
+                         papszArgv[iArg], nExtraArg)); } while( false )
 
-int main( int nArgc, char ** papszArgv )
+MAIN_START(nArgc, papszArgv)
 
 {
     int bQuiet = FALSE;
-    const char *pszFormat = NULL;
-    const char *pszSRS = NULL;
+    const char *pszFormat = nullptr;
+    const char *pszSRS = nullptr;
     GNMGFID nSrcFID = -1;
     GNMGFID nTgtFID = -1;
     GNMGFID nConFID = -1;
@@ -175,14 +177,14 @@ int main( int nArgc, char ** papszArgv )
     double dfInvCost = 1.0;
     GNMDirection eDir = GNM_EDGE_DIR_BOTH;
     const char *pszRuleStr = "";
-    const char *pszDataSource = NULL;
-    char **papszDSCO = NULL;
-    const char *pszInputDataset = NULL;
-    const char *pszInputLayer = NULL;
+    const char *pszDataSource = nullptr;
+    char **papszDSCO = nullptr;
+    const char *pszInputDataset = nullptr;
+    const char *pszInputLayer = nullptr;
     double dfTolerance = 0.0001;
     operation stOper = op_unknown;
-    char **papszLayers = NULL;
-    GNMNetwork *poDS = NULL;
+    char **papszLayers = nullptr;
+    GNMNetwork *poDS = nullptr;
     std::vector<GNMGFID> anFIDsToBlock;
     std::vector<GNMGFID> anFIDsToUnblock;
     bool bUnblockAll = false;
@@ -239,7 +241,7 @@ int main( int nArgc, char ** papszArgv )
             stOper = op_info;
         }
 
-        else if( EQUAL(papszArgv[iArg],"-f") )
+        else if( EQUAL(papszArgv[iArg],"-f") || EQUAL(papszArgv[iArg],"-of") )
         {
             CHECK_HAS_ENOUGH_ADDITIONAL_ARGS(1);
             pszFormat = papszArgv[++iArg];
@@ -355,7 +357,7 @@ int main( int nArgc, char ** papszArgv )
             Usage(CPLSPrintf("Unknown option name '%s'", papszArgv[iArg]));
         }
 
-        else if( pszDataSource == NULL )
+        else if( pszDataSource == nullptr )
             pszDataSource = papszArgv[iArg];
         else
             papszLayers = CSLAddString( papszLayers, papszArgv[iArg] );
@@ -365,7 +367,7 @@ int main( int nArgc, char ** papszArgv )
 
     if(stOper == op_info)
     {
-        if(pszDataSource == NULL)
+        if(pszDataSource == nullptr)
             Usage("No network dataset provided");
 
         //TODO for output:
@@ -373,21 +375,26 @@ int main( int nArgc, char ** papszArgv )
 
         // open
 
-        poDS = (GNMNetwork*) GDALOpenEx( pszDataSource, GDAL_OF_READONLY |
-                                    GDAL_OF_GNM, NULL, NULL, NULL );
+        poDS = cpl::down_cast<GNMNetwork*>(static_cast<GDALDataset*>(
+            GDALOpenEx( pszDataSource, GDAL_OF_READONLY |
+                                    GDAL_OF_GNM, nullptr, nullptr, nullptr )));
 
-        GDALDriver         *poDriver = NULL;
-        if( poDS != NULL )
+        GDALDriver         *poDriver = nullptr;
+        if( poDS != nullptr )
             poDriver = poDS->GetDriver();
 
-        if( poDS == NULL )
+        if( poDS == nullptr )
         {
             fprintf(stderr, "FAILURE:\nUnable to open datasource `%s'.\n",
                     pszDataSource);
             exit(1);
         }
 
-        CPLAssert( poDriver != NULL);
+        if( poDriver == nullptr )
+        {
+            CPLAssert( false );
+            exit(1);
+        }
 
         printf( "INFO: Open of `%s'\n      using driver `%s' successful.\n",
                     pszDataSource, poDriver->GetDescription() );
@@ -397,17 +404,17 @@ int main( int nArgc, char ** papszArgv )
         printf( "Network version: %d.%d.\n", nMajor,
                                             poDS->GetVersion() - nMajor * 100 );
         const char* pszName = poDS->GetName();
-        if(NULL != pszName)
+        if(nullptr != pszName)
             printf( "Network name: %s.\n", pszName );
         const char* pszDescript = poDS->GetDescription();
-        if(NULL != pszDescript)
+        if(nullptr != pszDescript)
             printf( "Network description: %s.\n", pszDescript );
 
-        char *pszProjection = (char*)poDS->GetProjectionRef();
-        OGRSpatialReferenceH hSRS = OSRNewSpatialReference(NULL);
+        char *pszProjection = const_cast<char*>(poDS->GetProjectionRef());
+        OGRSpatialReferenceH hSRS = OSRNewSpatialReference(nullptr);
         if( OSRImportFromWkt( hSRS, &pszProjection ) == CE_None )
         {
-            char *pszPrettyWkt = NULL;
+            char *pszPrettyWkt = nullptr;
             OSRExportToPrettyWkt( hSRS, &pszPrettyWkt, FALSE );
 
             printf( "Coordinate System is:\n%s\n", pszPrettyWkt );
@@ -427,7 +434,7 @@ int main( int nArgc, char ** papszArgv )
             {
                 OGRLayer *poLayer = poDS->GetLayer(iLayer);
 
-                if (poLayer != NULL)
+                if (poLayer != nullptr)
                 {
                     printf("  %d: %s", iLayer + 1, poLayer->GetName());
 
@@ -457,7 +464,7 @@ int main( int nArgc, char ** papszArgv )
         GNMGenericNetwork* poGenericNetwork =
                                          dynamic_cast<GNMGenericNetwork*>(poDS);
 
-        if(NULL != poGenericNetwork)
+        if(nullptr != poGenericNetwork)
         {
             CPLStringList oList(poGenericNetwork->GetRules());
             if(oList.Count() > 0)
@@ -469,18 +476,17 @@ int main( int nArgc, char ** papszArgv )
                 }
             }
         }
-
     }
     else if(stOper == op_create)
     {
         const char* pszPath;
         const char* pszNetworkName = CSLFetchNameValue(papszDSCO, GNM_MD_NAME);
 
-        if(pszDataSource == NULL)
+        if(pszDataSource == nullptr)
             Usage("No network dataset provided");
 
         //the DSCO have priority on input keys
-        if(NULL == pszNetworkName)
+        if(nullptr == pszNetworkName)
         {
             pszPath = CPLGetPath(pszDataSource);
             pszNetworkName = CPLGetBasename(pszDataSource);
@@ -491,40 +497,40 @@ int main( int nArgc, char ** papszArgv )
             pszPath = pszDataSource;
         }
 
-        if( pszNetworkName == NULL)
+        if( pszNetworkName == nullptr)
             Usage("No dataset name provided");
 
         const char* pszFinalSRS = CSLFetchNameValue(papszDSCO, GNM_MD_SRS);
-        if(NULL == pszFinalSRS)
+        if(nullptr == pszFinalSRS)
         {
             pszFinalSRS = pszSRS;
             papszDSCO = CSLAddNameValue(papszDSCO, GNM_MD_SRS, pszSRS);
         }
 
-        if(NULL == pszFinalSRS)
+        if(nullptr == pszFinalSRS)
             Usage("No spatial reference provided");
-        if( pszFormat == NULL )
+        if( pszFormat == nullptr )
             Usage("No output format provided");
 
         GDALDriver *poDriver = GetGDALDriverManager()->GetDriverByName(pszFormat);
-        if( poDriver == NULL )
+        if( poDriver == nullptr )
         {
             Usage( CPLSPrintf("%s driver not available", pszFormat) );
         }
 
         char** papszMD = poDriver->GetMetadata();
 
-        if( !CSLFetchBoolean( papszMD, GDAL_DCAP_GNM, FALSE ) )
+        if( !CPLFetchBool( papszMD, GDAL_DCAP_GNM, false ) )
             Usage("not a GNM driver");
 
-        poDS = (GNMNetwork*) poDriver->Create( pszPath, 0, 0, 0, GDT_Unknown,
-                                              papszDSCO );
+        poDS = cpl::down_cast<GNMNetwork*>(poDriver->Create( pszPath, 0, 0, 0, GDT_Unknown,
+                                              papszDSCO ));
 
-        if (NULL == poDS)
+        if (nullptr == poDS)
         {
             fprintf(stderr, "\nFAILURE: Failed to create network in a new dataset at "
                     "%s and with driver %s\n", CPLFormFilename(pszPath,
-                    pszNetworkName, NULL) ,pszFormat);
+                    pszNetworkName, nullptr) ,pszFormat);
             nRet = 1;
         }
         else
@@ -532,32 +538,30 @@ int main( int nArgc, char ** papszArgv )
             if (bQuiet == FALSE)
                 printf("\nNetwork created successfully in a "
                    "new dataset at %s\n", CPLFormFilename(pszPath,
-                    pszNetworkName, NULL));
+                    pszNetworkName, nullptr));
         }
-
     }
     else if(stOper == op_import)
     {
-        if(pszDataSource == NULL)
+        if(pszDataSource == nullptr)
             Usage("No network dataset provided");
 
-        if(pszInputDataset == NULL)
+        if(pszInputDataset == nullptr)
             Usage("No input dataset name provided");
 
-
         // open
-        poDS = (GNMNetwork*) GDALOpenEx( pszDataSource,
-                             GDAL_OF_READONLY | GDAL_OF_GNM, NULL, NULL, NULL );
+        poDS = cpl::down_cast<GNMNetwork*>(static_cast<GDALDataset*>(GDALOpenEx( pszDataSource,
+                             GDAL_OF_READONLY | GDAL_OF_GNM, nullptr, nullptr, nullptr )));
 
-        if(NULL == poDS)
+        if(nullptr == poDS)
         {
             printf("\nFailed to open network at %s\n",pszDataSource);
             goto exit;
         }
 
-        GDALDataset *poSrcDS = (GDALDataset*) GDALOpenEx(pszInputDataset,
-                          GDAL_OF_VECTOR | GDAL_OF_READONLY, NULL, NULL, NULL );
-        if(NULL == poSrcDS)
+        GDALDataset *poSrcDS = static_cast<GDALDataset*>(GDALOpenEx(pszInputDataset,
+                          GDAL_OF_VECTOR | GDAL_OF_READONLY, nullptr, nullptr, nullptr ));
+        if(nullptr == poSrcDS)
         {
             fprintf(stderr, "\nFAILURE: Can not open dataset at %s\n",
                             pszInputDataset);
@@ -567,14 +571,14 @@ int main( int nArgc, char ** papszArgv )
         }
 
         OGRLayer *poSrcLayer;
-        if (pszInputLayer != NULL)
+        if (pszInputLayer != nullptr)
             poSrcLayer = poSrcDS->GetLayerByName(pszInputLayer);
         else
             poSrcLayer = poSrcDS->GetLayer(0);
 
-        if (NULL == poSrcLayer)
+        if (nullptr == poSrcLayer)
         {
-            if (pszInputLayer != NULL)
+            if (pszInputLayer != nullptr)
                 fprintf(stderr, "\nFAILURE: Can not open layer %s in %s\n",
                     pszInputLayer,pszInputDataset);
             else
@@ -588,9 +592,9 @@ int main( int nArgc, char ** papszArgv )
         }
 
         OGRLayer * poLayer = poDS->CopyLayer(poSrcLayer, poSrcLayer->GetName());
-        if (NULL == poLayer)
+        if (nullptr == poLayer)
         {
-            if (pszInputLayer != NULL)
+            if (pszInputLayer != nullptr)
                 fprintf(stderr, "\nFAILURE: Can not copy layer %s from %s\n",
                     pszInputLayer,pszInputDataset);
             else
@@ -604,7 +608,7 @@ int main( int nArgc, char ** papszArgv )
 
         if (bQuiet == FALSE)
         {
-            if (pszInputLayer != NULL)
+            if (pszInputLayer != nullptr)
                 printf("\nLayer %s successfully copied from %s and added to the network at %s\n",
                 pszInputLayer, pszInputDataset, pszDataSource);
             else
@@ -616,14 +620,14 @@ int main( int nArgc, char ** papszArgv )
     }
     else if (stOper == op_connect)
     {
-        if(pszDataSource == NULL)
+        if(pszDataSource == nullptr)
             Usage("No network dataset provided");
 
         // open
-        poDS = (GNMNetwork*) GDALOpenEx( pszDataSource,
-                             GDAL_OF_UPDATE | GDAL_OF_GNM, NULL, NULL, NULL );
+        poDS = cpl::down_cast<GNMNetwork*>(static_cast<GDALDataset*>(GDALOpenEx( pszDataSource,
+                             GDAL_OF_UPDATE | GDAL_OF_GNM, nullptr, nullptr, nullptr )));
 
-        if(NULL == poDS)
+        if(nullptr == poDS)
         {
             fprintf( stderr, "\nFailed to open network at %s\n", pszDataSource);
             nRet = 1;
@@ -633,7 +637,7 @@ int main( int nArgc, char ** papszArgv )
         GNMGenericNetwork* poGenericNetwork =
                                          dynamic_cast<GNMGenericNetwork*>(poDS);
 
-        if(NULL == poGenericNetwork)
+        if(nullptr == poGenericNetwork)
         {
             fprintf( stderr, "\nUnsupported datasource type for this operation\n");
             nRet = 1;
@@ -655,14 +659,14 @@ int main( int nArgc, char ** papszArgv )
     }
     else if (stOper == op_disconnect)
     {
-        if(pszDataSource == NULL)
+        if(pszDataSource == nullptr)
             Usage("No network dataset provided");
 
         // open
-        poDS = (GNMNetwork*) GDALOpenEx( pszDataSource,
-                             GDAL_OF_UPDATE | GDAL_OF_GNM, NULL, NULL, NULL );
+        poDS = cpl::down_cast<GNMNetwork*>(static_cast<GDALDataset*>(GDALOpenEx( pszDataSource,
+                             GDAL_OF_UPDATE | GDAL_OF_GNM, nullptr, nullptr, nullptr )));
 
-        if(NULL == poDS)
+        if(nullptr == poDS)
         {
             fprintf( stderr, "\nFailed to open network at %s\n", pszDataSource);
             nRet = 1;
@@ -672,7 +676,7 @@ int main( int nArgc, char ** papszArgv )
         GNMGenericNetwork* poGenericNetwork =
                                          dynamic_cast<GNMGenericNetwork*>(poDS);
 
-        if(NULL == poGenericNetwork)
+        if(nullptr == poGenericNetwork)
         {
             fprintf( stderr, "\nUnsupported datasource type for this operation\n");
             nRet = 1;
@@ -694,14 +698,14 @@ int main( int nArgc, char ** papszArgv )
     }
     else if (stOper == op_rule)
     {
-        if(pszDataSource == NULL)
+        if(pszDataSource == nullptr)
             Usage("No network dataset provided");
 
         // open
-        poDS = (GNMNetwork*) GDALOpenEx( pszDataSource,
-                             GDAL_OF_UPDATE | GDAL_OF_GNM, NULL, NULL, NULL );
+        poDS = cpl::down_cast<GNMNetwork*>(static_cast<GDALDataset*>(GDALOpenEx( pszDataSource,
+                             GDAL_OF_UPDATE | GDAL_OF_GNM, nullptr, nullptr, nullptr )));
 
-        if(NULL == poDS)
+        if(nullptr == poDS)
         {
             fprintf( stderr, "\nFailed to open network at %s\n", pszDataSource);
             nRet = 1;
@@ -711,7 +715,7 @@ int main( int nArgc, char ** papszArgv )
         GNMGenericNetwork* poGenericNetwork =
                                          dynamic_cast<GNMGenericNetwork*>(poDS);
 
-        if(NULL == poGenericNetwork)
+        if(nullptr == poGenericNetwork)
         {
             fprintf( stderr, "\nUnsupported datasource type for this operation\n");
             nRet = 1;
@@ -732,14 +736,14 @@ int main( int nArgc, char ** papszArgv )
     }
     else if (stOper == op_autoconnect)
     {
-        if(pszDataSource == NULL)
+        if(pszDataSource == nullptr)
             Usage("No network dataset provided");
 
         // open
-        poDS = (GNMNetwork*) GDALOpenEx( pszDataSource,
-                             GDAL_OF_UPDATE | GDAL_OF_GNM, NULL, NULL, NULL );
+        poDS = cpl::down_cast<GNMNetwork*>(static_cast<GDALDataset*>(GDALOpenEx( pszDataSource,
+                             GDAL_OF_UPDATE | GDAL_OF_GNM, nullptr, nullptr, nullptr )));
 
-        if(NULL == poDS)
+        if(nullptr == poDS)
         {
             fprintf( stderr, "\nFailed to open network at %s\n", pszDataSource);
             nRet = 1;
@@ -749,7 +753,7 @@ int main( int nArgc, char ** papszArgv )
         GNMGenericNetwork* poGenericNetwork =
                                          dynamic_cast<GNMGenericNetwork*>(poDS);
 
-        if(NULL == poGenericNetwork)
+        if(nullptr == poGenericNetwork)
         {
             fprintf( stderr, "\nUnsupported datasource type for this operation\n");
             nRet = 1;
@@ -786,18 +790,17 @@ int main( int nArgc, char ** papszArgv )
         {
             printf("Features connected successfully\n");
         }
-
     }
     else if(stOper == op_delete)
     {
-        if(pszDataSource == NULL)
+        if(pszDataSource == nullptr)
             Usage("No network dataset provided");
 
         // open
-        poDS = (GNMNetwork*) GDALOpenEx( pszDataSource,
-                             GDAL_OF_UPDATE | GDAL_OF_GNM, NULL, NULL, NULL );
+        poDS = cpl::down_cast<GNMNetwork*>(static_cast<GDALDataset*>(GDALOpenEx( pszDataSource,
+                             GDAL_OF_UPDATE | GDAL_OF_GNM, nullptr, nullptr, nullptr )));
 
-        if(NULL == poDS)
+        if(nullptr == poDS)
         {
             fprintf( stderr, "\nFailed to open network at %s\n", pszDataSource);
             nRet = 1;
@@ -835,14 +838,14 @@ int main( int nArgc, char ** papszArgv )
     }
     else if(stOper == op_change_st)
     {
-        if(pszDataSource == NULL)
+        if(pszDataSource == nullptr)
             Usage("No dataset in input");
 
         // open
-        poDS = (GNMNetwork*) GDALOpenEx( pszDataSource,
-                             GDAL_OF_UPDATE | GDAL_OF_GNM, NULL, NULL, NULL );
+        poDS = cpl::down_cast<GNMNetwork*>(static_cast<GDALDataset*>(GDALOpenEx( pszDataSource,
+                             GDAL_OF_UPDATE | GDAL_OF_GNM, nullptr, nullptr, nullptr )));
 
-        if(NULL == poDS)
+        if(nullptr == poDS)
         {
             fprintf( stderr, "\nFailed to open network at %s\n", pszDataSource);
             nRet = 1;
@@ -852,7 +855,7 @@ int main( int nArgc, char ** papszArgv )
         GNMGenericNetwork* poGenericNetwork =
                                          dynamic_cast<GNMGenericNetwork*>(poDS);
 
-        if(NULL == poGenericNetwork)
+        if(nullptr == poGenericNetwork)
         {
             fprintf( stderr, "\nUnsupported datasource type for this operation\n");
             nRet = 1;
@@ -912,10 +915,11 @@ exit:
     CSLDestroy( papszDSCO );
     CSLDestroy( papszLayers );
 
-    if( poDS != NULL )
-        GDALClose( (GDALDatasetH)poDS );
+    if( poDS != nullptr )
+        GDALClose(poDS);
 
     GDALDestroyDriverManager();
 
     return nRet;
 }
+MAIN_END

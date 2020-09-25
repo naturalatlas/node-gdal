@@ -64,6 +64,9 @@
 				"../gdal/frmts/gtiff/libtiff/tif_warning.c",
 				"../gdal/frmts/gtiff/libtiff/tif_write.c",
 				"../gdal/frmts/gtiff/libtiff/tif_zip.c",
+				"../gdal/frmts/gtiff/libtiff/tif_webp.c",
+				"../gdal/frmts/gtiff/libtiff/tif_zstd.c",
+				"../gdal/frmts/gtiff/tif_lerc.c",
 				"../gdal/frmts/gtiff/tif_float.c",
 				"../gdal/frmts/gtiff/tifvsi.cpp"
 			],
@@ -71,7 +74,8 @@
 				"../gdal/frmts/zlib",
 				"../gdal/frmts/gtiff",
 				"../gdal/frmts/gtiff/libtiff",
-				"../gdal/frmts/gtiff/libgeotiff"
+				"../gdal/frmts/gtiff/libgeotiff",
+				"../gdal/third_party/LercLib"
 			]
 		}
 	]

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrsegukooadriver.cpp 32110 2015-12-10 17:19:40Z goatbar $
  *
  * Project:  SEG-P1 / UKOOA P1-90 Translator
  * Purpose:  Implements OGRSEGUKOOADriver.
@@ -30,7 +29,7 @@
 #include "ogr_segukooa.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrsegukooadriver.cpp 32110 2015-12-10 17:19:40Z goatbar $");
+CPL_CVSID("$Id: ogrsegukooadriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 extern "C" void RegisterOGRSEGUKOOA();
 
@@ -41,10 +40,10 @@ extern "C" void RegisterOGRSEGUKOOA();
 static GDALDataset *OGRSEGUKOOADriverOpen( GDALOpenInfo* poOpenInfo )
 {
     if( poOpenInfo->eAccess == GA_Update ||
-        poOpenInfo->fpL == NULL ||
+        poOpenInfo->fpL == nullptr ||
         poOpenInfo->pabyHeader[0] != 'H' )
     {
-        return NULL;
+        return nullptr;
     }
 
     OGRSEGUKOOADataSource   *poDS = new OGRSEGUKOOADataSource();
@@ -52,7 +51,7 @@ static GDALDataset *OGRSEGUKOOADriverOpen( GDALOpenInfo* poOpenInfo )
     if( !poDS->Open( poOpenInfo->pszFilename ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
@@ -65,7 +64,7 @@ static GDALDataset *OGRSEGUKOOADriverOpen( GDALOpenInfo* poOpenInfo )
 void RegisterOGRSEGUKOOA()
 
 {
-    if( GDALGetDriverByName( "SEGUKOOA" ) != NULL )
+    if( GDALGetDriverByName( "SEGUKOOA" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();
@@ -80,4 +79,3 @@ void RegisterOGRSEGUKOOA()
 
     GetGDALDriverManager()->RegisterDriver( poDriver );
 }
-

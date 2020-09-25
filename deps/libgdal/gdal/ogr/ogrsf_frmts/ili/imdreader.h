@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id$
+ * $Id: imdreader.h 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $
  *
  * Project:  Interlis 1/2 Translator
  * Purpose:  IlisMeta model reader.
@@ -36,14 +36,13 @@
 #include <list>
 #include <map>
 
-
 class GeomFieldInfo
 {
     OGRFeatureDefn* geomTable; /* separate geometry table for Ili 1 */
 public:
     CPLString       iliGeomType;
 
-    GeomFieldInfo() : geomTable(NULL) {};
+    GeomFieldInfo() : geomTable(nullptr) {}
     ~GeomFieldInfo() {
        if( geomTable )
            geomTable->Release();
@@ -73,7 +72,7 @@ public:
     OGRFeatureDefn* GetGeomTableDefnRef() const { return geomTable; }
     void            SetGeomTableDefn(OGRFeatureDefn* geomTableIn)
     {
-        CPLAssert(geomTable == NULL);
+        CPLAssert(geomTable == nullptr);
         geomTable = geomTableIn;
         if( geomTable )
             geomTable->Reference();
@@ -90,7 +89,7 @@ public:
     GeomFieldInfos  poGeomFieldInfos;
     StructFieldInfos poStructFieldInfos;
 
-    FeatureDefnInfo() : poTableDefn(NULL) {};
+    FeatureDefnInfo() : poTableDefn(nullptr) {}
     ~FeatureDefnInfo() {
        if( poTableDefn )
            poTableDefn->Release();
@@ -122,7 +121,7 @@ public:
     OGRFeatureDefn* GetTableDefnRef() const { return poTableDefn; }
     void            SetTableDefn(OGRFeatureDefn* poTableDefnIn)
     {
-        CPLAssert(poTableDefn == NULL);
+        CPLAssert(poTableDefn == nullptr);
         poTableDefn= poTableDefnIn;
         if( poTableDefn )
             poTableDefn->Reference();
@@ -141,7 +140,7 @@ typedef std::list<IliModelInfo> IliModelInfos;
 
 class ImdReader
 {
-public:
+  public:  // TODO(schwehr): Private?
     int                  iliVersion; /* 1 or 2 */
     IliModelInfos        modelInfos;
     CPLString            mainModelName;
@@ -151,8 +150,8 @@ public:
     char                 codeBlank;
     char                 codeUndefined;
     char                 codeContinue;
-public:
-                         ImdReader(int iliVersion);
+  public:
+    explicit             ImdReader(int iliVersion);
                         ~ImdReader();
     void                 ReadModel(const char *pszFilename);
     FeatureDefnInfo      GetFeatureDefnInfo(const char *pszLayerName);

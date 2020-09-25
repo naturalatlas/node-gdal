@@ -12,7 +12,8 @@
 				"../gdal/frmts/pds/nasakeywordhandler.cpp",
 				"../gdal/frmts/pds/vicarkeywordhandler.cpp",
 				"../gdal/frmts/pds/vicardataset.cpp",
-				"../gdal/frmts/pds/pdsdataset.cpp"
+				"../gdal/frmts/pds/pdsdataset.cpp",
+				"../gdal/frmts/pds/pds4dataset.cpp"
 			],
 			"include_dirs": [
 				"../gdal/frmts/pds",

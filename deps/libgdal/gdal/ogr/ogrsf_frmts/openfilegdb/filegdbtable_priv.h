@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: filegdbtable_priv.h 31777 2015-11-26 14:14:41Z rouault $
+ * $Id: filegdbtable_priv.h 79af835cc61bb895aea679c62073a7dbba03b27b 2017-06-27 23:29:31Z Even Rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements reading of FileGDB tables
@@ -133,6 +133,6 @@ void FileGDBTablePrintError(const char* pszFile, int nLineNumber);
 #define returnErrorAndCleanupIf(expr, cleanup) \
     do { if( (expr) ) { cleanup; returnError(); } } while(0)
 
-}; /* namespace OpenFileGDB */
+} /* namespace OpenFileGDB */
 
 #endif /* FILEGDBTABLE_PRIV_H_INCLUDED */

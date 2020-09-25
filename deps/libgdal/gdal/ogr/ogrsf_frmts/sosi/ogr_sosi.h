@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_sosi.h 34420 2016-06-24 21:06:03Z rouault $
+ * $Id: ogr_sosi.h 1a8cd1b07a75b672150242ef8a59b1821e82a137 2018-05-12 22:35:40 +0200 Even Rouault $
  *
  * Project:  SOSI Translator
  * Purpose:  Implements OGRSOSIDriver.
@@ -54,7 +54,7 @@ class OGRSOSIDataSource; /* defined below */
  * source, in an orderly fashion.                                       *
  ************************************************************************/
 
-class OGRSOSILayer : public OGRLayer {
+class OGRSOSILayer final: public OGRLayer {
     int                 nNextFID;
 
     OGRSOSIDataSource  *poParent;   /* used to call methods from data source */
@@ -70,14 +70,14 @@ public:
     OGRSOSILayer( OGRSOSIDataSource *poPar, OGRFeatureDefn *poFeatDefn, LC_FILADM *poFil, S2I *poHeadDefn);
     ~OGRSOSILayer();
 
-    void                ResetReading();
-    OGRFeature *        GetNextFeature();
-    OGRFeatureDefn *    GetLayerDefn();
+    void                ResetReading() override;
+    OGRFeature *        GetNextFeature() override;
+    OGRFeatureDefn *    GetLayerDefn() override;
 #ifdef WRITE_SUPPORT
     OGRErr              CreateField(OGRFieldDefn *poField, int bApproxOK=TRUE);
     OGRErr              ICreateFeature(OGRFeature *poFeature);
 #endif
-    int                 TestCapability( const char * );
+    int                 TestCapability( const char * ) override;
 };
 
 /************************************************************************
@@ -85,7 +85,7 @@ public:
  * OGRSOSIDataSource reads a SOSI file, prebuilds the features, and     *
  * creates one OGRSOSILayer per geometry type                           *
  ************************************************************************/
-class OGRSOSIDataSource : public OGRDataSource {
+class OGRSOSIDataSource final: public OGRDataSource {
     char                *pszName;
     OGRSOSILayer        **papoLayers;
     int                 nLayers;
@@ -122,19 +122,18 @@ public:
 #ifdef WRITE_SUPPORT
     int                 Create( const char * pszFilename );
 #endif
-    const char          *GetName() {
+    const char          *GetName() override {
         return pszName;
     }
-    int                 GetLayerCount() {
+    int                 GetLayerCount() override {
         return nLayers;
     }
-    OGRLayer            *GetLayer( int );
+    OGRLayer            *GetLayer( int ) override;
 #ifdef WRITE_SUPPORT
     OGRLayer            *ICreateLayer( const char *pszName, OGRSpatialReference  *poSpatialRef=NULL, OGRwkbGeometryType eGType=wkbUnknown, char **papszOptions=NULL);
 #endif
-    int                 TestCapability( const char * );
+    int                 TestCapability( const char * ) override;
 };
-
 
 /************************************************************************
  *                           OGRSOSIDataTypes                           *
@@ -143,7 +142,7 @@ public:
  ************************************************************************/
 
 class OGRSOSISimpleDataType {
-    const char          *pszName; 
+    CPLString           osName;
     OGRFieldType        nType;
 
 public:
@@ -152,35 +151,57 @@ public:
     ~OGRSOSISimpleDataType();
 
     void setType (const char *pszName, OGRFieldType nType);
-    const char          *GetName() {
-        return pszName;
-    };
-    OGRFieldType        GetType() {
+    const char          *GetName() const {
+        return osName.c_str();
+    }
+    OGRFieldType        GetType() const {
         return nType;
-    };
-
+    }
 };
 
 class OGRSOSIDataType {
     OGRSOSISimpleDataType* poElements;
     int                    nElementCount;
+
+    OGRSOSIDataType& operator= (const OGRSOSIDataType& ) = delete;
+
 public:
-    OGRSOSIDataType (int nSize);
+    explicit OGRSOSIDataType (int nSize);
+
+    OGRSOSIDataType( const OGRSOSIDataType& oSrc ) :
+            poElements( nullptr ),
+            nElementCount( oSrc.nElementCount )
+    {
+        poElements = new OGRSOSISimpleDataType[nElementCount];
+        for( int i = 0; i < nElementCount; i++ )
+            poElements[i] = oSrc.poElements[i];
+    }
+
+
+    OGRSOSIDataType( OGRSOSIDataType&& oSrc ) noexcept:
+            poElements( oSrc.poElements ),
+            nElementCount( oSrc.nElementCount )
+    {
+        oSrc.poElements = nullptr;
+        oSrc.nElementCount = 0;
+    }
+
     ~OGRSOSIDataType();
 
     void setElement(int nIndex, const char *name, OGRFieldType type);
     OGRSOSISimpleDataType* getElements() {
         return poElements;
-    };
+    }
     int getElementCount() {
         return nElementCount;
-    };
+    }
 };
 
 typedef std::map<CPLString, OGRSOSIDataType> C2F;
 
 void SOSIInitTypes();
-OGRSOSIDataType* SOSIGetType(CPLString name);
+void SOSICleanupTypes();
+OGRSOSIDataType* SOSIGetType(const CPLString& name);
 int  SOSITypeToInt(const char* value);
 double  SOSITypeToReal(const char* value);
 void SOSITypeToDate(const char* value, int* date);

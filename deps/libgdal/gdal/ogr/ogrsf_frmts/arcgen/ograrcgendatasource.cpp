@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ograrcgendatasource.cpp 32119 2015-12-11 05:47:58Z goatbar $
  *
  * Project:  Arc/Info Generate Translator
  * Purpose:  Implements OGRARCGENDataSource class
@@ -31,15 +30,15 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ograrcgendatasource.cpp 32119 2015-12-11 05:47:58Z goatbar $");
+CPL_CVSID("$Id: ograrcgendatasource.cpp 002b050d9a9ef403a732c1210784736ef97216d4 2018-04-09 21:34:55 +0200 Even Rouault $")
 
 /************************************************************************/
 /*                          OGRARCGENDataSource()                          */
 /************************************************************************/
 
 OGRARCGENDataSource::OGRARCGENDataSource() :
-    pszName(NULL),
-    papoLayers(NULL),
+    pszName(nullptr),
+    papoLayers(nullptr),
     nLayers(0)
 {}
 
@@ -74,7 +73,7 @@ OGRLayer *OGRARCGENDataSource::GetLayer( int iLayer )
 
 {
     if( iLayer < 0 || iLayer >= nLayers )
-        return NULL;
+        return nullptr;
 
     return papoLayers[iLayer];
 }
@@ -93,12 +92,12 @@ int OGRARCGENDataSource::Open( const char * pszFilename )
 // --------------------------------------------------------------------
 
     VSILFILE* fp = VSIFOpenL(pszFilename, "rb");
-    if (fp == NULL)
+    if (fp == nullptr)
         return FALSE;
 
     /* Go to end of file, and count the number of END keywords */
-    /* If there's 1, it's a point layer */
-    /* If there's 2, it's a linestring or polygon layer */
+    /* If there's 1, it is a point layer */
+    /* If there's 2, it is a linestring or polygon layer */
     VSIFSeekL( fp, 0, SEEK_END );
     vsi_l_offset nSize = VSIFTellL(fp);
     if (nSize < 10)
@@ -115,21 +114,21 @@ int OGRARCGENDataSource::Open( const char * pszFilename )
 
     const char* szPtr = szBuffer;
     const char* szEnd = strstr(szPtr, "END");
-    if (szEnd == NULL) szEnd = strstr(szPtr, "end");
-    if (szEnd == NULL)
+    if (szEnd == nullptr) szEnd = strstr(szPtr, "end");
+    if (szEnd == nullptr)
     {
         VSIFCloseL(fp);
         return FALSE;
     }
     szPtr = szEnd + 3;
     szEnd = strstr(szPtr, "END");
-    if (szEnd == NULL) szEnd = strstr(szPtr, "end");
+    if (szEnd == nullptr) szEnd = strstr(szPtr, "end");
 
     OGRwkbGeometryType eType;
-    if (szEnd == NULL)
+    if (szEnd == nullptr)
     {
-        const char* pszLine = CPLReadLine2L(fp,256,NULL);
-        if (pszLine == NULL)
+        const char* pszLine = CPLReadLine2L(fp,256,nullptr);
+        if (pszLine == nullptr)
         {
             VSIFCloseL(fp);
             return FALSE;
@@ -154,9 +153,9 @@ int OGRARCGENDataSource::Open( const char * pszFilename )
         eType = wkbUnknown;
         CPLString osFirstX, osFirstY;
         CPLString osLastX, osLastY;
-        int bIs3D = FALSE;
-        const char* pszLine;
-        while((pszLine = CPLReadLine2L(fp,256,NULL)) != NULL)
+        bool bIs3D = false;
+        const char* pszLine = nullptr;
+        while( (pszLine = CPLReadLine2L(fp,256,nullptr)) != nullptr )
         {
             nLineNumber ++;
             if (nLineNumber == 2)
@@ -166,7 +165,7 @@ int OGRARCGENDataSource::Open( const char * pszFilename )
                 if (nTokens == 2 || nTokens == 3)
                 {
                     if (nTokens == 3)
-                        bIs3D = TRUE;
+                        bIs3D = true;
                     osFirstX = papszTokens[0];
                     osFirstY = papszTokens[1];
                 }
@@ -180,9 +179,9 @@ int OGRARCGENDataSource::Open( const char * pszFilename )
                 {
                     if (osFirstX.compare(osLastX) == 0 &&
                         osFirstY.compare(osLastY) == 0)
-                        eType = (bIs3D) ? wkbPolygon25D : wkbPolygon;
+                        eType = bIs3D ? wkbPolygon25D : wkbPolygon;
                     else
-                        eType = (bIs3D) ? wkbLineString25D : wkbLineString;
+                        eType = bIs3D ? wkbLineString25D : wkbLineString;
                     break;
                 }
 

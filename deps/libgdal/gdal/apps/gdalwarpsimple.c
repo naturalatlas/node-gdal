@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: gdalwarpsimple.c 33720 2016-03-15 00:39:53Z goatbar $
  *
  * Project:  Mapinfo Image Warper
  * Purpose:  Commandline program for doing a variety of image warps, including
@@ -33,7 +32,7 @@
 #include "cpl_string.h"
 #include "ogr_srs_api.h"
 
-CPL_CVSID("$Id: gdalwarpsimple.c 33720 2016-03-15 00:39:53Z goatbar $");
+CPL_CVSID("$Id: gdalwarpsimple.c ff8146d84de7cba8e09d212d5481ea7d2ede3e98 2017-06-27 20:47:31Z Even Rouault $")
 
 static GDALDatasetH
 GDALWarpCreateOutput( GDALDatasetH hSrcDS, const char *pszFilename,
@@ -41,8 +40,8 @@ GDALWarpCreateOutput( GDALDatasetH hSrcDS, const char *pszFilename,
                       const char *pszTargetSRS, int nOrder,
                       char **papszCreateOptions );
 
-static double	       dfMinX=0.0, dfMinY=0.0, dfMaxX=0.0, dfMaxY=0.0;
-static double	       dfXRes=0.0, dfYRes=0.0;
+static double          dfMinX=0.0, dfMinY=0.0, dfMaxX=0.0, dfMaxY=0.0;
+static double          dfXRes=0.0, dfYRes=0.0;
 static int             nForcePixels=0, nForceLines=0;
 
 /************************************************************************/
@@ -95,7 +94,7 @@ char *SanitizeSRS( const char *pszUserInput )
 int main( int argc, char ** argv )
 
 {
-    GDALDatasetH	hSrcDS, hDstDS;
+    GDALDatasetH        hSrcDS, hDstDS;
     const char         *pszFormat = "GTiff";
     char               *pszTargetSRS = NULL;
     char               *pszSourceSRS = NULL;
@@ -343,7 +342,7 @@ GDALWarpCreateOutput( GDALDatasetH hSrcDS, const char *pszFilename,
     if( hDriver == NULL
         || GDALGetMetadataItem( hDriver, GDAL_DCAP_CREATE, NULL ) == NULL )
     {
-        int	iDr;
+        int iDr;
 
         printf( "Output driver `%s' not recognised or does not support\n",
                 pszFormat );

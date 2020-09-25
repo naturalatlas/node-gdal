@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: sdtsdataset.cpp 33717 2016-03-14 06:29:14Z goatbar $
  *
  * Project:  SDTS Translator
  * Purpose:  GDALDataset driver for SDTS Raster translator.
@@ -33,7 +32,7 @@
 #include "ogr_spatialref.h"
 #include "sdts_al.h"
 
-CPL_CVSID("$Id: sdtsdataset.cpp 33717 2016-03-14 06:29:14Z goatbar $");
+CPL_CVSID("$Id: sdtsdataset.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /**
  \file sdtsdataset.cpp
@@ -59,12 +58,13 @@ class SDTSDataset : public GDALPamDataset
     char        *pszProjection;
 
   public:
+                 SDTSDataset();
     virtual     ~SDTSDataset();
 
     static GDALDataset *Open( GDALOpenInfo * );
 
-    virtual const char *GetProjectionRef(void);
-    virtual CPLErr GetGeoTransform( double * );
+    virtual const char *GetProjectionRef(void) override;
+    virtual CPLErr GetGeoTransform( double * ) override;
 };
 
 class SDTSRasterBand : public GDALPamRasterBand
@@ -77,12 +77,24 @@ class SDTSRasterBand : public GDALPamRasterBand
 
                 SDTSRasterBand( SDTSDataset *, int, SDTSRasterReader * );
 
-    virtual CPLErr IReadBlock( int, int, void * );
+    virtual CPLErr IReadBlock( int, int, void * ) override;
 
-    virtual double GetNoDataValue( int *pbSuccess );
-    virtual const char *GetUnitType();
+    virtual double GetNoDataValue( int *pbSuccess ) override;
+    virtual const char *GetUnitType() override;
 };
 
+
+/************************************************************************/
+/*                             SDTSDataset()                            */
+/************************************************************************/
+
+SDTSDataset::SDTSDataset() :
+    poTransfer( nullptr ),
+    poRL( nullptr ),
+    pszProjection( nullptr )
+
+{
+}
 
 /************************************************************************/
 /*                            ~SDTSDataset()                            */
@@ -93,10 +105,10 @@ SDTSDataset::~SDTSDataset()
 {
     FlushCache();
 
-    if( poTransfer != NULL )
+    if( poTransfer != nullptr )
         delete poTransfer;
 
-    if( poRL != NULL )
+    if( poRL != nullptr )
         delete poRL;
 
     CPLFree( pszProjection );
@@ -114,17 +126,17 @@ GDALDataset *SDTSDataset::Open( GDALOpenInfo * poOpenInfo )
 /*      record is in fact a SDTS file descriptor record.                */
 /* -------------------------------------------------------------------- */
     if( poOpenInfo->nHeaderBytes < 24 )
-        return NULL;
+        return nullptr;
 
     char *pachLeader = reinterpret_cast<char *>( poOpenInfo->pabyHeader );
     if( pachLeader[5] != '1' && pachLeader[5] != '2' && pachLeader[5] != '3' )
-        return NULL;
+        return nullptr;
 
     if( pachLeader[6] != 'L' )
-        return NULL;
+        return nullptr;
 
     if( pachLeader[8] != '1' && pachLeader[8] != ' ' )
-        return NULL;
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Try opening the dataset.                                        */
@@ -134,7 +146,7 @@ GDALDataset *SDTSDataset::Open( GDALOpenInfo * poOpenInfo )
     if( !poTransfer->Open( poOpenInfo->pszFilename ) )
     {
         delete poTransfer;
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -146,14 +158,14 @@ GDALDataset *SDTSDataset::Open( GDALOpenInfo * poOpenInfo )
         CPLError( CE_Failure, CPLE_NotSupported,
                   "The SDTS driver does not support update access to existing"
                   " datasets.\n" );
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
 /*      Find the first raster layer.  If there are none, abort          */
 /*      returning an error.                                             */
 /* -------------------------------------------------------------------- */
-    SDTSRasterReader    *poRL = NULL;
+    SDTSRasterReader    *poRL = nullptr;
 
     for( int i = 0; i < poTransfer->GetLayerCount(); i++ )
     {
@@ -164,7 +176,7 @@ GDALDataset *SDTSDataset::Open( GDALOpenInfo * poOpenInfo )
         }
     }
 
-    if( poRL == NULL )
+    if( poRL == nullptr )
     {
         delete poTransfer;
 
@@ -172,7 +184,7 @@ GDALDataset *SDTSDataset::Open( GDALOpenInfo * poOpenInfo )
                   "%s is an SDTS transfer, but has no raster cell layers.\n"
                   "Perhaps it is a vector transfer?\n",
                   poOpenInfo->pszFilename );
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -225,17 +237,14 @@ GDALDataset *SDTSDataset::Open( GDALOpenInfo * poOpenInfo )
         oSRS.SetWellKnownGeogCS( "NAD83" );
     else if( EQUAL(poXREF->pszDatum, "WGC") )
         oSRS.SetWellKnownGeogCS( "WGS72" );
-    else if( EQUAL(poXREF->pszDatum, "WGE") )
-        oSRS.SetWellKnownGeogCS( "WGS84" );
-    else
+    else /* if( EQUAL(poXREF->pszDatum, "WGE") ) or default */
         oSRS.SetWellKnownGeogCS( "WGS84" );
 
     oSRS.Fixup();
 
-    poDS->pszProjection = NULL;
+    poDS->pszProjection = nullptr;
     if( oSRS.exportToWkt( &poDS->pszProjection ) != OGRERR_NONE )
         poDS->pszProjection = CPLStrdup("");
-
 
 /* -------------------------------------------------------------------- */
 /*      Get metadata from the IDEN file.                                */
@@ -246,12 +255,12 @@ GDALDataset *SDTSDataset::Open( GDALOpenInfo * poOpenInfo )
         DDFModule   oIDENFile;
         if( oIDENFile.Open( pszIDENFilePath ) )
         {
-            DDFRecord* poRecord;
+            DDFRecord* poRecord = nullptr;
 
-            while( (poRecord = oIDENFile.ReadRecord()) != NULL )
+            while( (poRecord = oIDENFile.ReadRecord()) != nullptr )
             {
 
-                if( poRecord->GetStringSubfield( "IDEN", 0, "MODN", 0 ) == NULL )
+                if( poRecord->GetStringSubfield( "IDEN", 0, "MODN", 0 ) == nullptr )
                     continue;
 
                 static const char* const fields[][2] = { { "TITL", "TITLE" },
@@ -360,7 +369,7 @@ CPLErr SDTSRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
 double SDTSRasterBand::GetNoDataValue( int *pbSuccess )
 
 {
-    if( pbSuccess != NULL )
+    if( pbSuccess != nullptr )
         *pbSuccess = TRUE;
 
     return -32766.0;
@@ -388,7 +397,7 @@ const char *SDTSRasterBand::GetUnitType()
 void GDALRegister_SDTS()
 
 {
-    if( GDALGetDriverByName( "SDTS" ) != NULL )
+    if( GDALGetDriverByName( "SDTS" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

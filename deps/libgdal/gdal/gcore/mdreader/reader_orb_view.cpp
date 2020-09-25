@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: reader_orb_view.cpp 29915 2015-08-29 21:29:57Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Read metadata from OrbView imagery.
@@ -28,44 +27,53 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
 #include "reader_orb_view.h"
 
-CPL_CVSID("$Id: reader_orb_view.cpp 29915 2015-08-29 21:29:57Z rouault $");
+#include <ctime>
+
+#include "cpl_conv.h"
+#include "cpl_error.h"
+#include "cpl_string.h"
+#include "gdal_priv.h"
+
+CPL_CVSID("$Id: reader_orb_view.cpp ec7b85e6bb8f9737693a31f0bf7166e31e10992e 2018-04-16 00:08:36 +0200 Even Rouault $")
 
 /**
  * GDALMDReaderOrbView()
  */
 GDALMDReaderOrbView::GDALMDReaderOrbView(const char *pszPath,
-        char **papszSiblingFiles) : GDALMDReaderBase(pszPath, papszSiblingFiles)
+                                         char **papszSiblingFiles) :
+    GDALMDReaderBase(pszPath, papszSiblingFiles),
+    m_osIMDSourceFilename( GDALFindAssociatedFile( pszPath, "PVL",
+                                                    papszSiblingFiles, 0 ) ),
+    m_osRPBSourceFilename( CPLString() )
 {
-    m_osIMDSourceFilename = GDALFindAssociatedFile( pszPath, "PVL",
-                                                    papszSiblingFiles, 0 );
-
     const char* pszBaseName = CPLGetBasename(pszPath);
     const char* pszDirName = CPLGetDirname(pszPath);
 
-    const char* pszRPBSourceFilename = CPLFormFilename( pszDirName,
+    CPLString osRPBSourceFilename = CPLFormFilename( pszDirName,
                                                         CPLSPrintf("%s_rpc",
                                                         pszBaseName),
                                                         "txt" );
-    if (CPLCheckForFile((char*)pszRPBSourceFilename, papszSiblingFiles))
+    if (CPLCheckForFile(&osRPBSourceFilename[0], papszSiblingFiles))
     {
-        m_osRPBSourceFilename = pszRPBSourceFilename;
+        m_osRPBSourceFilename = osRPBSourceFilename;
     }
     else
     {
-        pszRPBSourceFilename = CPLFormFilename( pszDirName, CPLSPrintf("%s_RPC",
+        osRPBSourceFilename = CPLFormFilename( pszDirName, CPLSPrintf("%s_RPC",
                                                 pszBaseName), "TXT" );
-        if (CPLCheckForFile((char*)pszRPBSourceFilename, papszSiblingFiles))
+        if (CPLCheckForFile(&osRPBSourceFilename[0], papszSiblingFiles))
         {
-            m_osRPBSourceFilename = pszRPBSourceFilename;
+            m_osRPBSourceFilename = osRPBSourceFilename;
         }
     }
 
-    if( m_osIMDSourceFilename.size() )
+    if( !m_osIMDSourceFilename.empty() )
         CPLDebug( "MDReaderOrbView", "IMD Filename: %s",
                   m_osIMDSourceFilename.c_str() );
-    if( m_osRPBSourceFilename.size() )
+    if( !m_osRPBSourceFilename.empty() )
         CPLDebug( "MDReaderOrbView", "RPB Filename: %s",
                   m_osRPBSourceFilename.c_str() );
 }
@@ -93,7 +101,7 @@ bool GDALMDReaderOrbView::HasRequiredFiles() const
  */
 char** GDALMDReaderOrbView::GetMetadataFiles() const
 {
-    char **papszFileList = NULL;
+    char **papszFileList = nullptr;
     if(!m_osIMDSourceFilename.empty())
         papszFileList= CSLAddString( papszFileList, m_osIMDSourceFilename );
     if(!m_osRPBSourceFilename.empty())
@@ -124,7 +132,7 @@ void GDALMDReaderOrbView::LoadMetadata()
 
     m_bIsMetadataLoad = true;
 
-    if(NULL == m_papszIMDMD)
+    if(nullptr == m_papszIMDMD)
     {
         return;
     }
@@ -132,7 +140,7 @@ void GDALMDReaderOrbView::LoadMetadata()
     //extract imagery metadata
     const char* pszSatId = CSLFetchNameValue(m_papszIMDMD,
                                              "sensorInfo.satelliteName");
-    if(NULL != pszSatId)
+    if(nullptr != pszSatId)
     {
         m_papszIMAGERYMD = CSLAddNameValue(m_papszIMAGERYMD,
                                            MD_NAME_SATELLITE,
@@ -141,7 +149,7 @@ void GDALMDReaderOrbView::LoadMetadata()
 
     const char* pszCloudCover = CSLFetchNameValue(m_papszIMDMD,
                                    "productInfo.productCloudCoverPercentage");
-    if(NULL != pszCloudCover)
+    if(nullptr != pszCloudCover)
     {
         m_papszIMAGERYMD = CSLAddNameValue(m_papszIMAGERYMD,
                                            MD_NAME_CLOUDCOVER, pszCloudCover);
@@ -150,7 +158,7 @@ void GDALMDReaderOrbView::LoadMetadata()
     const char* pszDateTime = CSLFetchNameValue(m_papszIMDMD,
                                  "inputImageInfo.firstLineAcquisitionDateTime");
 
-    if(NULL != pszDateTime)
+    if(nullptr != pszDateTime)
     {
         char buffer[80];
         time_t timeMid = GetAcquisitionTimeFromString(pszDateTime);

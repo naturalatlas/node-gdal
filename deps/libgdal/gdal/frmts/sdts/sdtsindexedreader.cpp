@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: sdtsindexedreader.cpp 33717 2016-03-14 06:29:14Z goatbar $
  *
  * Project:  SDTS Translator
  * Purpose:  Implmementation of SDTSIndexedReader class.  This base class for
@@ -32,15 +31,15 @@
 
 #include "sdts_al.h"
 
-CPL_CVSID("$Id: sdtsindexedreader.cpp 33717 2016-03-14 06:29:14Z goatbar $");
+CPL_CVSID("$Id: sdtsindexedreader.cpp e13dcd4dc171dfeed63f912ba06b9374ce4f3bb2 2018-03-18 21:37:41Z Even Rouault $")
 
 /************************************************************************/
 /*                         SDTSIndexedReader()                          */
 /************************************************************************/
 
 SDTSIndexedReader::SDTSIndexedReader() :
-    nIndexSize(0),
-    papoFeatures(NULL),
+    nIndexSize(-1),
+    papoFeatures(nullptr),
     iCurrentFeature(0)
 {}
 
@@ -66,10 +65,10 @@ SDTSIndexedReader::~SDTSIndexedReader()
   efficiently.
   */
 
-int SDTSIndexedReader::IsIndexed()
+int SDTSIndexedReader::IsIndexed() const
 
 {
-    return nIndexSize != 0;
+    return nIndexSize >= 0;
 }
 
 /************************************************************************/
@@ -88,13 +87,13 @@ void SDTSIndexedReader::ClearIndex()
 {
     for( int i = 0; i < nIndexSize; i++ )
     {
-        if( papoFeatures[i] != NULL )
+        if( papoFeatures[i] != nullptr )
             delete papoFeatures[i];
     }
 
     CPLFree( papoFeatures );
 
-    papoFeatures = NULL;
+    papoFeatures = nullptr;
     nIndexSize = 0;
 }
 
@@ -120,18 +119,18 @@ void SDTSIndexedReader::ClearIndex()
 SDTSFeature *SDTSIndexedReader::GetNextFeature()
 
 {
-    if( nIndexSize == 0 )
+    if( nIndexSize < 0 )
         return GetNextRawFeature();
 
     while( iCurrentFeature < nIndexSize )
     {
-        if( papoFeatures[iCurrentFeature] != NULL )
+        if( papoFeatures[iCurrentFeature] != nullptr )
             return papoFeatures[iCurrentFeature++];
         else
             iCurrentFeature++;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
@@ -139,7 +138,7 @@ SDTSFeature *SDTSIndexedReader::GetNextFeature()
 /************************************************************************/
 
 /**
- Fetch a feature based on it's record number.
+ Fetch a feature based on its record number.
 
  This method will forcibly fill the feature cache, reading all the
  features in the file into memory, if they haven't already been loaded.
@@ -156,11 +155,11 @@ SDTSFeature *SDTSIndexedReader::GetNextFeature()
 SDTSFeature *SDTSIndexedReader::GetIndexedFeatureRef( int iRecordId )
 
 {
-    if( nIndexSize == 0 )
+    if( nIndexSize < 0 )
         FillIndex();
 
     if( iRecordId < 0 || iRecordId >= nIndexSize )
-        return NULL;
+        return nullptr;
 
     return papoFeatures[iRecordId];
 }
@@ -179,19 +178,23 @@ SDTSFeature *SDTSIndexedReader::GetIndexedFeatureRef( int iRecordId )
 void SDTSIndexedReader::FillIndex()
 
 {
-
-    if( nIndexSize != 0 )
+    if( nIndexSize >= 0 )
         return;
 
     Rewind();
+    nIndexSize = 0;
 
-    SDTSFeature *poFeature;
-    while( (poFeature = GetNextRawFeature()) != NULL )
+    SDTSFeature *poFeature = nullptr;
+    while( (poFeature = GetNextRawFeature()) != nullptr )
     {
         const int iRecordId = poFeature->oModId.nRecord;
 
-        CPLAssert( iRecordId < 1000000 );
-        if( iRecordId >= 1000000 )
+        if( iRecordId < 0 || iRecordId >= 1000000 )
+        {
+            delete poFeature;
+            continue;
+        }
+        if( iRecordId < nIndexSize && papoFeatures[iRecordId] != nullptr )
         {
             delete poFeature;
             continue;
@@ -205,12 +208,11 @@ void SDTSIndexedReader::FillIndex()
                 CPLRealloc( papoFeatures, sizeof(void*) * nNewSize ) );
 
             for( int i = nIndexSize; i < nNewSize; i++ )
-                papoFeatures[i] = NULL;
+                papoFeatures[i] = nullptr;
 
             nIndexSize = nNewSize;
         }
 
-        CPLAssert( papoFeatures[iRecordId] == NULL );
         papoFeatures[iRecordId] = poFeature;
     }
 }
@@ -258,7 +260,7 @@ char ** SDTSIndexedReader::ScanModuleReferences( const char * pszFName )
 void SDTSIndexedReader::Rewind()
 
 {
-    if( nIndexSize != 0 )
+    if( nIndexSize >= 0 )
         iCurrentFeature = 0;
     else
         oDDFModule.Rewind();

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdaljp2metadatagenerator.h 33694 2016-03-10 17:54:30Z goatbar $
+ * $Id: gdaljp2metadatagenerator.h a340ddc9f053a5fd00cde76090d5664875f134f0 2016-10-24 05:49:15Z Kurt Schwehr $
  *
  * Project:  GDAL
  * Purpose:  GDALJP2Metadata: metadata generator
@@ -29,7 +29,6 @@
 
 #ifndef GDAL_JP2METADATA_GENERATOR_H_INCLUDED
 #define GDAL_JP2METADATA_GENERATOR_H_INCLUDED
-
 
 #include "cpl_string.h"
 #include "cpl_minixml.h"

@@ -50,13 +50,15 @@
 #pragma warning( disable : 4244 ) /* conversion from 'const int' to 'Guchar', possible loss of data */
 #endif
 
-/* hack for PDF driver and poppler >= 0.15.0 that defines incompatible "typedef bool GBool" */
-/* in include/poppler/goo/gtypes.h with the one defined in cpl_port.h */
-#define CPL_GBOOL_DEFINED
-#define OGR_FEATURESTYLE_INCLUDE
-
+#if !(POPPLER_MAJOR_VERSION >= 1 || POPPLER_MINOR_VERSION >= 73)
 #include <goo/gtypes.h>
+#else
+typedef unsigned char Guchar;
+#endif
+
+#if !(POPPLER_MAJOR_VERSION >= 1 || POPPLER_MINOR_VERSION >= 76)
 #include <goo/GooList.h>
+#endif
 
 /* begin of poppler xpdf includes */
 #include <poppler/Object.h>

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: msgdataset.h 32190 2015-12-16 13:50:27Z goatbar $
+ * $Id: msgdataset.h e13dcd4dc171dfeed63f912ba06b9374ce4f3bb2 2018-03-18 21:37:41Z Even Rouault $
  *
  * Project:  MSG Driver
  * Purpose:  GDALDataset driver for MSG translator for read support.
@@ -35,10 +35,6 @@
 #include <string>
 #include <fstream>
 
-CPL_C_START
-void GDALRegister_MSG();
-CPL_C_END
-
 /************************************************************************/
 /*                            MSGRasterBand                             */
 /************************************************************************/
@@ -53,10 +49,10 @@ class MSGRasterBand : public GDALRasterBand
   public:
     MSGRasterBand( MSGDataset *, int );
     virtual ~MSGRasterBand();
-    virtual CPLErr IReadBlock( int, int, void * );
+    virtual CPLErr IReadBlock( int, int, void * ) override;
 
   private:
-    double rRadiometricCorrection(unsigned int iDN, int iChannel, int iRow, int iCol, MSGDataset* poGDS);
+    double rRadiometricCorrection(unsigned int iDN, int iChannel, int iRow, int iCol, MSGDataset* poGDS) const;
     bool fScanNorth;
     int iLowerShift; // nr of pixels that lower HRV image is shifted compared to upper
     int iSplitLine; // line from top where the HRV image splits
@@ -75,12 +71,12 @@ class MSGDataset : public GDALDataset
 
   public:
     MSGDataset();
-    ~MSGDataset();
+    virtual ~MSGDataset();
 
     static GDALDataset *Open( GDALOpenInfo * );
-    virtual const char *GetProjectionRef(void);
-    virtual CPLErr SetProjection( const char * );
-    virtual CPLErr GetGeoTransform( double * padfTransform );
+    virtual const char *GetProjectionRef() override;
+    virtual CPLErr SetProjection( const char * ) override;
+    virtual CPLErr GetGeoTransform( double * padfTransform ) override;
 
   private:
     MSGCommand command;
@@ -96,5 +92,7 @@ class MSGDataset : public GDALDataset
     static const double rVc[12];
     static const double rA[12];
     static const double rB[12];
+    static const int iCentralPixelVIS_IR;
+    static const int iCentralPixelHRV;
+    static const char *metadataDomain;
 };
-

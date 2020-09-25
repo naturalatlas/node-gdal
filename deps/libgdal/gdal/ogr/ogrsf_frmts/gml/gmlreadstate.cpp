@@ -1,5 +1,4 @@
 /**********************************************************************
- * $Id: gmlreadstate.cpp 33702 2016-03-11 06:20:16Z goatbar $
  *
  * Project:  GML Reader
  * Purpose:  Implementation of GMLReadState class.
@@ -28,30 +27,35 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
 #include "gmlreaderp.h"
+
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "cpl_conv.h"
+#include "cpl_error.h"
 #include "cpl_string.h"
+
+CPL_CVSID("$Id: gmlreadstate.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                            GMLReadState()                            */
 /************************************************************************/
 
-GMLReadState::GMLReadState()
-
-{
-    m_poFeature = NULL;
-    m_poParentState = NULL;
-    m_nPathLength = 0;
-}
+GMLReadState::GMLReadState() :
+    m_poFeature(nullptr),
+    m_poParentState(nullptr),
+    m_nPathLength(0)
+{}
 
 /************************************************************************/
 /*                           ~GMLReadState()                            */
 /************************************************************************/
 
-GMLReadState::~GMLReadState()
-
-{
-}
+GMLReadState::~GMLReadState() {}
 
 /************************************************************************/
 /*                              Reset()                                 */
@@ -59,8 +63,8 @@ GMLReadState::~GMLReadState()
 
 void GMLReadState::Reset()
 {
-    m_poFeature = NULL;
-    m_poParentState = NULL;
+    m_poFeature = nullptr;
+    m_poParentState = nullptr;
 
     osPath.resize(0);
     m_nPathLength = 0;
@@ -75,7 +79,7 @@ void GMLReadState::PushPath( const char *pszElement, int nLen )
 {
     if (m_nPathLength > 0)
         osPath.append(1, '|');
-    if (m_nPathLength < (int)aosPathComponents.size())
+    if (m_nPathLength < static_cast<int>(aosPathComponents.size()))
     {
         if (nLen >= 0)
         {
@@ -93,7 +97,7 @@ void GMLReadState::PushPath( const char *pszElement, int nLen )
         aosPathComponents.push_back(pszElement);
         osPath.append(pszElement);
     }
-    m_nPathLength ++;
+    m_nPathLength++;
 }
 
 /************************************************************************/
@@ -103,8 +107,9 @@ void GMLReadState::PushPath( const char *pszElement, int nLen )
 void GMLReadState::PopPath()
 
 {
-    CPLAssert( m_nPathLength > 0 );
+    CPLAssert(m_nPathLength > 0);
 
-    osPath.resize(osPath.size() - (aosPathComponents[m_nPathLength-1].size() + ((m_nPathLength > 1) ? 1 : 0)));
-    m_nPathLength --;
+    osPath.resize(osPath.size() - (aosPathComponents[m_nPathLength - 1].size() +
+                                   ((m_nPathLength > 1) ? 1 : 0)));
+    m_nPathLength--;
 }

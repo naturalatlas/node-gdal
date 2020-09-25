@@ -1,5 +1,3 @@
-/* $Id: tif_zip.c,v 1.35 2015-11-22 22:37:27 erouault Exp $ */
-
 /*
  * Copyright (c) 1995-1997 Sam Leffler
  * Copyright (c) 1995-1997 Silicon Graphics, Inc.
@@ -107,7 +105,11 @@ ZIPSetupDecode(TIFF* tif)
 	    sp->state = 0;
 	}
 
-	if (inflateInit(&sp->stream) != Z_OK) {
+	/* This function can possibly be called several times by */
+	/* PredictorSetupDecode() if this function succeeds but */
+	/* PredictorSetup() fails */
+	if ((sp->state & ZSTATE_INIT_DECODE) == 0 &&
+	    inflateInit(&sp->stream) != Z_OK) {
 		TIFFErrorExt(tif->tif_clientdata, module, "%s", SAFE_MSG(sp));
 		return (0);
 	} else {
@@ -177,8 +179,8 @@ ZIPDecode(TIFF* tif, uint8* op, tmsize_t occ, uint16 s)
 			TIFFErrorExt(tif->tif_clientdata, module,
 			    "Decoding error at scanline %lu, %s",
 			     (unsigned long) tif->tif_row, SAFE_MSG(sp));
-			if (inflateSync(&sp->stream) != Z_OK)
-				return (0);
+			/* if (inflateSync(&sp->stream) != Z_OK) */
+			return (0);
 			continue;
 		}
 		if (state != Z_OK) {

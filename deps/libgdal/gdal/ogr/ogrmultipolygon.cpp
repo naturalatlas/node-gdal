@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrmultipolygon.cpp 33631 2016-03-04 06:28:09Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  The OGRMultiPolygon class.
@@ -28,11 +27,14 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
 #include "ogr_geometry.h"
+
 #include "ogr_api.h"
+#include "ogr_core.h"
 #include "ogr_p.h"
 
-CPL_CVSID("$Id: ogrmultipolygon.cpp 33631 2016-03-04 06:28:09Z goatbar $");
+CPL_CVSID("$Id: ogrmultipolygon.cpp ba2ef4045f82fd2260f1732e9e46a927277ac93d 2018-05-06 19:07:03 +0200 Even Rouault $")
 
 /************************************************************************/
 /*                          OGRMultiPolygon()                           */
@@ -42,9 +44,7 @@ CPL_CVSID("$Id: ogrmultipolygon.cpp 33631 2016-03-04 06:28:09Z goatbar $");
  * \brief Create an empty multi polygon collection.
  */
 
-OGRMultiPolygon::OGRMultiPolygon()
-{
-}
+OGRMultiPolygon::OGRMultiPolygon() = default;
 
 /************************************************************************/
 /*              OGRMultiPolygon( const OGRMultiPolygon& )               */
@@ -59,18 +59,13 @@ OGRMultiPolygon::OGRMultiPolygon()
  * @since GDAL 2.1
  */
 
-OGRMultiPolygon::OGRMultiPolygon( const OGRMultiPolygon& other ) :
-    OGRMultiSurface(other)
-{
-}
+OGRMultiPolygon::OGRMultiPolygon( const OGRMultiPolygon& ) = default;
 
 /************************************************************************/
 /*                         ~OGRMultiPolygon()                           */
 /************************************************************************/
 
-OGRMultiPolygon::~OGRMultiPolygon()
-{
-}
+OGRMultiPolygon::~OGRMultiPolygon() = default;
 
 /************************************************************************/
 /*                  operator=( const OGRMultiPolygon&)                    */
@@ -103,7 +98,7 @@ OGRwkbGeometryType OGRMultiPolygon::getGeometryType() const
 {
     if( (flags & OGR_G_3D) && (flags & OGR_G_MEASURED) )
         return wkbMultiPolygonZM;
-    else if( flags & OGR_G_MEASURED  )
+    else if( flags & OGR_G_MEASURED )
         return wkbMultiPolygonM;
     else if( flags & OGR_G_3D )
         return wkbMultiPolygon25D;
@@ -125,7 +120,8 @@ const char * OGRMultiPolygon::getGeometryName() const
 /*                          isCompatibleSubType()                       */
 /************************************************************************/
 
-OGRBoolean OGRMultiPolygon::isCompatibleSubType( OGRwkbGeometryType eGeomType ) const
+OGRBoolean
+OGRMultiPolygon::isCompatibleSubType( OGRwkbGeometryType eGeomType ) const
 {
     return wkbFlatten(eGeomType) == wkbPolygon;
 }
@@ -135,7 +131,7 @@ OGRBoolean OGRMultiPolygon::isCompatibleSubType( OGRwkbGeometryType eGeomType ) 
 /************************************************************************/
 
 OGRErr OGRMultiPolygon::exportToWkt( char ** ppszDstText,
-                                        OGRwkbVariant eWkbVariant ) const
+                                     OGRwkbVariant eWkbVariant ) const
 
 {
     return exportToWktInternal( ppszDstText, eWkbVariant, "POLYGON" );
@@ -145,18 +141,10 @@ OGRErr OGRMultiPolygon::exportToWkt( char ** ppszDstText,
 /*                         hasCurveGeometry()                           */
 /************************************************************************/
 
-OGRBoolean OGRMultiPolygon::hasCurveGeometry(CPL_UNUSED int bLookForNonLinear) const
+OGRBoolean
+OGRMultiPolygon::hasCurveGeometry( int /* bLookForNonLinear */ ) const
 {
     return FALSE;
-}
-
-/************************************************************************/
-/*                            PointOnSurface()                          */
-/************************************************************************/
-
-OGRErr OGRMultiPolygon::PointOnSurface( OGRPoint * poPoint ) const
-{
-    return PointOnSurfaceInternal(poPoint);
 }
 
 /************************************************************************/
@@ -172,7 +160,65 @@ OGRErr OGRMultiPolygon::PointOnSurface( OGRPoint * poPoint ) const
  * @return new geometry.
  */
 
-OGRMultiSurface* OGRMultiPolygon::CastToMultiSurface(OGRMultiPolygon* poMP)
+OGRMultiSurface* OGRMultiPolygon::CastToMultiSurface( OGRMultiPolygon* poMP )
 {
-    return (OGRMultiSurface*) TransferMembersAndDestroy(poMP, new OGRMultiSurface());
+    OGRMultiSurface* poMS = new OGRMultiSurface();
+    TransferMembersAndDestroy(poMP, poMS);
+    return poMS;
 }
+
+
+/************************************************************************/
+/*               _addGeometryWithExpectedSubGeometryType()              */
+/*      Only to be used in conjunction with OGRPolyhedralSurface.       */
+/*                        DO NOT USE IT ELSEWHERE.                      */
+/************************************************************************/
+
+//! @cond Doxygen_Suppress
+OGRErr OGRMultiPolygon::_addGeometryWithExpectedSubGeometryType(
+                                      const OGRGeometry * poNewGeom,
+                                      OGRwkbGeometryType eSubGeometryType )
+
+{
+    OGRGeometry *poClone = poNewGeom->clone();
+    OGRErr      eErr;
+
+    if( poClone == nullptr )
+        return OGRERR_FAILURE;
+    eErr = _addGeometryDirectlyWithExpectedSubGeometryType( poClone, eSubGeometryType );
+    if( eErr != OGRERR_NONE )
+        delete poClone;
+
+    return eErr;
+}
+//! @endcond
+
+/************************************************************************/
+/*                 _addGeometryDirectlyWithExpectedSubGeometryType()    */
+/*      Only to be used in conjunction with OGRPolyhedralSurface.       */
+/*                        DO NOT USE IT ELSEWHERE.                      */
+/************************************************************************/
+
+//! @cond Doxygen_Suppress
+OGRErr OGRMultiPolygon::_addGeometryDirectlyWithExpectedSubGeometryType(
+                                      OGRGeometry * poNewGeom,
+                                      OGRwkbGeometryType eSubGeometryType )
+{
+    if ( wkbFlatten(poNewGeom->getGeometryType()) != eSubGeometryType)
+        return OGRERR_UNSUPPORTED_GEOMETRY_TYPE;
+
+    HomogenizeDimensionalityWith(poNewGeom);
+
+    OGRGeometry** papoNewGeoms = static_cast<OGRGeometry **>(
+        VSI_REALLOC_VERBOSE( papoGeoms, sizeof(void*) * (nGeomCount+1) ));
+    if( papoNewGeoms == nullptr )
+        return OGRERR_FAILURE;
+
+    papoGeoms = papoNewGeoms;
+    papoGeoms[nGeomCount] = poNewGeom;
+    nGeomCount++;
+
+    return OGRERR_NONE;
+}
+//! @endcond
+

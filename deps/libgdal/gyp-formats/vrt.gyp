@@ -16,7 +16,8 @@
 				"../gdal/frmts/vrt/vrtrawrasterband.cpp",
 				"../gdal/frmts/vrt/vrtsourcedrasterband.cpp",
 				"../gdal/frmts/vrt/vrtsources.cpp",
-				"../gdal/frmts/vrt/vrtwarped.cpp"
+				"../gdal/frmts/vrt/vrtwarped.cpp",
+				"../gdal/frmts/vrt/pixelfunctions.cpp"
 			],
 			"include_dirs": [
 				"../gdal/frmts/vrt",

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogropenairdriver.cpp 32976 2016-01-14 00:07:34Z goatbar $
  *
  * Project:  OpenAir Translator
  * Purpose:  Implements OGROpenAirDriver.
@@ -31,7 +30,7 @@
 #include "ogr_openair.h"
 #include "ogrsf_frmts.h"
 
-CPL_CVSID("$Id: ogropenairdriver.cpp 32976 2016-01-14 00:07:34Z goatbar $");
+CPL_CVSID("$Id: ogropenairdriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                                Open()                                */
@@ -41,16 +40,16 @@ static GDALDataset *OGROpenAirDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
     if( poOpenInfo->eAccess == GA_Update ||
-        poOpenInfo->fpL == NULL ||
+        poOpenInfo->fpL == nullptr ||
         !poOpenInfo->TryToIngest(10000) )
-        return NULL;
+        return nullptr;
 
     const char *pabyHeader = reinterpret_cast<char *>(poOpenInfo->pabyHeader);
     bool bIsOpenAir =
-        strstr(pabyHeader, "\nAC ") != NULL &&
-        strstr(pabyHeader, "\nAN ") != NULL &&
-        strstr(pabyHeader, "\nAL ") != NULL &&
-        strstr(pabyHeader, "\nAH") != NULL;
+        strstr(pabyHeader, "\nAC ") != nullptr &&
+        strstr(pabyHeader, "\nAN ") != nullptr &&
+        strstr(pabyHeader, "\nAL ") != nullptr &&
+        strstr(pabyHeader, "\nAH") != nullptr;
     if( !bIsOpenAir )
     {
         // Some files, such as
@@ -60,11 +59,11 @@ static GDALDataset *OGROpenAirDriverOpen( GDALOpenInfo* poOpenInfo )
         // file might be a candidate.
         int nLen = poOpenInfo->nHeaderBytes;
         if( nLen < 10000 )
-            return NULL;
+            return nullptr;
         /* Check the 'Airspace' word in the header */
         if( strstr(pabyHeader, "Airspace")
-            == NULL )
-            return NULL;
+            == nullptr )
+            return nullptr;
         // Check that the header is at least UTF-8
         // but do not take into account partial UTF-8 characters at the end
         int nTruncated = 0;
@@ -77,19 +76,20 @@ static GDALDataset *OGROpenAirDriverOpen( GDALOpenInfo* poOpenInfo )
             nLen --;
             nTruncated ++;
             if( nTruncated == 7 )
-                return NULL;
+                return nullptr;
         }
         if( !CPLIsUTF8(pabyHeader, nLen) )
-            return NULL;
+            return nullptr;
         if( !poOpenInfo->TryToIngest(30000) )
-            return NULL;
+            return nullptr;
+        pabyHeader = reinterpret_cast<char *>(poOpenInfo->pabyHeader);
         bIsOpenAir =
-            strstr(pabyHeader, "\nAC ") != NULL &&
-            strstr(pabyHeader, "\nAN ") != NULL &&
-            strstr(pabyHeader, "\nAL ") != NULL &&
-            strstr(pabyHeader, "\nAH") != NULL;
+            strstr(pabyHeader, "\nAC ") != nullptr &&
+            strstr(pabyHeader, "\nAN ") != nullptr &&
+            strstr(pabyHeader, "\nAL ") != nullptr &&
+            strstr(pabyHeader, "\nAH") != nullptr;
         if( !bIsOpenAir )
-            return NULL;
+            return nullptr;
     }
 
     OGROpenAirDataSource *poDS = new OGROpenAirDataSource();
@@ -97,7 +97,7 @@ static GDALDataset *OGROpenAirDriverOpen( GDALOpenInfo* poOpenInfo )
     if( !poDS->Open( poOpenInfo->pszFilename ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
@@ -110,7 +110,7 @@ static GDALDataset *OGROpenAirDriverOpen( GDALOpenInfo* poOpenInfo )
 void RegisterOGROpenAir()
 
 {
-    if( GDALGetDriverByName( "OpenAir" ) != NULL )
+    if( GDALGetDriverByName( "OpenAir" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();
@@ -120,9 +120,9 @@ void RegisterOGROpenAir()
     poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, "OpenAir" );
     poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_openair.html" );
     poDriver->SetMetadataItem( GDAL_DCAP_VIRTUALIO, "YES" );
+    poDriver->SetMetadataItem( GDAL_DCAP_FEATURE_STYLES, "YES" );
 
     poDriver->pfnOpen = OGROpenAirDriverOpen;
 
     GetGDALDriverManager()->RegisterDriver( poDriver );
 }
-

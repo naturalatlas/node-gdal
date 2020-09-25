@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrdxfdriver.cpp 18535 2010-01-12 01:40:32Z warmerdam $
  *
  * Project:  DWG Translator
  * Purpose:  Implements OGRDWGDriver.
@@ -29,74 +28,27 @@
 
 #include "ogr_dwg.h"
 #include "cpl_conv.h"
+#include "ogrteigha.h"
 
-CPL_CVSID("$Id: ogrdxfdriver.cpp 18535 2010-01-12 01:40:32Z warmerdam $");
-
-CPL_C_START
-void CPL_DLL RegisterOGRDWG();
-CPL_C_END
+CPL_CVSID("$Id: ogrdwgdriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                            OGRDWGDriver()                            */
 /************************************************************************/
 
-OGRDWGDriver::OGRDWGDriver()
+OGRDWGDriver::OGRDWGDriver() : poServices(nullptr)
 
 {
-    bInitialized = FALSE;
 }
 
 /************************************************************************/
-/*                          ~OGRDWGDriver()                          */
+/*                          ~OGRDWGDriver()                             */
 /************************************************************************/
 
 OGRDWGDriver::~OGRDWGDriver()
 
 {
-    if( bInitialized && !CPLTestBool(
-            CPLGetConfigOption("IN_GDAL_GLOBAL_DESTRUCTOR", "NO")) )
-    {
-        bInitialized = FALSE;
-        odUninitialize();
-    }
-}
-
-/************************************************************************/
-/*                             Initialize()                             */
-/************************************************************************/
-
-void OGRDWGDriver::Initialize()
-
-{
-    if( bInitialized )
-        return;
-
-    bInitialized = TRUE;
-
-    OdGeContext::gErrorFunc = ErrorHandler;
-
-    odInitialize(&oServices);
-    oServices.disableOutput( true );
-
-    /********************************************************************/
-    /* Find the data file and and initialize the character mapper       */
-    /********************************************************************/
-    OdString iniFile = oServices.findFile(OD_T("adinit.dat"));
-    if (!iniFile.isEmpty())
-      OdCharMapper::initialize(iniFile);
-
-}
-
-/************************************************************************/
-/*                            ErrorHandler()                            */
-/************************************************************************/
-
-void OGRDWGDriver::ErrorHandler( OdResult oResult )
-
-{
-    CPLError( CE_Failure, CPLE_AppDefined,
-              "GeError:%s",
-              (const char *) OdError(oResult).description().c_str() );
+    OGRTEIGHADeinitialize();
 }
 
 /************************************************************************/
@@ -113,17 +65,27 @@ const char *OGRDWGDriver::GetName()
 /*                                Open()                                */
 /************************************************************************/
 
-OGRDataSource *OGRDWGDriver::Open( const char * pszFilename, int bUpdate )
+OGRDataSource *OGRDWGDriver::Open( const char * pszFilename, int /*bUpdate*/ )
 
 {
-    Initialize();
+    if( !EQUAL(CPLGetExtension(pszFilename),"dwg") )
+        return nullptr;
+
+    // Check that this is a real file since the driver doesn't support
+    // VSI*L API
+    VSIStatBuf sStat;
+    if( VSIStat(pszFilename, &sStat) != 0 )
+        return nullptr;
+
+    if( !OGRTEIGHAInitialize() )
+        return nullptr;
 
     OGRDWGDataSource   *poDS = new OGRDWGDataSource();
 
-    if( !poDS->Open( &oServices, pszFilename ) )
+    if( !poDS->Open( OGRDWGGetServices(), pszFilename ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
@@ -133,7 +95,7 @@ OGRDataSource *OGRDWGDriver::Open( const char * pszFilename, int bUpdate )
 /*                           TestCapability()                           */
 /************************************************************************/
 
-int OGRDWGDriver::TestCapability( const char * pszCap )
+int OGRDWGDriver::TestCapability( const char * /*pszCap*/ )
 
 {
     return FALSE;
@@ -152,5 +114,7 @@ void RegisterOGRDWG()
     poDriver->SetMetadataItem( GDAL_DMD_EXTENSION, "dwg" );
     poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC,
                                 "drv_dwg.html" );
+    poDriver->SetMetadataItem( GDAL_DCAP_FEATURE_STYLES, "YES" );
+
     OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( poDriver );
 }

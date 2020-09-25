@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrsosidriver.cpp 34420 2016-06-24 21:06:03Z rouault $
  *
  * Project:  SOSI Translator
  * Purpose:  Implements OGRSOSIDriver.
@@ -28,9 +27,30 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+// Must be included before FYBA headers that mess with min() / max()
+#include <mutex>
+
 #include "ogr_sosi.h"
 
+CPL_CVSID("$Id: ogrsosidriver.cpp 1a8cd1b07a75b672150242ef8a59b1821e82a137 2018-05-12 22:35:40 +0200 Even Rouault $")
+
 static int bFYBAInit = FALSE;
+static std::mutex oMutex;
+
+/************************************************************************/
+/*                          OGRSOSIInit()                               */
+/************************************************************************/
+
+static void OGRSOSIInit()
+{
+    std::lock_guard<std::mutex> oLock(oMutex);
+    if ( !bFYBAInit )
+    {
+        LC_Init();  /* Init FYBA */
+        SOSIInitTypes();
+        bFYBAInit = TRUE;
+    }
+}
 
 /************************************************************************/
 /*                        OGRSOSIDriverUnload()                         */
@@ -41,6 +61,7 @@ static void OGRSOSIDriverUnload(CPL_UNUSED GDALDriver* poDriver) {
     if ( bFYBAInit )
     {
         LC_Close(); /* Close FYBA */
+        SOSICleanupTypes();
         bFYBAInit = FALSE;
     }
 }
@@ -51,20 +72,16 @@ static void OGRSOSIDriverUnload(CPL_UNUSED GDALDriver* poDriver) {
 
 static GDALDataset *OGRSOSIDriverOpen( GDALOpenInfo* poOpenInfo )
 {
-    if( poOpenInfo->fpL == NULL ||
-        strstr((const char*)poOpenInfo->pabyHeader, ".HODE") == NULL )
-        return NULL;
+    if( poOpenInfo->fpL == nullptr ||
+        strstr((const char*)poOpenInfo->pabyHeader, ".HODE") == nullptr )
+        return nullptr;
 
-    if ( !bFYBAInit )
-    {
-        LC_Init();  /* Init FYBA */
-        bFYBAInit = TRUE;
-    }
+    OGRSOSIInit();
 
     OGRSOSIDataSource   *poDS = new OGRSOSIDataSource();
     if ( !poDS->Open( poOpenInfo->pszFilename, 0 ) ) {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     return poDS;
@@ -80,11 +97,7 @@ static GDALDataset *OGRSOSIDriverCreate( const char * pszName,
                                          CPL_UNUSED int nYSize, CPL_UNUSED GDALDataType eDT,
                                          CPL_UNUSED char **papszOptions )
 {
-    if ( !bFYBAInit )
-    {
-        LC_Init();  /* Init FYBA */
-        bFYBAInit = TRUE;
-    }
+    OGRSOSIInit();
     OGRSOSIDataSource   *poDS = new OGRSOSIDataSource();
     if ( !poDS->Create( pszName ) ) {
         delete poDS;
@@ -99,7 +112,7 @@ static GDALDataset *OGRSOSIDriverCreate( const char * pszName,
 /************************************************************************/
 
 void RegisterOGRSOSI() {
-    if( GDALGetDriverByName( "SOSI" ) != NULL )
+    if( GDALGetDriverByName( "SOSI" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

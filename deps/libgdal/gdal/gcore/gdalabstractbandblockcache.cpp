@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: gdalabstractbandblockcache.cpp 31703 2015-11-21 22:11:38Z rouault $
  *
  * Project:  GDAL Core
  * Purpose:  Store cached blocks
@@ -27,11 +26,19 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
 #include "gdal_priv.h"
-#include "cpl_multiproc.h"
+
+#include <cstddef>
 #include <new>
 
-CPL_CVSID("$Id: gdalabstractbandblockcache.cpp 31703 2015-11-21 22:11:38Z rouault $");
+#include "cpl_atomic_ops.h"
+#include "cpl_error.h"
+#include "cpl_multiproc.h"
+
+//! @cond Doxygen_Suppress
+
+CPL_CVSID("$Id: gdalabstractbandblockcache.cpp abe7fd53ca8ef6713800d4fe39c44f74a7e57081 2019-11-13 16:36:03 +0100 Even Rouault $")
 
 #ifdef DEBUG_VERBOSE_ABBC
 static int nAllBandsKeptAlivedBlocks = 0;
@@ -41,14 +48,13 @@ static int nAllBandsKeptAlivedBlocks = 0;
 /*                       GDALArrayBandBlockCache()                      */
 /************************************************************************/
 
-GDALAbstractBandBlockCache::GDALAbstractBandBlockCache(GDALRasterBand* poBandIn) :
+GDALAbstractBandBlockCache::GDALAbstractBandBlockCache(
+    GDALRasterBand* poBandIn ) :
     hSpinLock(CPLCreateLock(LOCK_SPIN)),
-    psListBlocksToFree(NULL),
     hCond(CPLCreateCond()),
     hCondMutex(CPLCreateMutex()),
-    nKeepAliveCounter(0)
+    poBand(poBandIn)
 {
-    poBand = poBandIn;
     if( hCondMutex )
         CPLReleaseMutex(hCondMutex);
 }
@@ -95,35 +101,35 @@ void GDALAbstractBandBlockCache::UnreferenceBlockBase()
 
 void GDALAbstractBandBlockCache::AddBlockToFreeList( GDALRasterBlock *poBlock )
 {
-    CPLAssert(poBlock->poPrevious == NULL);
-    CPLAssert(poBlock->poNext == NULL);
+    CPLAssert(poBlock->poPrevious == nullptr);
+    CPLAssert(poBlock->poNext == nullptr);
     {
 #ifdef DEBUG_VERBOSE_ABBC
         CPLAtomicInc(&nAllBandsKeptAlivedBlocks);
-        fprintf(stderr, "AddBlockToFreeList(): nAllBandsKeptAlivedBlocks=%d\n", nAllBandsKeptAlivedBlocks);
+        fprintf(stderr, "AddBlockToFreeList(): nAllBandsKeptAlivedBlocks=%d\n", nAllBandsKeptAlivedBlocks);/*ok*/
 #endif
         CPLLockHolderOptionalLockD(hSpinLock);
         poBlock->poNext = psListBlocksToFree;
         psListBlocksToFree = poBlock;
     }
 
-    // If no more blocks in transient state, then warn WaitKeepAliveCounter()
+    // If no more blocks in transient state, then warn WaitCompletionPendingTasks()
+    CPLAcquireMutex(hCondMutex, 1000);
     if( CPLAtomicDec(&nKeepAliveCounter) == 0 )
     {
-        CPLAcquireMutex(hCondMutex, 1000);
         CPLCondSignal(hCond);
-        CPLReleaseMutex(hCondMutex);
     }
+    CPLReleaseMutex(hCondMutex);
 }
 
 /************************************************************************/
-/*                         WaitKeepAliveCounter()                       */
+/*                      WaitCompletionPendingTasks()                    */
 /************************************************************************/
 
-void GDALAbstractBandBlockCache::WaitKeepAliveCounter()
+void GDALAbstractBandBlockCache::WaitCompletionPendingTasks()
 {
 #ifdef DEBUG_VERBOSE
-    CPLDebug("GDAL", "WaitKeepAliveCounter()");
+    CPLDebug("GDAL", "WaitCompletionPendingTasks()");
 #endif
 
     CPLAcquireMutex(hCondMutex, 1000);
@@ -146,16 +152,16 @@ void GDALAbstractBandBlockCache::FreeDanglingBlocks()
     {
         CPLLockHolderOptionalLockD(hSpinLock);
         poList = psListBlocksToFree;
-        psListBlocksToFree = NULL;
+        psListBlocksToFree = nullptr;
     }
     while( poList )
     {
 #ifdef DEBUG_VERBOSE_ABBC
         CPLAtomicDec(&nAllBandsKeptAlivedBlocks);
-        fprintf(stderr, "FreeDanglingBlocks(): nAllBandsKeptAlivedBlocks=%d\n", nAllBandsKeptAlivedBlocks);
+        fprintf(stderr, "FreeDanglingBlocks(): nAllBandsKeptAlivedBlocks=%d\n", nAllBandsKeptAlivedBlocks);/*ok*/
 #endif
         GDALRasterBlock* poNext = poList->poNext;
-        poList->poNext = NULL;
+        poList->poNext = nullptr;
         delete poList;
         poList = poNext;
     }
@@ -176,7 +182,7 @@ GDALRasterBlock* GDALAbstractBandBlockCache::CreateBlock(int nXBlockOff,
         {
 #ifdef DEBUG_VERBOSE_ABBC
             CPLAtomicDec(&nAllBandsKeptAlivedBlocks);
-            fprintf(stderr, "CreateBlock(): nAllBandsKeptAlivedBlocks=%d\n", nAllBandsKeptAlivedBlocks);
+            fprintf(stderr, "CreateBlock(): nAllBandsKeptAlivedBlocks=%d\n", nAllBandsKeptAlivedBlocks);/*ok*/
 #endif
             psListBlocksToFree = poBlock->poNext;
         }
@@ -188,3 +194,4 @@ GDALRasterBlock* GDALAbstractBandBlockCache::CreateBlock(int nXBlockOff,
             poBand, nXBlockOff, nYBlockOff );
     return poBlock;
 }
+//! @endcond

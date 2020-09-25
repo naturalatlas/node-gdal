@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrsvgdatasource.cpp 32011 2015-12-06 10:19:18Z rouault $
  *
  * Project:  SVG Translator
  * Purpose:  Implements OGRSVGDataSource class
@@ -30,25 +29,24 @@
 #include "ogr_svg.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrsvgdatasource.cpp 32011 2015-12-06 10:19:18Z rouault $");
+CPL_CVSID("$Id: ogrsvgdatasource.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                          OGRSVGDataSource()                          */
 /************************************************************************/
 
 OGRSVGDataSource::OGRSVGDataSource() :
-    pszName(NULL),
-    papoLayers(NULL),
+    pszName(nullptr),
+    papoLayers(nullptr),
     nLayers(0)
 #ifdef HAVE_EXPAT
     ,
     eValidity(SVG_VALIDITY_UNKNOWN),
     bIsCloudmade(false),
-    oCurrentParser(NULL),
+    oCurrentParser(nullptr),
     nDataHandlerCounter(0)
 #endif
-{
-}
+{}
 
 /************************************************************************/
 /*                         ~OGRSVGDataSource()                          */
@@ -71,7 +69,7 @@ OGRLayer *OGRSVGDataSource::GetLayer( int iLayer )
 
 {
     if( iLayer < 0 || iLayer >= nLayers )
-        return NULL;
+        return nullptr;
     else
         return papoLayers[iLayer];
 }
@@ -89,9 +87,8 @@ void OGRSVGDataSource::startElementValidateCbk(const char *pszNameIn,
     {
         if (strcmp(pszNameIn, "svg") == 0)
         {
-            int i;
             eValidity = SVG_VALIDITY_VALID;
-            for(i=0; ppszAttr[i] != NULL; i+= 2)
+            for( int i = 0; ppszAttr[i] != nullptr; i += 2 )
             {
                 if (strcmp(ppszAttr[i], "xmlns:cm") == 0 &&
                     strcmp(ppszAttr[i+1], "http://cloudmade.com/") == 0)
@@ -108,7 +105,6 @@ void OGRSVGDataSource::startElementValidateCbk(const char *pszNameIn,
     }
 }
 
-
 /************************************************************************/
 /*                      dataHandlerValidateCbk()                        */
 /************************************************************************/
@@ -124,7 +120,6 @@ void OGRSVGDataSource::dataHandlerValidateCbk(CPL_UNUSED const char *data,
         XML_StopParser(oCurrentParser, XML_FALSE);
     }
 }
-
 
 static void XMLCALL startElementValidateCbk(void *pUserData,
                                             const char *pszName, const char **ppszAttr)
@@ -155,14 +150,14 @@ int OGRSVGDataSource::Open( const char * pszFilename )
 /* -------------------------------------------------------------------- */
     CPLString osFilename(pszFilename);
     if (EQUAL(CPLGetExtension(pszFilename), "svgz") &&
-        strstr(pszFilename, "/vsigzip/") == NULL)
+        strstr(pszFilename, "/vsigzip/") == nullptr)
     {
         osFilename = CPLString("/vsigzip/") + pszFilename;
         pszFilename = osFilename.c_str();
     }
 
     VSILFILE* fp = VSIFOpenL(pszFilename, "r");
-    if (fp == NULL)
+    if (fp == nullptr)
         return FALSE;
 
     eValidity = SVG_VALIDITY_UNKNOWN;
@@ -170,12 +165,12 @@ int OGRSVGDataSource::Open( const char * pszFilename )
     XML_Parser oParser = OGRCreateExpatXMLParser();
     oCurrentParser = oParser;
     XML_SetUserData(oParser, this);
-    XML_SetElementHandler(oParser, ::startElementValidateCbk, NULL);
+    XML_SetElementHandler(oParser, ::startElementValidateCbk, nullptr);
     XML_SetCharacterDataHandler(oParser, ::dataHandlerValidateCbk);
 
     char aBuf[BUFSIZ];
-    int nDone;
-    unsigned int nLen;
+    int nDone = 0;
+    unsigned int nLen = 0;
     int nCount = 0;
 
     /* Begin to parse the file and look for the <svg> element */
@@ -245,7 +240,7 @@ int OGRSVGDataSource::Open( const char * pszFilename )
         }
     }
 
-    return (nLayers > 0);
+    return nLayers > 0;
 #else
     char aBuf[256];
     VSILFILE* fp = VSIFOpenL(pszFilename, "r");

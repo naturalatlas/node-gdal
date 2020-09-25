@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdal_alg_priv.h 33757 2016-03-20 20:22:33Z goatbar $
+ * $Id: gdal_alg_priv.h fe2d81c8819bf9794bce0210098e637565728350 2018-05-06 00:49:51 +0200 Even Rouault $
  *
  * Project:  GDAL Image Processing Algorithms
  * Purpose:  Prototypes and definitions for various GDAL based algorithms:
@@ -32,6 +32,8 @@
 #ifndef GDAL_ALG_PRIV_H_INCLUDED
 #define GDAL_ALG_PRIV_H_INCLUDED
 
+#ifndef DOXYGEN_SKIP
+
 #include "gdal_alg.h"
 
 CPL_C_START
@@ -39,7 +41,7 @@ CPL_C_START
 /** Source of the burn value */
 typedef enum {
     /*! Use value from padfBurnValue */    GBV_UserBurnValue = 0,
-    /*! Use value from the Z coordinate */    GBV_Z = 1,
+    /*! Use value from the Z coordinate */ GBV_Z = 1,
     /*! Use value form the M value */    GBV_M = 2
 } GDALBurnValueSrc;
 
@@ -59,6 +61,13 @@ typedef struct {
     GDALRasterMergeAlg eMergeAlg;
 } GDALRasterizeInfo;
 
+typedef enum {
+    GRO_Raster = 0,
+    GRO_Vector = 1,
+    GRO_Auto = 2,
+} GDALRasterizeOptim;
+
+
 /************************************************************************/
 /*      Low level rasterizer API.                                       */
 /************************************************************************/
@@ -76,17 +85,17 @@ void GDALdllImageLine( int nRasterXSize, int nRasterYSize,
                        double *padfX, double *padfY, double *padfVariant,
                        llPointFunc pfnPointFunc, void *pCBData );
 
-void GDALdllImageLineAllTouched(int nRasterXSize, int nRasterYSize,
+void GDALdllImageLineAllTouched( int nRasterXSize, int nRasterYSize,
+                                 int nPartCount, int *panPartSize,
+                                 double *padfX, double *padfY,
+                                 double *padfVariant,
+                                 llPointFunc pfnPointFunc, void *pCBData );
+
+void GDALdllImageFilledPolygon( int nRasterXSize, int nRasterYSize,
                                 int nPartCount, int *panPartSize,
                                 double *padfX, double *padfY,
                                 double *padfVariant,
-                                llPointFunc pfnPointFunc, void *pCBData );
-
-void GDALdllImageFilledPolygon(int nRasterXSize, int nRasterYSize,
-                               int nPartCount, int *panPartSize,
-                               double *padfX, double *padfY,
-                               double *padfVariant,
-                               llScanlineFunc pfnScanlineFunc, void *pCBData );
+                                llScanlineFunc pfnScanlineFunc, void *pCBData );
 
 CPL_C_END
 
@@ -103,18 +112,20 @@ private:
     void     MergePolygon( int nSrcId, int nDstId );
     int      NewPolygon( DataType nValue );
 
+    CPL_DISALLOW_COPY_ASSIGN(GDALRasterPolygonEnumeratorT)
+
 public:  // these are intended to be readonly.
 
-    GInt32   *panPolyIdMap;
-    DataType   *panPolyValue;
+    GInt32   *panPolyIdMap = nullptr;
+    DataType   *panPolyValue = nullptr;
 
-    int      nNextPolygonId;
-    int      nPolyAlloc;
+    int      nNextPolygonId = 0;
+    int      nPolyAlloc = 0;
 
-    int      nConnectedness;
+    int      nConnectedness = 0;
 
 public:
-             GDALRasterPolygonEnumeratorT( int nConnectedness=4 );
+    explicit GDALRasterPolygonEnumeratorT( int nConnectedness=4 );
             ~GDALRasterPolygonEnumeratorT();
 
     void     ProcessLine( DataType *panLastLineVal, DataType *panThisLineVal,
@@ -128,17 +139,17 @@ public:
 
 struct IntEqualityTest
 {
-    bool operator()(GInt32 a, GInt32 b) { return a == b; }
+    bool operator()(GInt32 a, GInt32 b) const { return a == b; }
 };
 
 typedef GDALRasterPolygonEnumeratorT<GInt32, IntEqualityTest> GDALRasterPolygonEnumerator;
 
 typedef void* (*GDALTransformDeserializeFunc)( CPLXMLNode *psTree );
 
-void* GDALRegisterTransformDeserializer(const char* pszTransformName,
+void CPL_DLL *GDALRegisterTransformDeserializer(const char* pszTransformName,
                                        GDALTransformerFunc pfnTransformerFunc,
                                        GDALTransformDeserializeFunc pfnDeserializeFunc);
-void GDALUnregisterTransformDeserializer(void* pData);
+void CPL_DLL GDALUnregisterTransformDeserializer(void* pData);
 
 void GDALCleanupTransformDeserializerMutex();
 
@@ -153,21 +164,21 @@ void CPL_DLL * GDALCloneTransformer( void *pTransformerArg );
 /*      Color table related                                             */
 /************************************************************************/
 
-/* definitions exists for T = GUInt32 and T = GUIntBig */
+// Definitions exists for T = GUInt32 and T = GUIntBig.
 template<class T> int
 GDALComputeMedianCutPCTInternal( GDALRasterBandH hRed,
-                           GDALRasterBandH hGreen,
-                           GDALRasterBandH hBlue,
-                           GByte* pabyRedBand,
-                           GByte* pabyGreenBand,
-                           GByte* pabyBlueBand,
-                           int (*pfnIncludePixel)(int,int,void*),
-                           int nColors,
-                           int nBits,
-                           T* panHistogram,
-                           GDALColorTableH hColorTable,
-                           GDALProgressFunc pfnProgress,
-                           void * pProgressArg );
+                                 GDALRasterBandH hGreen,
+                                 GDALRasterBandH hBlue,
+                                 GByte* pabyRedBand,
+                                 GByte* pabyGreenBand,
+                                 GByte* pabyBlueBand,
+                                 int (*pfnIncludePixel)(int,int,void*),
+                                 int nColors,
+                                 int nBits,
+                                 T* panHistogram,
+                                 GDALColorTableH hColorTable,
+                                 GDALProgressFunc pfnProgress,
+                                 void * pProgressArg );
 
 int GDALDitherRGB2PCTInternal( GDALRasterBandH hRed,
                                GDALRasterBandH hGreen,
@@ -180,12 +191,12 @@ int GDALDitherRGB2PCTInternal( GDALRasterBandH hRed,
                                GDALProgressFunc pfnProgress,
                                void * pProgressArg );
 
-#define PRIME_FOR_65536                                 98317
+#define PRIME_FOR_65536 98317
 
-/* See HashHistogram structure in gdalmediancut.cpp and ColorIndex structure in gdaldither.cpp */
-/* 6 * sizeof(int) should be the size of the largest of both structures */
-#define MEDIAN_CUT_AND_DITHER_BUFFER_SIZE_65536         (6 * sizeof(int) * PRIME_FOR_65536)
-
+// See HashHistogram structure in gdalmediancut.cpp and ColorIndex structure in
+// gdaldither.cpp 6 * sizeof(int) should be the size of the largest of both
+// structures.
+#define MEDIAN_CUT_AND_DITHER_BUFFER_SIZE_65536 (6 * sizeof(int) * PRIME_FOR_65536)
 
 /************************************************************************/
 /*      Float comparison function.                                      */
@@ -205,5 +216,7 @@ struct FloatEqualityTest
 {
     bool operator()(float a, float b) { return GDALFloatEquals(a,b) == TRUE; }
 };
+
+#endif /* #ifndef DOXYGEN_SKIP */
 
 #endif /* ndef GDAL_ALG_PRIV_H_INCLUDED */

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ograpispy.h 33631 2016-03-04 06:28:09Z goatbar $
+ * $Id: ograpispy.h 1efc44a83b04874a2485ddcab47afb141c4d6721 2017-08-18 14:40:18Z Even Rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  OGR C API "Spy"
@@ -61,7 +61,6 @@
  * @since GDAL 2.0
  */
 
-
 #ifdef DEBUG
 #define OGRAPISPY_ENABLED
 #endif
@@ -71,6 +70,8 @@
 CPL_C_START
 
 extern int bOGRAPISpyEnabled;
+
+void OGRAPISpyDestroyMutex();
 
 int OGRAPISpyOpenTakeSnapshot(const char* pszName, int bUpdate);
 void OGRAPISpyOpen(const char* pszName, int bUpdate, int iSnapshot,

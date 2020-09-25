@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: vsidataio_12.cpp 33720 2016-03-15 00:39:53Z goatbar $
+ * $Id: vsidataio_12.cpp bde879dd6c2dd67ecf317ad588846089f0905cb9 2016-03-15 00:39:53Z Kurt Schwehr $
  *
  * Project:  JPEG JFIF Driver
  * Purpose:  Implement JPEG read/write io indirection through VSI.

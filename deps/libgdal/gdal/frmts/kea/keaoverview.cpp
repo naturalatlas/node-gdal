@@ -1,5 +1,4 @@
 /*
- * $Id: keaoverview.cpp 33720 2016-03-15 00:39:53Z goatbar $
  *  keaoverview.cpp
  *
  *  Created by Pete Bunting on 01/08/2012.
@@ -30,6 +29,8 @@
 
 #include "keaoverview.h"
 
+CPL_CVSID("$Id: keaoverview.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
+
 // constructor
 KEAOverview::KEAOverview(KEADataset *pDataset, int nSrcBand, GDALAccess eAccessIn,
                 kealib::KEAImageIO *pImageIO, int *pRefCount,
@@ -44,10 +45,7 @@ KEAOverview::KEAOverview(KEADataset *pDataset, int nSrcBand, GDALAccess eAccessI
     this->nRasterYSize = static_cast<int>(nYSize);
 }
 
-KEAOverview::~KEAOverview()
-{
-
-}
+KEAOverview::~KEAOverview() {}
 
 // overridden implementation - calls readFromOverview instead
 CPLErr KEAOverview::IReadBlock( int nBlockXOff, int nBlockYOff, void * pImage )
@@ -121,7 +119,7 @@ CPLErr KEAOverview::IWriteBlock( int nBlockXOff, int nBlockYOff, void * pImage )
 GDALRasterAttributeTable *KEAOverview::GetDefaultRAT()
 {
     // KEARasterBand implements this, but we don't want to
-    return NULL;
+    return nullptr;
 }
 
 CPLErr KEAOverview::SetDefaultRAT(CPL_UNUSED const GDALRasterAttributeTable *poRAT)

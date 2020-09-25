@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrbnalayer.cpp 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  BNA Translator
  * Purpose:  Implements OGRBNALayer class.
@@ -33,6 +32,8 @@
 #include "cpl_csv.h"
 #include "ogr_p.h"
 
+CPL_CVSID("$Id: ogrbnalayer.cpp 7a3b8689d54765d306ea9cc4c773b4c967db980f 2018-10-14 19:50:43 +0200 Even Rouault $")
+
 /************************************************************************/
 /*                            OGRBNALayer()                             */
 /*                                                                      */
@@ -50,13 +51,13 @@ OGRBNALayer::OGRBNALayer( const char *pszFilename,
     poDS(poDSIn),
     bWriter(bWriterIn),
     nIDs(nIDsIn),
-    eof(FALSE),
-    failed(FALSE),
+    eof(false),
+    failed(false),
     curLine(0),
     nNextFID(0),
     nFeatures(0),
     partialIndexTable(TRUE),
-    offsetAndLineFeaturesTable(NULL)
+    offsetAndLineFeaturesTable(nullptr)
 {
     static const char* const iKnowHowToCount[]
         = { "Primary", "Secondary", "Third", "Fourth", "Fifth" };
@@ -69,7 +70,7 @@ OGRBNALayer::OGRBNALayer( const char *pszFilename,
     poFeatureDefn->Reference();
     poFeatureDefn->SetGeomType( eLayerGeomType );
     SetDescription( poFeatureDefn->GetName() );
-    this->bnaFeatureType = bnaFeatureTypeIn;
+    bnaFeatureType = bnaFeatureTypeIn;
 
     if (! bWriter )
     {
@@ -100,12 +101,12 @@ OGRBNALayer::OGRBNALayer( const char *pszFilename,
         }
 
         fpBNA = VSIFOpenL( pszFilename, "rb" );
-        if( fpBNA == NULL )
+        if( fpBNA == nullptr )
             return;
     }
     else
     {
-        fpBNA = NULL;
+        fpBNA = nullptr;
     }
 }
 
@@ -134,7 +135,7 @@ void OGRBNALayer::SetFeatureIndexTable(
 {
     nFeatures = nFeaturesIn;
     offsetAndLineFeaturesTable = offsetAndLineFeaturesTableIn;
-    partialIndexTable = partialIndexTableIn;
+    partialIndexTable = CPL_TO_BOOL(partialIndexTableIn);
 }
 
 /************************************************************************/
@@ -144,15 +145,14 @@ void OGRBNALayer::SetFeatureIndexTable(
 void OGRBNALayer::ResetReading()
 
 {
-    if( fpBNA == NULL )
+    if( fpBNA == nullptr )
         return;
-    eof = FALSE;
-    failed = FALSE;
+    eof = false;
+    failed = false;
     curLine = 0;
     nNextFID = 0;
     CPL_IGNORE_RET_VAL(VSIFSeekL( fpBNA, 0, SEEK_SET ));
 }
-
 
 /************************************************************************/
 /*                           GetNextFeature()                           */
@@ -160,10 +160,10 @@ void OGRBNALayer::ResetReading()
 
 OGRFeature *OGRBNALayer::GetNextFeature()
 {
-    if (failed || eof || fpBNA == NULL)
-        return NULL;
+    if( failed || eof || fpBNA == nullptr )
+        return nullptr;
 
-    while(1)
+    while( true )
     {
         int ok = FALSE;
         const int offset = static_cast<int>( VSIFTellL(fpBNA) );
@@ -172,7 +172,7 @@ OGRFeature *OGRBNALayer::GetNextFeature()
         {
             if( VSIFSeekL( fpBNA, offsetAndLineFeaturesTable[nNextFID].offset,
                            SEEK_SET ) < 0 )
-                return NULL;
+                return nullptr;
             curLine = offsetAndLineFeaturesTable[nNextFID].line;
         }
         BNARecord* record
@@ -180,17 +180,17 @@ OGRFeature *OGRBNALayer::GetNextFeature()
         if (ok == FALSE)
         {
             BNA_FreeRecord(record);
-            failed = TRUE;
-            return NULL;
+            failed = true;
+            return nullptr;
         }
-        if (record == NULL)
+        if (record == nullptr)
         {
             /* end of file */
-            eof = TRUE;
+            eof = true;
 
             /* and we have finally build the whole index table */
-            partialIndexTable = FALSE;
-            return NULL;
+            partialIndexTable = false;
+            return nullptr;
         }
 
         if (record->featureType == bnaFeatureType)
@@ -211,9 +211,9 @@ OGRFeature *OGRBNALayer::GetNextFeature()
 
             BNA_FreeRecord(record);
 
-            if(   (m_poFilterGeom == NULL
+            if(   (m_poFilterGeom == nullptr
                 || FilterGeometry( poFeature->GetGeometryRef() ) )
-            && (m_poAttrQuery == NULL
+            && (m_poAttrQuery == nullptr
                 || m_poAttrQuery->Evaluate( poFeature )) )
             {
                  return poFeature;
@@ -228,14 +228,12 @@ OGRFeature *OGRBNALayer::GetNextFeature()
     }
 }
 
-
 /************************************************************************/
 /*                      WriteFeatureAttributes()                        */
 /************************************************************************/
 
-void OGRBNALayer::WriteFeatureAttributes(VSILFILE* fp, OGRFeature *poFeature )
+void OGRBNALayer::WriteFeatureAttributes( VSILFILE* fp, OGRFeature *poFeature )
 {
-    OGRFieldDefn *poFieldDefn;
     int nbOutID = poDS->GetNbOutId();
     if (nbOutID < 0)
         nbOutID = poFeatureDefn->GetFieldCount();
@@ -243,8 +241,8 @@ void OGRBNALayer::WriteFeatureAttributes(VSILFILE* fp, OGRFeature *poFeature )
     {
         if (i < poFeatureDefn->GetFieldCount())
         {
-            poFieldDefn = poFeatureDefn->GetFieldDefn( i );
-            if( poFeature->IsFieldSet( i ) )
+            OGRFieldDefn *poFieldDefn = poFeatureDefn->GetFieldDefn( i );
+            if( poFeature->IsFieldSetAndNotNull( i ) )
             {
                 if (poFieldDefn->GetType() == OFTReal)
                 {
@@ -296,14 +294,14 @@ OGRErr OGRBNALayer::ICreateFeature( OGRFeature *poFeature )
     char eol[3];
     const char* partialEol = (poDS->GetMultiLine()) ? eol : poDS->GetCoordinateSeparator();
 
-    if (poGeom == NULL || poGeom->IsEmpty() )
+    if (poGeom == nullptr || poGeom->IsEmpty() )
     {
         CPLError(CE_Failure, CPLE_AppDefined,
                  "OGR BNA driver cannot write features with empty geometries.");
         return OGRERR_FAILURE;
     }
 
-    if (poDS->GetUseCRLF())
+    if( poDS->GetUseCRLF() )
     {
         eol[0] = 13;
         eol[1] = 10;
@@ -315,7 +313,8 @@ OGRErr OGRBNALayer::ICreateFeature( OGRFeature *poFeature )
         eol[1] = 0;
     }
 
-    if ( ! bWriter )
+    VSILFILE* fp = poDS->GetOutputFP();
+    if ( ! bWriter || fp == nullptr )
     {
         return OGRERR_FAILURE;
     }
@@ -323,7 +322,6 @@ OGRErr OGRBNALayer::ICreateFeature( OGRFeature *poFeature )
     if( poFeature->GetFID() == OGRNullFID )
         poFeature->SetFID( nFeatures++ );
 
-    VSILFILE* fp = poDS->GetOutputFP();
     int nbPairPerLine = poDS->GetNbPairPerLine();
 
     switch( poGeom->getGeometryType() )
@@ -331,7 +329,7 @@ OGRErr OGRBNALayer::ICreateFeature( OGRFeature *poFeature )
         case wkbPoint:
         case wkbPoint25D:
         {
-            OGRPoint* point = (OGRPoint*)poGeom;
+            OGRPoint* point = poGeom->toPoint();
             WriteFeatureAttributes(fp, poFeature);
             CPL_IGNORE_RET_VAL(VSIFPrintfL( fp, "1"));
             CPL_IGNORE_RET_VAL(VSIFPrintfL( fp, "%s", partialEol));
@@ -343,9 +341,9 @@ OGRErr OGRBNALayer::ICreateFeature( OGRFeature *poFeature )
         case wkbPolygon:
         case wkbPolygon25D:
         {
-            OGRPolygon* polygon = (OGRPolygon*)poGeom;
+            OGRPolygon* polygon = poGeom->toPolygon();
             OGRLinearRing* ring = polygon->getExteriorRing();
-            if (ring == NULL)
+            if (ring == nullptr)
             {
                 return OGRERR_FAILURE;
             }
@@ -353,7 +351,7 @@ OGRErr OGRBNALayer::ICreateFeature( OGRFeature *poFeature )
             double firstX = ring->getX(0);
             double firstY = ring->getY(0);
             int nBNAPoints = ring->getNumPoints();
-            int is_ellipse = FALSE;
+            bool is_ellipse = false;
 
             /* This code tries to detect an ellipse in a polygon geometry */
             /* This will only work presumably on ellipses already read from a BNA file */
@@ -378,17 +376,17 @@ OGRErr OGRBNALayer::ICreateFeature( OGRFeature *poFeature )
                 {
                     double major_radius = fabs(firstX - center1X);
                     double minor_radius = fabs(quarterY - center1Y);
-                    is_ellipse = TRUE;
+                    is_ellipse = true;
                     for(int i=0;i<360;i++)
                     {
                         if (!(fabs(center1X + major_radius * cos(i * (M_PI / 180)) - ring->getX(i)) < 1e-5 &&
                               fabs(center1Y + minor_radius * sin(i * (M_PI / 180)) - ring->getY(i)) < 1e-5))
                         {
-                            is_ellipse = FALSE;
+                            is_ellipse = false;
                             break;
                         }
                     }
-                    if ( is_ellipse == TRUE )
+                    if( is_ellipse )
                     {
                         WriteFeatureAttributes(fp, poFeature);
                         CPL_IGNORE_RET_VAL(VSIFPrintfL( fp, "2"));
@@ -401,7 +399,7 @@ OGRErr OGRBNALayer::ICreateFeature( OGRFeature *poFeature )
                 }
             }
 
-            if ( is_ellipse == FALSE)
+            if( !is_ellipse )
             {
                 int nInteriorRings = polygon->getNumInteriorRings();
                 for(int i=0;i<nInteriorRings;i++)
@@ -445,15 +443,14 @@ OGRErr OGRBNALayer::ICreateFeature( OGRFeature *poFeature )
         case wkbMultiPolygon:
         case wkbMultiPolygon25D:
         {
-            OGRMultiPolygon* multipolygon = (OGRMultiPolygon*)poGeom;
-            int N = multipolygon->getNumGeometries();
+            OGRMultiPolygon* multipolygon = poGeom->toMultiPolygon();
             int nBNAPoints = 0;
-            double firstX = 0, firstY = 0;
-            for(int i=0;i<N;i++)
+            double firstX = 0.0;
+            double firstY = 0.0;
+            for( auto&& polygon: *multipolygon )
             {
-                OGRPolygon* polygon = (OGRPolygon*)multipolygon->getGeometryRef(i);
                 OGRLinearRing* ring = polygon->getExteriorRing();
-                if (ring == NULL)
+                if (ring == nullptr)
                     continue;
 
                 if (nBNAPoints)
@@ -478,11 +475,11 @@ OGRErr OGRBNALayer::ICreateFeature( OGRFeature *poFeature )
             WriteFeatureAttributes(fp, poFeature);
             CPL_IGNORE_RET_VAL(VSIFPrintfL( fp, "%d", nBNAPoints));
             int nbPair = 0;
-            for(int i=0;i<N;i++)
+            bool bFirst = true;
+            for( auto&& polygon: *multipolygon )
             {
-                OGRPolygon* polygon = (OGRPolygon*)multipolygon->getGeometryRef(i);
                 OGRLinearRing* ring = polygon->getExteriorRing();
-                if (ring == NULL)
+                if (ring == nullptr)
                     continue;
 
                 int n = ring->getNumPoints();
@@ -493,12 +490,13 @@ OGRErr OGRBNALayer::ICreateFeature( OGRFeature *poFeature )
                     WriteCoord(fp, ring->getX(j), ring->getY(j));
                     nbPair++;
                 }
-                if (i != 0)
+                if (!bFirst)
                 {
                     CPL_IGNORE_RET_VAL(VSIFPrintfL( fp, "%s", ((nbPair % nbPairPerLine) == 0) ? partialEol : " "));
                     WriteCoord(fp, firstX, firstY);
                     nbPair++;
                 }
+                bFirst = false;
                 for(int j=0;j<nInteriorRings;j++)
                 {
                     ring = polygon->getInteriorRing(j);
@@ -521,7 +519,7 @@ OGRErr OGRBNALayer::ICreateFeature( OGRFeature *poFeature )
         case wkbLineString:
         case wkbLineString25D:
         {
-            OGRLineString* line = (OGRLineString*)poGeom;
+            OGRLineString* line = poGeom->toLineString();
             int n = line->getNumPoints();
             if (n < 2)
             {
@@ -554,8 +552,6 @@ OGRErr OGRBNALayer::ICreateFeature( OGRFeature *poFeature )
     return OGRERR_NONE;
 }
 
-
-
 /************************************************************************/
 /*                            CreateField()                             */
 /************************************************************************/
@@ -569,7 +565,6 @@ OGRErr OGRBNALayer::CreateField( OGRFieldDefn *poField, int /* bApproxOK */ )
 
     return OGRERR_NONE;
 }
-
 
 /************************************************************************/
 /*                           BuildFeatureFromBNARecord()                */
@@ -604,11 +599,9 @@ OGRFeature *OGRBNALayer::BuildFeatureFromBNARecord (BNARecord* record, long fid)
         double firstX = record->tabCoords[0][0];
         double firstY = record->tabCoords[0][1];
         int isFirstPolygon = 1;
-        double secondaryFirstX = 0, secondaryFirstY = 0;
-
-        OGRLinearRing* ring = new OGRLinearRing ();
-        ring->setCoordinateDimension(2);
-        ring->addPoint(record->tabCoords[0][0], record->tabCoords[0][1] );
+        double secondaryFirstX = 0.0;
+        double secondaryFirstY = 0.0;
+        int iStartIndex = 0;
 
         /* record->nCoords is really a safe upper bound */
         int nbPolygons = 0;
@@ -619,12 +612,20 @@ OGRFeature *OGRBNALayer::BuildFeatureFromBNARecord (BNARecord* record, long fid)
         int i = 1;
         for( ; i < record->nCoords; i++ )
         {
-            ring->addPoint(record->tabCoords[i][0], record->tabCoords[i][1] );
             if (isFirstPolygon == 1 &&
                 record->tabCoords[i][0] == firstX &&
                 record->tabCoords[i][1] == firstY)
             {
                 OGRPolygon* polygon = new OGRPolygon ();
+                OGRLinearRing* ring = new OGRLinearRing ();
+                ring->setCoordinateDimension(2);
+                ring->setNumPoints(i - iStartIndex + 1, false);
+                for( int j = iStartIndex; j <= i ; ++j )
+                {
+                    ring->setPoint( j - iStartIndex,
+                                    record->tabCoords[j][0],
+                                    record->tabCoords[j][1] );
+                }
                 polygon->addRingDirectly(ring);
                 tabPolygons[nbPolygons] = polygon;
                 nbPolygons++;
@@ -639,10 +640,7 @@ OGRFeature *OGRBNALayer::BuildFeatureFromBNARecord (BNARecord* record, long fid)
                 i++;
                 secondaryFirstX = record->tabCoords[i][0];
                 secondaryFirstY = record->tabCoords[i][1];
-                ring = new OGRLinearRing ();
-                ring->setCoordinateDimension(2);
-                ring->addPoint( record->tabCoords[i][0],
-                                record->tabCoords[i][1] );
+                iStartIndex = i;
             }
             else if (isFirstPolygon == 0 &&
                     record->tabCoords[i][0] == secondaryFirstX &&
@@ -650,9 +648,31 @@ OGRFeature *OGRBNALayer::BuildFeatureFromBNARecord (BNARecord* record, long fid)
             {
 
                 OGRPolygon* polygon = new OGRPolygon ();
+                OGRLinearRing* ring = new OGRLinearRing ();
+                ring->setCoordinateDimension(2);
+                ring->setNumPoints(i - iStartIndex + 1, false);
+                for( int j = iStartIndex; j <= i ; ++j )
+                {
+                    ring->setPoint( j - iStartIndex,
+                                    record->tabCoords[j][0],
+                                    record->tabCoords[j][1] );
+                }
                 polygon->addRingDirectly(ring);
-                tabPolygons[nbPolygons] = polygon;
-                nbPolygons++;
+
+                for( int j = 0; j < nbPolygons; j++ )
+                {
+                    if( polygon->Equals(tabPolygons[j]) )
+                    {
+                        delete polygon;
+                        polygon = nullptr;
+                        break;
+                    }
+                }
+                if( polygon )
+                {
+                    tabPolygons[nbPolygons] = polygon;
+                    nbPolygons++;
+                }
 
                 if (i < record->nCoords - 1)
                 {
@@ -681,10 +701,7 @@ OGRFeature *OGRBNALayer::BuildFeatureFromBNARecord (BNARecord* record, long fid)
                     i ++;
                     secondaryFirstX = record->tabCoords[i][0];
                     secondaryFirstY = record->tabCoords[i][1];
-                    ring = new OGRLinearRing ();
-                    ring->setCoordinateDimension(2);
-                    ring->addPoint( record->tabCoords[i][0],
-                                    record->tabCoords[i][1] );
+                    iStartIndex = i;
                 }
                 else
                 {
@@ -704,11 +721,24 @@ OGRFeature *OGRBNALayer::BuildFeatureFromBNARecord (BNARecord* record, long fid)
             /* Let's be a bit tolerant about non-closing polygons. */
             if (isFirstPolygon)
             {
-                ring->addPoint( record->tabCoords[0][0],
+                CPLAssert( iStartIndex == 0 );
+                OGRLinearRing* ring = new OGRLinearRing ();
+                ring->setCoordinateDimension(2);
+                ring->setNumPoints(record->nCoords + 1, false);
+                for( int j = 0; j < record->nCoords ; ++j )
+                {
+                    ring->setPoint( j,
+                                    record->tabCoords[j][0],
+                                    record->tabCoords[j][1] );
+                }
+
+                ring->setPoint( record->nCoords,
+                                record->tabCoords[0][0],
                                 record->tabCoords[0][1] );
 
                 OGRPolygon* polygon = new OGRPolygon ();
                 polygon->addRingDirectly(ring);
+
                 tabPolygons[nbPolygons] = polygon;
                 nbPolygons++;
             }
@@ -724,11 +754,11 @@ OGRFeature *OGRBNALayer::BuildFeatureFromBNARecord (BNARecord* record, long fid)
         }
         else
         {
-            int isValidGeometry;
+            int isValidGeometry = FALSE;
             poFeature->SetGeometryDirectly(
                 OGRGeometryFactory::organizePolygons(
                     reinterpret_cast<OGRGeometry**>( tabPolygons ),
-                    nbPolygons, &isValidGeometry, NULL ) );
+                    nbPolygons, &isValidGeometry, nullptr ) );
 
             if (!isValidGeometry)
             {
@@ -772,17 +802,16 @@ OGRFeature *OGRBNALayer::BuildFeatureFromBNARecord (BNARecord* record, long fid)
     return poFeature;
 }
 
-
 /************************************************************************/
 /*                           FastParseUntil()                           */
 /************************************************************************/
 void OGRBNALayer::FastParseUntil ( int interestFID)
 {
-    if (partialIndexTable)
+    if( partialIndexTable )
     {
         ResetReading();
 
-        BNARecord *record = NULL;
+        BNARecord *record = nullptr;
 
         if (nFeatures > 0)
         {
@@ -808,16 +837,16 @@ void OGRBNALayer::FastParseUntil ( int interestFID)
                                        BNA_READ_NONE);
             if (ok == FALSE)
             {
-                failed = TRUE;
+                failed = true;
                 return;
             }
-            if (record == NULL)
+            if (record == nullptr)
             {
                 /* end of file */
-                eof = TRUE;
+                eof = true;
 
                 /* and we have finally build the whole index table */
-                partialIndexTable = FALSE;
+                partialIndexTable = false;
                 return;
             }
 
@@ -851,18 +880,18 @@ void OGRBNALayer::FastParseUntil ( int interestFID)
 OGRFeature *  OGRBNALayer::GetFeature( GIntBig nFID )
 {
     if (nFID < 0 || !CPL_INT64_FITS_ON_INT32(nFID))
-        return NULL;
+        return nullptr;
 
     FastParseUntil( static_cast<int>( nFID ) );
 
     if (nFID >= nFeatures)
-        return NULL;
+        return nullptr;
 
-    int ok;
     if( VSIFSeekL( fpBNA, offsetAndLineFeaturesTable[nFID].offset, SEEK_SET ) < 0 )
-        return NULL;
+        return nullptr;
 
     curLine = offsetAndLineFeaturesTable[nFID].line;
+    int ok = FALSE;
     BNARecord* record
         = BNA_GetNextRecord(fpBNA, &ok, &curLine, TRUE, bnaFeatureType);
 

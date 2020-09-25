@@ -904,8 +904,11 @@ NAN_METHOD(Geometry::createFromGeoJson) {
 	Nan::ThrowError("GDAL < 2.3 does not support parsing GeoJSON directly");
 	return;
 #else
-	Local<Value> input;
-	NODE_ARG_OBJECT(0, "geojson", input);
+	if (info.Length() < 1) {
+		Nan::ThrowError("Missing required argument");
+		return;
+	}
+	Local<Value> input = info[0].As<Value>();
 
 	std::string val;
 	if (input->IsString()) {
@@ -914,7 +917,8 @@ NAN_METHOD(Geometry::createFromGeoJson) {
 		// goes to text to pass it in, there isn't a performant way to
 		// go from v8 JSON -> CPLJSON anyways
 		Nan::JSON NanJSON;
-		Nan::MaybeLocal<String> result = NanJSON.Stringify(geo_obj);
+		v8::Local<v8::Object> inputObject = v8::Local<v8::Object>::Cast(input);
+		Nan::MaybeLocal<String> result = NanJSON.Stringify(inputObject);
 		if (result.IsEmpty()) {
 			Nan::ThrowError("Invalid GeoJSON");
 			return;

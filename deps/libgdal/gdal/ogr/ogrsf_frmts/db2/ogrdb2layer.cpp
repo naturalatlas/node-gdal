@@ -29,6 +29,8 @@
 
 #include "ogr_db2.h"
 
+CPL_CVSID("$Id: ogrdb2layer.cpp 7d078e0357d2998edfa713422e607cbadf77f9ff 2018-04-08 22:11:28 +0200 Even Rouault $")
+
 /************************************************************************/
 /*                        OGRDB2Layer()                        */
 /************************************************************************/
@@ -36,15 +38,19 @@
 OGRDB2Layer::OGRDB2Layer()
 
 {
-    poDS = NULL;
-    pszGeomColumn = NULL;
-    pszFIDColumn = NULL;
+    m_poDS = nullptr;
+    poFeatureDefn = nullptr;
+    poDS = nullptr;
+    pszGeomColumn = nullptr;
+    pszFIDColumn = nullptr;
     bIsIdentityFid = FALSE;
     cGenerated = ' ';
-    panFieldOrdinals = NULL;
-    m_poStmt = NULL;
+    nLayerStatus = 0;
+    panFieldOrdinals = nullptr;
+    m_poStmt = nullptr;
+    m_poPrepStmt = nullptr;
     iNextShapeId = 0;
-    poSRS = NULL;
+    poSRS = nullptr;
     nSRSId = -1; // we haven't even queried the database for it yet.
 }
 
@@ -57,8 +63,9 @@ OGRDB2Layer::~OGRDB2Layer()
 {
     CPLDebug("OGRDB2Layer::~OGRDB2Layer","entering");
     CPLDebug("OGRDB2Layer::~OGRDB2Layer",
-             "m_nFeaturesRead: %d; poFeatureDefn: %p", m_nFeaturesRead,poFeatureDefn);
-    if( m_nFeaturesRead > 0 && poFeatureDefn != NULL )
+             "m_nFeaturesRead: " CPL_FRMT_GIB "; poFeatureDefn: %p",
+             m_nFeaturesRead,poFeatureDefn);
+    if( m_nFeaturesRead > 0 && poFeatureDefn != nullptr )
     {
         CPLDebug( "OGR_DB2Layer",
                   "%d features read on layer '%s'.",
@@ -69,7 +76,7 @@ OGRDB2Layer::~OGRDB2Layer()
     if( m_poStmt )
     {
         delete m_poStmt;
-        m_poStmt = NULL;
+        m_poStmt = nullptr;
     }
 
     CPLFree( pszGeomColumn );
@@ -79,7 +86,7 @@ OGRDB2Layer::~OGRDB2Layer()
     if( poFeatureDefn )
     {
         poFeatureDefn->Release();
-        poFeatureDefn = NULL;
+        poFeatureDefn = nullptr;
     }
 
     if( poSRS )
@@ -112,7 +119,7 @@ CPLErr OGRDB2Layer::BuildFeatureDefn( const char *pszLayerName,
     /*      If we don't already have an FID, check if there is a special    */
     /*      FID named column available.                                     */
     /* -------------------------------------------------------------------- */
-    if( pszFIDColumn == NULL )
+    if( pszFIDColumn == nullptr )
     {
         const char *pszOGR_FID = CPLGetConfigOption("DB2SPATIAL_OGR_FID",
                                  "OBJECTID");
@@ -126,7 +133,7 @@ CPLErr OGRDB2Layer::BuildFeatureDefn( const char *pszLayerName,
         }
     }
 
-    if( pszFIDColumn != NULL )
+    if( pszFIDColumn != nullptr )
         CPLDebug( "OGR_DB2Layer::BuildFeatureDefn",
                   "Using column %s as FID for table %s.",
                   pszFIDColumn, poFeatureDefn->GetName() );
@@ -137,7 +144,7 @@ CPLErr OGRDB2Layer::BuildFeatureDefn( const char *pszLayerName,
 
     for( int iCol = 0; iCol < nRawColumns; iCol++ )
     {
-        if ( pszGeomColumn == NULL )
+        if ( pszGeomColumn == nullptr )
         {
             /* need to identify the geometry column */
             if ( EQUAL(poStmt->GetColTypeName( iCol ),
@@ -153,7 +160,7 @@ CPLErr OGRDB2Layer::BuildFeatureDefn( const char *pszLayerName,
                 continue;
             }
         }
-        if( pszFIDColumn != NULL &&
+        if( pszFIDColumn != nullptr &&
                 EQUAL(poStmt->GetColName(iCol), pszFIDColumn) )
         {
             /* skip FID */
@@ -217,7 +224,6 @@ CPLErr OGRDB2Layer::BuildFeatureDefn( const char *pszLayerName,
     return CE_None;
 }
 
-
 /************************************************************************/
 /*                            ResetReading()                            */
 /************************************************************************/
@@ -241,11 +247,11 @@ OGRFeature *OGRDB2Layer::GetNextFeature()
         OGRFeature      *poFeature;
 
         poFeature = GetNextRawFeature();
-        if( poFeature == NULL )
-            return NULL;
-        if( (m_poFilterGeom == NULL
+        if( poFeature == nullptr )
+            return nullptr;
+        if( (m_poFilterGeom == nullptr
                 || FilterGeometry( poFeature->GetGeometryRef() ) )
-                && (m_poAttrQuery == NULL
+                && (m_poAttrQuery == nullptr
                     || m_poAttrQuery->Evaluate( poFeature )) ) {
             return poFeature;
         }
@@ -262,8 +268,8 @@ OGRFeature *OGRDB2Layer::GetNextRawFeature()
 
 {
 
-    if( GetStatement() == NULL )
-        return NULL;
+    if( GetStatement() == nullptr )
+        return nullptr;
 
     /* -------------------------------------------------------------------- */
     /*      If we are marked to restart then do so, and fetch a record.     */
@@ -272,8 +278,8 @@ OGRFeature *OGRDB2Layer::GetNextRawFeature()
     {
 //      CPLDebug("OGR_DB2Layer::GetNextRawFeature","Fetch failed");
         delete m_poStmt;
-        m_poStmt = NULL;
-        return NULL;
+        m_poStmt = nullptr;
+        return nullptr;
     }
 //      CPLDebug("OGR_DB2Layer::GetNextRawFeature","Create feature");
     /* -------------------------------------------------------------------- */
@@ -281,7 +287,7 @@ OGRFeature *OGRDB2Layer::GetNextRawFeature()
     /* -------------------------------------------------------------------- */
     int         iField;
     OGRFeature *poFeature = new OGRFeature( poFeatureDefn );
-    if( pszFIDColumn != NULL && m_poStmt->GetColId(pszFIDColumn) > -1 )
+    if( pszFIDColumn != nullptr && m_poStmt->GetColId(pszFIDColumn) > -1 )
         poFeature->SetFID(
             atoi(m_poStmt->GetColData(m_poStmt->GetColId(pszFIDColumn))) );
     else
@@ -302,8 +308,8 @@ OGRFeature *OGRDB2Layer::GetNextRawFeature()
         int iSrcField = panFieldOrdinals[iField];
         const char *pszValue = m_poStmt->GetColData( iSrcField );
 
-        if( pszValue == NULL )
-            /* no value */;
+        if( pszValue == nullptr )
+            poFeature->SetFieldNull( iField );
         else if( poFeature->GetFieldDefnRef(iField)->GetType() == OFTBinary )
             poFeature->SetField( iField,
                                  m_poStmt->GetColDataLength(iSrcField),
@@ -316,16 +322,16 @@ OGRFeature *OGRDB2Layer::GetNextRawFeature()
     /*      Try to extract a geometry.                                      */
     /* -------------------------------------------------------------------- */
 
-    if( pszGeomColumn != NULL && !poFeatureDefn->IsGeometryIgnored())
+    if( pszGeomColumn != nullptr && !poFeatureDefn->IsGeometryIgnored())
     {
         iField = m_poStmt->GetColId( pszGeomColumn );
         const char *pszGeomText = m_poStmt->GetColData( iField );
-        OGRGeometry *poGeom = NULL;
+        OGRGeometry *poGeom = nullptr;
         OGRErr eErr = OGRERR_NONE;
-        if( pszGeomText != NULL )
+        if( pszGeomText != nullptr )
         {
-            eErr = OGRGeometryFactory::createFromWkt((char **) &pszGeomText,
-                    NULL, &poGeom);
+            eErr = OGRGeometryFactory::createFromWkt(pszGeomText,
+                    nullptr, &poGeom);
         }
 
         if ( eErr != OGRERR_NONE )
@@ -350,7 +356,7 @@ OGRFeature *OGRDB2Layer::GetNextRawFeature()
                      "GetNextRawFeature(): %s", pszMessage);
         }
 
-        if( poGeom != NULL )
+        if( poGeom != nullptr )
         {
             if ( GetSpatialRef() )
                 poGeom->assignSpatialReference( poSRS );
@@ -424,10 +430,10 @@ OGRSpatialReference *OGRDB2Layer::GetSpatialRef()
 
 {
 //CPLDebug("OGR_DB2Layer::GetSpatialRef", "nSrsId: %d", nSRSId);
-    if( poSRS == NULL && nSRSId > 0 )
+    if( poSRS == nullptr && nSRSId > 0 )
     {
         poSRS = poDS->FetchSRS( nSRSId );
-        if( poSRS != NULL )
+        if( poSRS != nullptr )
             poSRS->Reference();
         else
             nSRSId = 0;
@@ -445,7 +451,7 @@ const char *OGRDB2Layer::GetFIDColumn()
 {
     GetLayerDefn();
 
-    if( pszFIDColumn != NULL )
+    if( pszFIDColumn != nullptr )
         return pszFIDColumn;
     else
         return "";
@@ -460,7 +466,7 @@ const char *OGRDB2Layer::GetGeometryColumn()
 {
     GetLayerDefn();
 
-    if( pszGeomColumn != NULL )
+    if( pszGeomColumn != nullptr )
         return pszGeomColumn;
     else
         return "";
@@ -473,8 +479,9 @@ const char *OGRDB2Layer::GetGeometryColumn()
 char* OGRDB2Layer::GByteArrayToHexString( const GByte* pabyData, int nLen)
 {
     char* pszTextBuf;
+    const size_t nBufLen = nLen*2+3;
 
-    pszTextBuf = (char *) CPLMalloc(nLen*2+3);
+    pszTextBuf = (char *) CPLMalloc(nBufLen);
 
     int  iSrc, iDst=0;
 
@@ -482,12 +489,12 @@ char* OGRDB2Layer::GByteArrayToHexString( const GByte* pabyData, int nLen)
     {
         if( iSrc == 0 )
         {
-            sprintf( pszTextBuf+iDst, "0x%02x", pabyData[iSrc] );
+            snprintf( pszTextBuf+iDst, nBufLen - iDst, "0x%02x", pabyData[iSrc] );
             iDst += 4;
         }
         else
         {
-            sprintf( pszTextBuf+iDst, "%02x", pabyData[iSrc] );
+            snprintf( pszTextBuf+iDst, nBufLen - iDst, "%02x", pabyData[iSrc] );
             iDst += 2;
         }
     }

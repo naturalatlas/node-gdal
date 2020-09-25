@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: gtm.cpp 32760 2016-01-05 17:50:33Z rouault $
  *
  * Project:  GTM Driver
  * Purpose:  Class for reading, parsing and handling a gtmfile.
@@ -30,6 +29,7 @@
 
 #include "gtm.h"
 
+CPL_CVSID("$Id: gtm.cpp 9944743a9d4f77b8bbcf6c365b3dd8a262b5adfb 2018-02-12 13:11:56Z Even Rouault $")
 
 /************************************************************************/
 /*        Methods for dealing with write on files and buffers           */
@@ -105,15 +105,15 @@ static unsigned char readUChar(VSILFILE* fp)
     return val;
 }
 
-static unsigned short readUShort(VSILFILE* fp, int *pbSuccess = NULL)
+static unsigned short readUShort( VSILFILE* fp, bool *pbSuccess = nullptr )
 {
     unsigned short val;
     if (VSIFReadL( &val, 1, 2, fp ) != 2)
     {
-        if (pbSuccess) *pbSuccess = FALSE;
+        if (pbSuccess) *pbSuccess = false;
         return 0;
     }
-    if (pbSuccess) *pbSuccess = TRUE;
+    if (pbSuccess) *pbSuccess = true;
     CPL_LSBPTR16(&val);
     return val;
 }
@@ -206,13 +206,13 @@ Track::Track( const char* pszNameIn,
     type(typeIn),
     color(colorIn),
     nPoints(0),
-    pasTrackPoints(NULL)
+    pasTrackPoints(nullptr)
 {}
 
 Track::~Track()
 {
     CPLFree(pszName);
-    pszName = NULL;
+    pszName = nullptr;
     CPLFree(pasTrackPoints);
 }
 
@@ -225,7 +225,6 @@ unsigned char Track::getType() const
 {
     return type;
 }
-
 
 int Track::getColor() const
 {
@@ -253,16 +252,15 @@ const TrackPoint* Track::getPoint(int pointNum) const
     if (pointNum >=0 && pointNum < nPoints)
         return &pasTrackPoints[pointNum];
 
-    return NULL;
+    return nullptr;
 }
-
 
 /************************************************************************/
 /*                Implementation of GTM Function Members                */
 /************************************************************************/
 GTM::GTM() :
-    pGTMFile(NULL),
-    pszFilename(NULL),
+    pGTMFile(nullptr),
+    pszFilename(nullptr),
     nwptstyles(0),
     nwpts(0),
     ntcks(0),
@@ -283,30 +281,29 @@ GTM::GTM() :
 GTM::~GTM()
 {
     CPLFree(pszFilename);
-    if (pGTMFile != NULL)
+    if (pGTMFile != nullptr)
     {
         VSIFCloseL(pGTMFile);
-        pGTMFile = NULL;
+        pGTMFile = nullptr;
     }
 }
 
 bool GTM::Open(const char* pszFilenameIn)
 {
 
-    if (pGTMFile != NULL)
+    if (pGTMFile != nullptr)
         VSIFCloseL(pGTMFile);
 
     CPLFree(pszFilename);
     pszFilename = CPLStrdup(pszFilenameIn);
 
     pGTMFile = VSIFOpenL( pszFilename, "r" );
-    if (pGTMFile == NULL)
+    if (pGTMFile == nullptr)
     {
         return false;
     }
     return true;
 }
-
 
 bool GTM::isValid()
 {
@@ -322,7 +319,7 @@ bool GTM::isValid()
     if (nRead == 0)
     {
         VSIFCloseL( pGTMFile );
-        pGTMFile = NULL;
+        pGTMFile = nullptr;
         return false;
     }
     buffer[12] = '\0';
@@ -342,7 +339,11 @@ bool GTM::isValid()
         {
             VSILFILE* pGTMFileOri = pGTMFile;
             pGTMFile = fp;
-            if (isValid())
+            char* pszFilenameOri = pszFilename;
+            pszFilename = pszGZIPFileName;
+            const bool bRet = isValid();
+            pszFilename = pszFilenameOri;
+            if (bRet)
             {
                 VSIFCloseL(pGTMFileOri);
                 CPLFree(pszGZIPFileName);
@@ -358,7 +359,7 @@ bool GTM::isValid()
         CPLFree(pszGZIPFileName);
     }
 
-    const short version = CPL_LSBINT16PTR(buffer);
+    const short version = CPL_LSBSINT16PTR(buffer);
     /*Skip string length */
     const char* szHeader = buffer + 2;
     if (version == 211 && strcmp(szHeader, "TrackMaker") == 0 )
@@ -370,7 +371,7 @@ bool GTM::isValid()
 
 bool GTM::readHeaderNumbers()
 {
-    if (pGTMFile == NULL)
+    if (pGTMFile == nullptr)
         return false;
 
     /* I'm supposing that the user has already checked if the file is
@@ -429,7 +430,6 @@ bool GTM::readHeaderNumbers()
         return false;
     stringSize = readUShort(pGTMFile);
     headerSize += stringSize + 2; // String + size field
-
 
     /* Read userfont string size */
     if ( VSIFSeekL(pGTMFile, stringSize, SEEK_CUR) != 0)
@@ -502,19 +502,19 @@ Waypoint* GTM::fetchNextWaypoint()
 {
     /* Point to the actual waypoint offset */
     if ( VSIFSeekL(pGTMFile, actualWaypointOffset, SEEK_SET) != 0)
-        return NULL;
+        return nullptr;
 
     const double latitude = readDouble(pGTMFile);
     const double longitude = readDouble(pGTMFile);
 
     char name[11];
     if ( !readFile( name, 1, 10 ) )
-        return NULL;
+        return nullptr;
 
     /* Trim string name */
     {
-    int i;
-        for (i = 9; i >= 0; --i)
+        int i = 9;  // Used after for.
+        for( ; i >= 0; --i)
         {
             if (name[i] != ' ')
             {
@@ -531,12 +531,12 @@ Waypoint* GTM::fetchNextWaypoint()
     /* Read Comment String */
     char* comment = static_cast<char *>(
         VSI_MALLOC2_VERBOSE(sizeof(char), stringSize+1) );
-    if( comment == NULL )
-        return NULL;
+    if( comment == nullptr )
+        return nullptr;
     if ( stringSize != 0 && !readFile( comment, 1, sizeof(char)*stringSize ) )
     {
         CPLFree(comment);
-        return NULL;
+        return nullptr;
     }
     comment[stringSize] = '\0';
 
@@ -561,7 +561,6 @@ Waypoint* GTM::fetchNextWaypoint()
     Waypoint* poWaypoint = new Waypoint(latitude, longitude, altitude,
                                         name, comment, (int) icon, wptdate);
 
-
     /* Set actual waypoint offset to the next it there is one */
     ++waypointFetched;
     if (waypointFetched < nwpts)
@@ -573,7 +572,6 @@ Waypoint* GTM::fetchNextWaypoint()
     CPLFree(comment);
     return poWaypoint;
 }
-
 
 /************************************************************************/
 /*                        Track control functions                    */
@@ -598,36 +596,28 @@ void GTM::rewindTrack()
 
 Track* GTM::fetchNextTrack()
 {
-    unsigned short stringSize;
-
-    char* pszName;
-    unsigned char type;
-    int color;
-
-
     /* Point to the actual track offset */
     if ( VSIFSeekL(pGTMFile, actualTrackOffset, SEEK_SET) != 0)
-        return NULL;
-
+        return nullptr;
 
     /* Read string length */
-    stringSize = readUShort(pGTMFile);
+    const unsigned short stringSize = readUShort(pGTMFile);
     /* Read name string */
-    pszName = (char*) VSI_MALLOC2_VERBOSE(sizeof(char), stringSize+1);
-    if( pszName == NULL )
-        return NULL;
+    char* pszName = (char*) VSI_MALLOC2_VERBOSE(sizeof(char), stringSize+1);
+    if( pszName == nullptr )
+        return nullptr;
     if ( stringSize != 0 && !readFile( pszName, 1, sizeof(char) * stringSize ) )
     {
         CPLFree(pszName);
-        return NULL;
+        return nullptr;
     }
     pszName[stringSize] = '\0';
 
     /* Read type */
-    type = readUChar(pGTMFile);
+    const unsigned char type = readUChar(pGTMFile);
 
     /* Read color */
-    color = readInt(pGTMFile);
+    const int color = readInt(pGTMFile);
 
     Track* poTrack = new Track(pszName, type, color);
 
@@ -637,22 +627,23 @@ Track* GTM::fetchNextTrack()
     ++trackFetched;
 
     /* Now, We read all trackpoints for this track */
-    double latitude, longitude;
-    GIntBig datetime;
-    unsigned char start;
-    float altitude;
+    double latitude = 0.0;
+    double longitude = 0.0;
+    GIntBig datetime = 0;
+    unsigned char start = 0;
+    float altitude = 0.0f;
     /* NOTE: Parameters are passed by reference */
     if ( !readTrackPoints(latitude, longitude, datetime, start, altitude) )
     {
         delete poTrack;
-        return NULL;
+        return nullptr;
     }
 
     /* Check if it is the start, if not we have done something wrong */
     if (start != 1)
     {
         delete poTrack;
-        return NULL;
+        return nullptr;
     }
     poTrack->addPoint(longitude, latitude, datetime, altitude);
 
@@ -662,7 +653,7 @@ Track* GTM::fetchNextTrack()
         if ( !readTrackPoints(latitude, longitude, datetime, start, altitude) )
         {
             delete poTrack;
-            return NULL;
+            return nullptr;
         }
         if (start == 0)
             poTrack->addPoint(longitude, latitude, datetime, altitude);
@@ -678,8 +669,6 @@ Track* GTM::fetchNextTrack()
     return poTrack;
 }
 
-
-
 /************************************************************************/
 /*                        Private Methods Implementation                */
 /************************************************************************/
@@ -693,17 +682,18 @@ vsi_l_offset GTM::findFirstWaypointOffset()
     for (int i = 0; i < n_maps; ++i)
     {
         /* Read image name string size */
-        unsigned short stringSize = readUShort(pGTMFile);
+        bool bSuccess = false;
+        unsigned short stringSize = readUShort(pGTMFile, &bSuccess);
 
         /* skip image name string */
-        if ( VSIFSeekL(pGTMFile, stringSize, SEEK_CUR) != 0)
+        if ( !bSuccess ||  VSIFSeekL(pGTMFile, stringSize, SEEK_CUR) != 0)
             return 0;
 
         /* read image comment string size */
-        stringSize = readUShort(pGTMFile);
+        stringSize = readUShort(pGTMFile, &bSuccess);
 
         /* skip image comment string */
-        if ( VSIFSeekL(pGTMFile, stringSize, SEEK_CUR) != 0)
+        if ( !bSuccess || VSIFSeekL(pGTMFile, stringSize, SEEK_CUR) != 0)
             return 0;
 
         /* skip the others image parameters */
@@ -712,7 +702,6 @@ vsi_l_offset GTM::findFirstWaypointOffset()
     }
     return VSIFTellL(pGTMFile);
 }
-
 
 vsi_l_offset GTM::findFirstTrackpointOffset()
 {
@@ -730,8 +719,6 @@ vsi_l_offset GTM::findFirstTrackpointOffset()
     if (VSIFSeekL(pGTMFile, firstWaypointOffset, SEEK_SET) != 0)
         return 0;
 
-    unsigned short stringSize;
-    int bSuccess;
     /* Skip waypoints */
     for (int i = 0; i < nwpts; ++i)
     {
@@ -739,10 +726,11 @@ vsi_l_offset GTM::findFirstTrackpointOffset()
         if (VSIFSeekL(pGTMFile, 26, SEEK_CUR) != 0)
             return 0;
         /* Read string comment size */
-        stringSize = readUShort(pGTMFile, &bSuccess);
+        bool bSuccess = false;
+        const unsigned short stringSize = readUShort(pGTMFile, &bSuccess);
 
         /* Skip to the next Waypoint */
-        if (bSuccess == FALSE || VSIFSeekL(pGTMFile, stringSize + 15, SEEK_CUR) != 0)
+        if( !bSuccess || VSIFSeekL(pGTMFile, stringSize + 15, SEEK_CUR) != 0 )
             return 0;
     }
 
@@ -758,10 +746,12 @@ vsi_l_offset GTM::findFirstTrackpointOffset()
                 return 0;
 
             /* Read string facename size */
-            stringSize = readUShort(pGTMFile, &bSuccess);
+            bool bSuccess = false;
+            const unsigned short stringSize = readUShort(pGTMFile, &bSuccess);
 
             /* Skip to the next Waypoint Style*/
-            if (bSuccess == FALSE || VSIFSeekL(pGTMFile, stringSize + 24, SEEK_CUR) != 0)
+            if( !bSuccess ||
+                VSIFSeekL(pGTMFile, stringSize + 24, SEEK_CUR) != 0 )
                 return 0;
         }
     }
@@ -821,12 +811,7 @@ bool GTM::readFile(void* pBuffer, size_t nSize, size_t nCount)
     const size_t nRead = VSIFReadL( pBuffer, nSize, nCount, pGTMFile );
     if (nRead == 0)
     {
-        VSIFCloseL( pGTMFile );
-        pGTMFile = NULL;
         return false;
     }
     return true;
 }
-
-
-

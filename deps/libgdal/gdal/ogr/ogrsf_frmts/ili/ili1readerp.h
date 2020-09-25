@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ili1readerp.h 31777 2015-11-26 14:14:41Z rouault $
+ * $Id: ili1readerp.h d88329fa88553cce9e72b3ac894e49e4daf026a3 2017-05-21 12:13:23Z Even Rouault $
  *
  * Project:  Interlis 1 Reader
  * Purpose:  Private Declarations for Reader code.
@@ -33,7 +33,6 @@
 #include "ili1reader.h"
 #include "ogr_ili1.h"
 
-
 class ILI1Reader;
 class OGRILI1Layer;
 
@@ -44,7 +43,7 @@ class OGRILI1Layer;
 class ILI1Reader : public IILI1Reader
 {
 private:
-    FILE         *fpItf;
+    VSILFILE    *fpItf;
     int          nLayers;
     OGRILI1Layer **papoLayers;
     OGRILI1Layer *curLayer;
@@ -56,20 +55,19 @@ public:
                  ILI1Reader();
                 ~ILI1Reader();
 
-    int          OpenFile( const char *pszFilename );
-    int          ReadModel( ImdReader *poImdReader, const char *pszModelFilename, OGRILI1DataSource *poDS );
-    int          ReadFeatures();
+    int          OpenFile( const char *pszFilename ) override;
+    int          ReadModel( ImdReader *poImdReader, const char *pszModelFilename, OGRILI1DataSource *poDS ) override;
+    int          ReadFeatures() override;
     int          ReadTable(const char *layername);
     void         ReadGeom(char **stgeom, int geomIdx, OGRwkbGeometryType eType, OGRFeature *feature);
     char         **ReadParseLine();
 
     void         AddLayer( OGRILI1Layer * poNewLayer );
-    OGRILI1Layer *GetLayer( int );
-    OGRILI1Layer *GetLayerByName( const char* );
-    int          GetLayerCount();
+    OGRILI1Layer *GetLayer( int ) override;
+    OGRILI1Layer *GetLayerByName( const char* ) override;
+    int          GetLayerCount() override;
 
-    const char*  GetLayerNameString(const char* topicname, const char* tablename);
+    static const char*  GetLayerNameString(const char* topicname, const char* tablename);
 };
-
 
 #endif

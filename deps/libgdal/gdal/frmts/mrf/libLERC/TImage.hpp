@@ -46,11 +46,11 @@ template< class Element >
 class TImage : public Image
 {
 public:
-  TImage() : data_(NULL) {}
-  TImage(const TImage& tImg) : data_(NULL) { *this = tImg;  }
+  TImage() : data_(nullptr) {}
+  TImage(const TImage& tImg) : data_(nullptr) { *this = tImg;  }
   virtual ~TImage() {
-      clear();
-  };
+      TImage::clear();
+  }
 
   /// assignment
   TImage& operator=(const TImage& tImg);
@@ -70,7 +70,7 @@ public:
 
   /// compare
   bool operator == (const Image& img) const;
-  bool operator != (const Image& img) const	{ return !operator==(img); };
+  bool operator != (const Image& img) const	{ return !operator==(img); }
 
 protected:
   Element* data_;
@@ -127,7 +127,7 @@ bool TImage< Element >::resize(int width, int height)
   if (width <= 0 || height <= 0)
     return false;
 
-  if (width == width_ && height == height_)
+  if (width == width_ && height == height_ && data_)
     return true;
 
   free(data_);
@@ -140,7 +140,7 @@ bool TImage< Element >::resize(int width, int height)
 
   width_ = width;
   height_ = height;
-  
+
   return true;
 }
 
@@ -150,7 +150,7 @@ template< class Element >
 void TImage< Element >::clear()
 {
   free(data_);
-  data_ = NULL;
+  data_ = nullptr;
   width_ = 0;
   height_ = 0;
 }
@@ -173,7 +173,7 @@ TImage< Element >& TImage< Element >::operator = (const TImage& tImg)
   memcpy(getData(), tImg.getData(), getSize() * sizeof(Element));
 
   Image::operator=(tImg);
-  
+
   return *this;
 }
 

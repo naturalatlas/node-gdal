@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_bna.h 33714 2016-03-13 05:42:13Z goatbar $
+ * $Id: ogr_bna.h a36939afd5248338d928ac2107e2136b32ffb9df 2018-06-01 14:24:48 +0200 Even Rouault $
  *
  * Project:  BNA Translator
  * Purpose:  Definition of classes for OGR .bna driver.
@@ -54,13 +54,13 @@ class OGRBNALayer : public OGRLayer
     int                bWriter;
 
     int                nIDs;
-    int                eof;
-    int                failed;
+    bool               eof;
+    bool               failed;
     int                curLine;
     int                nNextFID;
     VSILFILE*          fpBNA;
     int                nFeatures;
-    int                partialIndexTable;
+    bool               partialIndexTable;
     OffsetAndLine*     offsetAndLineFeaturesTable;
 
     BNAFeatureType     bnaFeatureType;
@@ -84,18 +84,17 @@ class OGRBNALayer : public OGRLayer
                                              OffsetAndLine* offsetAndLineFeaturesTable,
                                              int partialIndexTable);
 
-    void                ResetReading();
-    OGRFeature *        GetNextFeature();
+    void                ResetReading() override;
+    OGRFeature *        GetNextFeature() override;
 
-    OGRErr              ICreateFeature( OGRFeature *poFeature );
-    OGRErr              CreateField( OGRFieldDefn *poField, int bApproxOK );
+    OGRErr              ICreateFeature( OGRFeature *poFeature ) override;
+    OGRErr              CreateField( OGRFieldDefn *poField, int bApproxOK ) override;
 
-    OGRFeatureDefn *    GetLayerDefn() { return poFeatureDefn; }
+    OGRFeatureDefn *    GetLayerDefn() override { return poFeatureDefn; }
 
-    OGRFeature *        GetFeature( GIntBig nFID );
+    OGRFeature *        GetFeature( GIntBig nFID ) override;
 
-    int                 TestCapability( const char * );
-
+    int                 TestCapability( const char * ) override;
 };
 
 /************************************************************************/
@@ -109,14 +108,12 @@ class OGRBNADataSource : public OGRDataSource
     OGRBNALayer**       papoLayers;
     int                 nLayers;
 
-    int                 bUpdate;
-
     /*  Export related */
     VSILFILE                *fpOutput; /* Virtual file API */
-    int                 bUseCRLF;
+    bool                bUseCRLF;
     int                 bMultiLine;
     int                 nbOutID;
-    int                 bEllipsesAsEllipses;
+    bool                bEllipsesAsEllipses;
     int                 nbPairPerLine;
     int                 coordinatePrecision;
     char*               pszCoordinateSeparator;
@@ -126,31 +123,30 @@ class OGRBNADataSource : public OGRDataSource
                         ~OGRBNADataSource();
 
     VSILFILE                *GetOutputFP() { return fpOutput; }
-    int                 GetUseCRLF() { return bUseCRLF; }
+    bool                GetUseCRLF() { return bUseCRLF; }
     int                 GetMultiLine() { return bMultiLine; }
     int                 GetNbOutId() { return nbOutID; }
-    int                 GetEllipsesAsEllipses() { return bEllipsesAsEllipses; }
+    bool                GetEllipsesAsEllipses() { return bEllipsesAsEllipses; }
     int                 GetNbPairPerLine() { return nbPairPerLine; }
     int                 GetCoordinatePrecision() { return coordinatePrecision; }
     const char*         GetCoordinateSeparator() { return pszCoordinateSeparator; }
 
-    int                 Open( const char * pszFilename,
-                              int bUpdate );
+    int                 Open( const char * pszFilename );
 
     int                 Create( const char *pszFilename,
                               char **papszOptions );
 
-    const char*         GetName() { return pszName; }
+    const char*         GetName() override { return pszName; }
 
-    int                 GetLayerCount() { return nLayers; }
-    OGRLayer*           GetLayer( int );
+    int                 GetLayerCount() override { return nLayers; }
+    OGRLayer*           GetLayer( int ) override;
 
     OGRLayer *          ICreateLayer( const char * pszLayerName,
                                     OGRSpatialReference *poSRS,
                                     OGRwkbGeometryType eType,
-                                    char ** papszOptions );
+                                    char ** papszOptions ) override;
 
-    int                 TestCapability( const char * );
+    int                 TestCapability( const char * ) override;
 };
 
 #endif /* ndef OGR_BNA_H_INCLUDED */

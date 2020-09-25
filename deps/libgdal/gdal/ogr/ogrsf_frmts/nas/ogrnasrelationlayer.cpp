@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrnasrelationlayer.cpp 32898 2016-01-10 14:44:10Z goatbar $
  *
  * Project:  OGR
  * Purpose:  Implements OGRNASRelationLayer class, a special layer holding all
@@ -33,7 +32,7 @@
 #include "cpl_string.h"
 #include "ogr_nas.h"
 
-CPL_CVSID("$Id: ogrnasrelationlayer.cpp 32898 2016-01-10 14:44:10Z goatbar $");
+CPL_CVSID("$Id: ogrnasrelationlayer.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                        OGRNASRelationLayer()                         */
@@ -103,7 +102,7 @@ OGRFeature *OGRNASRelationLayer::GetNextFeature()
     {
         // out of features?
         if( iNextFeature >= static_cast<int>(aoRelationCollection.size()) )
-            return NULL;
+            return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      The from/type/to values are stored in a packed string with      */
@@ -129,14 +128,14 @@ OGRFeature *OGRNASRelationLayer::GetNextFeature()
 /* -------------------------------------------------------------------- */
 /*      Test against the attribute query.                               */
 /* -------------------------------------------------------------------- */
-        if( m_poAttrQuery != NULL
+        if( m_poAttrQuery != nullptr
             && !m_poAttrQuery->Evaluate( poFeature ) )
             delete poFeature;
         else
             return poFeature;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
@@ -149,7 +148,7 @@ GIntBig OGRNASRelationLayer::GetFeatureCount( int bForce )
     if( !bPopulated )
         poDS->PopulateRelations();
 
-    if( m_poAttrQuery == NULL )
+    if( m_poAttrQuery == nullptr )
         return aoRelationCollection.size();
 
     return OGRLayer::GetFeatureCount( bForce );
@@ -166,7 +165,7 @@ int OGRNASRelationLayer::TestCapability( const char * pszCap )
         return TRUE;
 
     if( EQUAL(pszCap,OLCFastFeatureCount) )
-        return bPopulated && m_poAttrQuery == NULL;
+        return bPopulated && m_poAttrQuery == nullptr;
 
     if( EQUAL(pszCap,OLCStringsAsUTF8) )
         return TRUE;
@@ -198,4 +197,3 @@ void OGRNASRelationLayer::AddRelation( const char *pszFromID,
 
     aoRelationCollection.push_back( osRelation );
 }
-

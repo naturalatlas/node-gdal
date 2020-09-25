@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrmssqlspatialdriver.cpp 32293 2015-12-20 01:21:31Z rouault $
  *
  * Project:  MSSQL Spatial driver
  * Purpose:  Definition of classes for OGR MSSQL Spatial driver.
@@ -30,7 +29,7 @@
 #include "ogr_mssqlspatial.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrmssqlspatialdriver.cpp 32293 2015-12-20 01:21:31Z rouault $");
+CPL_CVSID("$Id: ogrmssqlspatialdriver.cpp af87d0f739c0d9769410034858a8831d84c62915 2018-08-15 16:04:34 +0200 Even Rouault $")
 
 /************************************************************************/
 /*                           ~OGRMSSQLSpatialDriver()                   */
@@ -61,14 +60,14 @@ OGRDataSource *OGRMSSQLSpatialDriver::Open( const char * pszFilename, int bUpdat
     OGRMSSQLSpatialDataSource     *poDS;
 
     if( !STARTS_WITH_CI(pszFilename, "MSSQL:") )
-        return NULL;
+        return nullptr;
 
     poDS = new OGRMSSQLSpatialDataSource();
 
-    if( !poDS->Open( pszFilename, bUpdate, TRUE ) )
+    if( !poDS->Open( pszFilename, CPL_TO_BOOL(bUpdate), TRUE ) )
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
     else
         return poDS;
@@ -82,7 +81,7 @@ OGRDataSource *OGRMSSQLSpatialDriver::CreateDataSource( const char * pszName,
                                                         CPL_UNUSED char **papszOptions )
 {
     if( !STARTS_WITH_CI(pszName, "MSSQL:") )
-        return NULL;
+        return nullptr;
 
     OGRMSSQLSpatialDataSource   *poDS = new OGRMSSQLSpatialDataSource();
     if( !poDS->Open( pszName, TRUE, TRUE ) )
@@ -91,7 +90,7 @@ OGRDataSource *OGRMSSQLSpatialDriver::CreateDataSource( const char * pszName,
         CPLError( CE_Failure, CPLE_AppDefined,
          "MSSQL Spatial driver doesn't currently support database creation.\n"
                   "Please create database with the Microsoft SQL Server Client Tools." );
-        return NULL;
+        return nullptr;
     }
 
     return poDS;
@@ -110,7 +109,6 @@ int OGRMSSQLSpatialDriver::TestCapability( const char * pszCap )
         return FALSE;
 }
 
-
 /************************************************************************/
 /*                           RegisterOGRMSSQLSpatial()                  */
 /************************************************************************/
@@ -124,7 +122,11 @@ void RegisterOGRMSSQLSpatial()
     OGRSFDriver* poDriver = new OGRMSSQLSpatialDriver;
 
     poDriver->SetMetadataItem( GDAL_DMD_LONGNAME,
-                               "Microsoft SQL Server Spatial Database" );
+                               "Microsoft SQL Server Spatial Database"
+#ifdef MSSQL_BCP_SUPPORTED
+                               " (BCP)"
+#endif
+                               );
     poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_mssqlspatial.html" );
     poDriver->SetMetadataItem( GDAL_DMD_CREATIONOPTIONLIST,
                                "<CreationOptionList/>");
@@ -150,7 +152,10 @@ void RegisterOGRMSSQLSpatial()
 "  <Option name='FID' type='string' description='Name of the FID column to create' default='ogr_fid'/>"
 "  <Option name='FID64' type='boolean' description='Whether to create the FID column with bigint type to handle 64bit wide ids' default='NO'/>"
 "  <Option name='GEOMETRY_NULLABLE' type='boolean' description='Whether the values of the geometry column can be NULL' default='YES'/>"
+"  <Option name='EXTRACT_SCHEMA_FROM_LAYER_NAME' type='boolean' description='Whether a dot in a layer name should be considered as the separator for the schema and table name' default='YES'/>"
 "</LayerCreationOptionList>");
+
+    poDriver->SetMetadataItem( GDAL_DMD_CONNECTION_PREFIX, "MSSQL:");
 
     poDriver->SetMetadataItem( GDAL_DMD_CREATIONFIELDDATATYPES,
                                "Integer Integer64 Real String Date Time "

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: gtadataset.cpp 33005 2016-01-15 17:28:49Z rouault $
  *
  * Project:  GTA read/write Driver
  * Purpose:  GDAL bindings over GTA library.
@@ -92,7 +91,7 @@
 #include "gdal_pam.h"
 #include "gta_headers.h"
 
-CPL_CVSID("$Id: gtadataset.cpp 33005 2016-01-15 17:28:49Z rouault $");
+CPL_CVSID("$Id: gtadataset.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /* Helper functions                                                     */
@@ -137,7 +136,7 @@ class GTAIO : public gta::custom_io
 
   public:
     GTAIO( ) throw ()
-        : fp( NULL )
+        : fp( nullptr )
     {
     }
 
@@ -149,15 +148,15 @@ class GTAIO : public gta::custom_io
     int open( const char *pszFilename, const char *pszMode )
     {
         fp = VSIFOpenL( pszFilename, pszMode );
-        return ( fp == NULL ? -1 : 0 );
+        return fp == nullptr ? -1 : 0;
     }
 
     void close( )
     {
-        if( fp != NULL )
+        if( fp != nullptr )
         {
             VSIFCloseL( fp );
-            fp = NULL;
+            fp = nullptr;
         }
     }
 
@@ -166,7 +165,7 @@ class GTAIO : public gta::custom_io
         return VSIFTellL( fp );
     }
 
-    virtual size_t read(void *buffer, size_t size, bool *error) throw ()
+    virtual size_t read(void *buffer, size_t size, bool *error) throw () override
     {
         size_t s;
         s = VSIFReadL( buffer, 1, size, fp );
@@ -178,7 +177,7 @@ class GTAIO : public gta::custom_io
         return size;
     }
 
-    virtual size_t write(const void *buffer, size_t size, bool *error) throw ()
+    virtual size_t write(const void *buffer, size_t size, bool *error) throw () override
     {
         size_t s;
         s = VSIFWriteL( buffer, 1, size, fp );
@@ -190,12 +189,12 @@ class GTAIO : public gta::custom_io
         return size;
     }
 
-    virtual bool seekable() throw ()
+    virtual bool seekable() throw () override
     {
         return true;
     }
 
-    virtual void seek(intmax_t offset, int whence, bool *error) throw ()
+    virtual void seek(intmax_t offset, int whence, bool *error) throw () override
     {
         int r;
         r = VSIFSeekL( fp, offset, whence );
@@ -246,16 +245,16 @@ class GTADataset : public GDALPamDataset
 
     static GDALDataset *Open( GDALOpenInfo * );
 
-    CPLErr      GetGeoTransform( double * padfTransform );
-    CPLErr      SetGeoTransform( double * padfTransform );
+    CPLErr      GetGeoTransform( double * padfTransform ) override;
+    CPLErr      SetGeoTransform( double * padfTransform ) override;
 
-    const char *GetProjectionRef( );
-    CPLErr      SetProjection( const char *pszProjection );
+    const char *GetProjectionRef( ) override;
+    CPLErr      SetProjection( const char *pszProjection ) override;
 
-    int         GetGCPCount( );
-    const char *GetGCPProjection( );
-    const GDAL_GCP *GetGCPs( );
-    CPLErr      SetGCPs( int, const GDAL_GCP *, const char * );
+    int         GetGCPCount( ) override;
+    const char *GetGCPProjection( ) override;
+    const GDAL_GCP *GetGCPs( ) override;
+    CPLErr      SetGCPs( int, const GDAL_GCP *, const char * ) override;
 };
 
 /************************************************************************/
@@ -281,25 +280,25 @@ class GTARasterBand : public GDALPamRasterBand
                 GTARasterBand( GTADataset *, int );
                 ~GTARasterBand( );
 
-    CPLErr      IReadBlock( int, int, void * );
-    CPLErr      IWriteBlock( int, int, void * );
+    CPLErr      IReadBlock( int, int, void * ) override;
+    CPLErr      IWriteBlock( int, int, void * ) override;
 
-    char      **GetCategoryNames( );
-    CPLErr      SetCategoryNames( char ** );
+    char      **GetCategoryNames( ) override;
+    CPLErr      SetCategoryNames( char ** ) override;
 
-    double      GetMinimum( int * );
-    double      GetMaximum( int * );
+    double      GetMinimum( int * ) override;
+    double      GetMaximum( int * ) override;
 
-    double      GetNoDataValue( int * );
-    CPLErr      SetNoDataValue( double );
-    double      GetOffset( int * );
-    CPLErr      SetOffset( double );
-    double      GetScale( int * );
-    CPLErr      SetScale( double );
-    const char *GetUnitType( );
-    CPLErr      SetUnitType( const char * );
-    GDALColorInterp GetColorInterpretation( );
-    CPLErr      SetColorInterpretation( GDALColorInterp );
+    double      GetNoDataValue( int * ) override;
+    CPLErr      SetNoDataValue( double ) override;
+    double      GetOffset( int * ) override;
+    CPLErr      SetOffset( double ) override;
+    double      GetScale( int * ) override;
+    CPLErr      SetScale( double ) override;
+    const char *GetUnitType( ) override;
+    CPLErr      SetUnitType( const char * ) override;
+    GDALColorInterp GetColorInterpretation( ) override;
+    CPLErr      SetColorInterpretation( GDALColorInterp ) override;
 };
 
 /************************************************************************/
@@ -364,8 +363,8 @@ GTARasterBand::GTARasterBand( GTADataset *poDSIn, int nBandIn )
     }
 
     // Metadata
-    papszCategoryNames = NULL;
-    papszMetaData = NULL;
+    papszCategoryNames = nullptr;
+    papszMetaData = nullptr;
     if( poDSIn->oHeader.component_taglist( nBand-1 ).get( "DESCRIPTION" ) )
     {
         SetDescription( poDSIn->oHeader.component_taglist( nBand-1 ).get( "DESCRIPTION" ) );
@@ -392,7 +391,7 @@ GTARasterBand::GTARasterBand( GTADataset *poDSIn, int nBandIn )
                 const char *pszName = pszTagName + 10 + j + 1;
                 const char *pszValue = poDSIn->oHeader.component_taglist( nBand-1 ).value( i );
                 SetMetadataItem( pszName, pszValue,
-                        strcmp( pszDomain, "DEFAULT" ) == 0 ? NULL : pszDomain );
+                        strcmp( pszDomain, "DEFAULT" ) == 0 ? nullptr : pszDomain );
                 VSIFree( pszDomain );
             }
         }
@@ -768,13 +767,14 @@ GTADataset::GTADataset()
     // Initialize Metadata
     bHaveGeoTransform = false;
     nGCPs = 0;
-    pszGCPProjection = NULL;
-    pasGCPs = NULL;
+    pszGCPProjection = nullptr;
+    pasGCPs = nullptr;
     // Initialize block-based input/output
     nLastBlockXOff = -1;
     nLastBlockYOff = -1;
-    pBlock = NULL;
+    pBlock = nullptr;
     DataOffset = 0;
+    memset( adfGeoTransform, 0, sizeof(adfGeoTransform) );
 }
 
 /************************************************************************/
@@ -807,10 +807,10 @@ CPLErr GTADataset::ReadBlock( int nBlockXOff, int nBlockYOff )
 
     if( oHeader.compression() != gta::none )
     {
-        if( pBlock == NULL )
+        if( pBlock == nullptr )
         {
             if( oHeader.data_size() > (size_t)(-1)
-                    || ( pBlock = VSI_MALLOC_VERBOSE( static_cast<size_t>(oHeader.data_size()) ) ) == NULL )
+                    || ( pBlock = VSI_MALLOC_VERBOSE( static_cast<size_t>(oHeader.data_size()) ) ) == nullptr )
             {
                 CPLError( CE_Failure, CPLE_OutOfMemory,
                         "Cannot allocate buffer for the complete data set.\n"
@@ -839,10 +839,10 @@ CPLErr GTADataset::ReadBlock( int nBlockXOff, int nBlockYOff )
         if( nLastBlockXOff == nBlockXOff && nLastBlockYOff == nBlockYOff )
             return CE_None;
 
-        if( pBlock == NULL )
+        if( pBlock == nullptr )
         {
             pBlock = VSI_MALLOC2_VERBOSE( static_cast<size_t>(oHeader.element_size()), nBlockXSize );
-            if( pBlock == NULL )
+            if( pBlock == nullptr )
             {
                 return CE_Failure;
             }
@@ -931,7 +931,7 @@ const char *GTADataset::GetProjectionRef()
 
 {
     const char *p = oHeader.global_taglist().get("GDAL/PROJECTION");
-    return ( p ? p : "" );
+    return p ? p : "";
 }
 
 /************************************************************************/
@@ -996,24 +996,22 @@ GDALDataset *GTADataset::Open( GDALOpenInfo * poOpenInfo )
 
 {
     if( poOpenInfo->nHeaderBytes < 5 )
-        return NULL;
+        return nullptr;
 
     if( !STARTS_WITH_CI((char *)poOpenInfo->pabyHeader, "GTA") )
-        return NULL;
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Create a corresponding GDALDataset.                             */
 /* -------------------------------------------------------------------- */
-    GTADataset  *poDS;
-
-    poDS = new GTADataset();
+    GTADataset *poDS = new GTADataset();
 
     if( poDS->oGTAIO.open( poOpenInfo->pszFilename,
             poOpenInfo->eAccess == GA_Update ? "r+" : "r" ) != 0 )
     {
         CPLError( CE_Failure, CPLE_OpenFailed, "Cannot open file.\n" );
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
 /* -------------------------------------------------------------------- */
@@ -1028,7 +1026,7 @@ GDALDataset *GTADataset::Open( GDALOpenInfo * poOpenInfo )
     {
         CPLError( CE_Failure, CPLE_OpenFailed, "GTA error: %s\n", e.what() );
         delete poDS;
-        return NULL;
+        return nullptr;
     }
     poDS->DataOffset = poDS->oGTAIO.tell();
     poDS->eAccess = poOpenInfo->eAccess;
@@ -1040,7 +1038,7 @@ GDALDataset *GTADataset::Open( GDALOpenInfo * poOpenInfo )
                   "The GTA driver does not support update access to compressed "
                   "data sets.\nUncompress the data set first.\n" );
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     if( poDS->oHeader.dimensions() != 2 )
@@ -1050,7 +1048,7 @@ GDALDataset *GTADataset::Open( GDALOpenInfo * poOpenInfo )
                 "dimensions.\n",
                 poDS->oHeader.dimensions() < 2 ? "less" : "more" );
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     // We know the dimensions are > 0 (guaranteed by libgta), but they may be
@@ -1061,7 +1059,7 @@ GDALDataset *GTADataset::Open( GDALOpenInfo * poOpenInfo )
         CPLError( CE_Failure, CPLE_NotSupported,
                 "The GTA driver does not support the size of this data set.\n" );
         delete poDS;
-        return NULL;
+        return nullptr;
     }
     poDS->nRasterXSize = static_cast<int>(poDS->oHeader.dimension_size(0));
     poDS->nRasterYSize = static_cast<int>(poDS->oHeader.dimension_size(1));
@@ -1074,7 +1072,7 @@ GDALDataset *GTADataset::Open( GDALOpenInfo * poOpenInfo )
                 "The GTA driver does not support the number or size of bands "
                 "in this data set.\n" );
         delete poDS;
-        return NULL;
+        return nullptr;
     }
     poDS->nBands = static_cast<int>(poDS->oHeader.components());
 
@@ -1096,7 +1094,7 @@ GDALDataset *GTADataset::Open( GDALOpenInfo * poOpenInfo )
                     "The GTA driver does not support some of the data types "
                     "used in this data set.\n" );
             delete poDS;
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -1129,14 +1127,14 @@ GDALDataset *GTADataset::Open( GDALOpenInfo * poOpenInfo )
         else
         {
             poDS->pasGCPs = (GDAL_GCP *)VSI_MALLOC2_VERBOSE( poDS->nGCPs, sizeof(GDAL_GCP) );
-            if( poDS->pasGCPs == NULL )
+            if( poDS->pasGCPs == nullptr )
             {
                 delete poDS;
-                return NULL;
+                return nullptr;
             }
             for( int i = 0; i < poDS->nGCPs; i++ )
             {
-                poDS->pasGCPs[i].pszInfo = NULL;
+                poDS->pasGCPs[i].pszInfo = nullptr;
                 poDS->pasGCPs[i].dfGCPPixel = 0.0;
                 poDS->pasGCPs[i].dfGCPLine = 0.0;
                 poDS->pasGCPs[i].dfGCPX = 0.0;
@@ -1185,7 +1183,7 @@ GDALDataset *GTADataset::Open( GDALOpenInfo * poOpenInfo )
                 if( !pszDomain )
                 {
                     delete poDS;
-                    return NULL;
+                    return nullptr;
                 }
                 int j;
                 for( j = 0; j < pDomainEnd - (pszTagName + 10); j++ )
@@ -1196,7 +1194,7 @@ GDALDataset *GTADataset::Open( GDALOpenInfo * poOpenInfo )
                 const char *pszName = pszTagName + 10 + j + 1;
                 const char *pszValue = poDS->oHeader.global_taglist().value( i );
                 poDS->SetMetadataItem( pszName, pszValue,
-                        strcmp( pszDomain, "DEFAULT" ) == 0 ? NULL : pszDomain );
+                        strcmp( pszDomain, "DEFAULT" ) == 0 ? nullptr : pszDomain );
                 VSIFree( pszDomain );
             }
         }
@@ -1250,7 +1248,7 @@ GDALDataset *GTADataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
     poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename );
 
-    return( poDS );
+    return poDS;
 }
 
 /************************************************************************/
@@ -1263,8 +1261,8 @@ GTACreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
                 GDALProgressFunc pfnProgress, void * pProgressData )
 
 {
-    if( !pfnProgress( 0.0, NULL, pProgressData ) )
-        return NULL;
+    if( !pfnProgress( 0.0, nullptr, pProgressData ) )
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Create a GTA header                                             */
@@ -1273,7 +1271,7 @@ GTACreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     gta::compression eGTACompression = gta::none;
     const char *pszCompressionValue = CSLFetchNameValue( papszOptions,
             "COMPRESS" );
-    if( pszCompressionValue != NULL )
+    if( pszCompressionValue != nullptr )
     {
         if( EQUAL( pszCompressionValue, "NONE" ) )
             eGTACompression = gta::none;
@@ -1308,9 +1306,9 @@ GTACreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     }
 
     gta::type *peGTATypes = (gta::type *)VSI_MALLOC2_VERBOSE( poSrcDS->GetRasterCount(), sizeof(gta::type) );
-    if( peGTATypes == NULL )
+    if( peGTATypes == nullptr )
     {
-        return NULL;
+        return nullptr;
     }
     for( int i = 0; i < poSrcDS->GetRasterCount(); i++ )
     {
@@ -1320,7 +1318,7 @@ GTACreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
             CPLError( CE_Failure, CPLE_NotSupported,
                     "The GTA driver does not support color palettes.\n" );
             VSIFree( peGTATypes );
-            return NULL;
+            return nullptr;
         }
         GDALDataType eDT = poSrcBand->GetRasterDataType();
         switch( eDT )
@@ -1361,7 +1359,7 @@ GTACreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
                         "(If no strict copy is required, the driver can "
                         "use CFloat32 instead.)\n" );
                 VSIFree( peGTATypes );
-                return NULL;
+                return nullptr;
             }
             peGTATypes[i] = gta::cfloat32;
             break;
@@ -1374,7 +1372,7 @@ GTACreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
                         "(If no strict copy is required, the driver can "
                         "use CFloat64 instead.)\n" );
                 VSIFree( peGTATypes );
-                return NULL;
+                return nullptr;
             }
             peGTATypes[i] = gta::cfloat64;
             break;
@@ -1389,7 +1387,7 @@ GTACreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
                     "The GTA driver does not support source data sets using "
                     "unknown data types.\n");
             VSIFree( peGTATypes );
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -1405,7 +1403,7 @@ GTACreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
         {
             oHeader.global_taglist().set( "DESCRIPTION", pszDescription );
         }
-        const char *papszMetadataDomains[] = { NULL /* default */, "RPC" };
+        const char *papszMetadataDomains[] = { nullptr /* default */, "RPC" };
         size_t nMetadataDomains = sizeof( papszMetadataDomains ) / sizeof( papszMetadataDomains[0] );
         for( size_t iDomain = 0; iDomain < nMetadataDomains; iDomain++ )
         {
@@ -1545,7 +1543,7 @@ GTACreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
                         PrintDoubles( &dfScaleValue, 1 ).c_str() );
             // Unit
             const char *pszUnit = poSrcBand->GetUnitType( );
-            if( pszUnit != NULL && pszUnit[0] != '\0' )
+            if( pszUnit != nullptr && pszUnit[0] != '\0' )
                 oHeader.component_taglist( iBand ).set( "UNIT", pszUnit );
             // Color interpretation
             GDALColorInterp eCI = poSrcBand->GetColorInterpretation();
@@ -1585,7 +1583,7 @@ GTACreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     {
         CPLError( CE_Failure, CPLE_NotSupported, "GTA error: %s\n", e.what() );
         VSIFree( peGTATypes );
-        return NULL;
+        return nullptr;
     }
     VSIFree( peGTATypes );
 
@@ -1598,14 +1596,14 @@ GTACreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     {
         CPLError( CE_Failure, CPLE_OpenFailed,
                 "Cannot create GTA file %s.\n", pszFilename );
-        return NULL;
+        return nullptr;
     }
 
     void *pLine = VSI_MALLOC2_VERBOSE( static_cast<size_t>(oHeader.element_size()), static_cast<size_t>(oHeader.dimension_size(0)) );
-    if( pLine == NULL )
+    if( pLine == nullptr )
     {
         VSIFree( pLine );
-        return NULL;
+        return nullptr;
     }
 
     try
@@ -1633,22 +1631,22 @@ GTACreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
                 CPLErr eErr = poSrcBand->RasterIO( GF_Read, 0, iLine,
                         poSrcDS->GetRasterXSize(), 1,
                         pDst, poSrcDS->GetRasterXSize(), 1, eDT,
-                        oHeader.element_size(), 0, NULL );
+                        oHeader.element_size(), 0, nullptr );
                 if( eErr != CE_None )
                 {
                     CPLError( CE_Failure, CPLE_FileIO, "Cannot read source data set.\n" );
                     VSIFree( pLine );
-                    return NULL;
+                    return nullptr;
                 }
                 nComponentOffset += oHeader.component_size( iBand );
             }
             oHeader.write_elements( oGTAIOState, oGTAIO, poSrcDS->GetRasterXSize(), pLine );
             if( !pfnProgress( (iLine+1) / (double) poSrcDS->GetRasterYSize(),
-                        NULL, pProgressData ) )
+                        nullptr, pProgressData ) )
             {
                 CPLError( CE_Failure, CPLE_UserInterrupt, "User terminated CreateCopy()" );
                 VSIFree( pLine );
-                return NULL;
+                return nullptr;
             }
         }
     }
@@ -1656,7 +1654,7 @@ GTACreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
     {
         CPLError( CE_Failure, CPLE_FileIO, "GTA write error: %s\n", e.what() );
         VSIFree( pLine );
-        return NULL;
+        return nullptr;
     }
     VSIFree( pLine );
 
@@ -1682,7 +1680,7 @@ GTACreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
 void GDALRegister_GTA()
 
 {
-    if( GDALGetDriverByName( "GTA" ) != NULL )
+    if( GDALGetDriverByName( "GTA" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

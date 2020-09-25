@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: reader_rdk1.cpp 31812 2015-11-28 22:37:37Z goatbar $
  *
  * Project:  GDAL Core
  * Purpose:  Read metadata from Resurs-DK1 imagery.
@@ -28,19 +27,28 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_port.h"
 #include "reader_rdk1.h"
 
-CPL_CVSID("$Id: reader_rdk1.cpp 31812 2015-11-28 22:37:37Z goatbar $");
+#include <cstdio>
+
+#include "cpl_error.h"
+#include "cpl_minixml.h"
+#include "cpl_string.h"
+#include "gdal_priv.h"
+
+CPL_CVSID("$Id: reader_rdk1.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /**
  * GDALMDReaderResursDK1()
  */
 GDALMDReaderResursDK1::GDALMDReaderResursDK1(const char *pszPath,
-        char **papszSiblingFiles) : GDALMDReaderBase(pszPath, papszSiblingFiles)
+                                             char **papszSiblingFiles) :
+    GDALMDReaderBase(pszPath, papszSiblingFiles),
+    m_osXMLSourceFilename( GDALFindAssociatedFile( pszPath, "XML",
+                                                    papszSiblingFiles, 0 ) )
 {
-    m_osXMLSourceFilename = GDALFindAssociatedFile( pszPath, "XML",
-                                                         papszSiblingFiles, 0 );
-    if( m_osXMLSourceFilename.size() )
+    if( !m_osXMLSourceFilename.empty() )
         CPLDebug( "MDReaderResursDK1", "XML Filename: %s",
                   m_osXMLSourceFilename.c_str() );
 }
@@ -70,7 +78,7 @@ bool GDALMDReaderResursDK1::HasRequiredFiles() const
  */
 char** GDALMDReaderResursDK1::GetMetadataFiles() const
 {
-    char **papszFileList = NULL;
+    char **papszFileList = nullptr;
     if(!m_osXMLSourceFilename.empty())
         papszFileList= CSLAddString( papszFileList, m_osXMLSourceFilename );
 
@@ -89,11 +97,11 @@ void GDALMDReaderResursDK1::LoadMetadata()
     {
         CPLXMLNode* psNode = CPLParseXMLFile(m_osXMLSourceFilename);
 
-        if(psNode != NULL)
+        if(psNode != nullptr)
         {
             CPLXMLNode* pMSPRootNode = CPLSearchXMLNode(psNode, "=MSP_ROOT");
 
-            if(pMSPRootNode != NULL)
+            if(pMSPRootNode != nullptr)
             {
                 m_papszIMDMD = ReadXMLToList(pMSPRootNode, m_papszIMDMD, "MSP_ROOT");
             }
@@ -105,28 +113,27 @@ void GDALMDReaderResursDK1::LoadMetadata()
 
     m_bIsMetadataLoad = true;
 
-    if(NULL == m_papszIMDMD)
+    if(nullptr == m_papszIMDMD)
     {
         return;
     }
 
     //extract imagery metadata
     const char* pszSatId = CSLFetchNameValue(m_papszIMDMD, "MSP_ROOT.cCodeKA");
-    if(NULL != pszSatId)
+    if(nullptr != pszSatId)
     {
         m_papszIMAGERYMD = CSLAddNameValue(m_papszIMAGERYMD, MD_NAME_SATELLITE,
                                            CPLStripQuotes(pszSatId));
     }
 
-
     const char* pszDate = CSLFetchNameValue(m_papszIMDMD,
                                             "MSP_ROOT.Normal.dSceneDate");
 
-    if(NULL != pszDate)
+    if(nullptr != pszDate)
     {
         const char* pszTime = CSLFetchNameValue(m_papszIMDMD,
                                          "MSP_ROOT.Normal.tSceneTime");
-        if(NULL == pszTime)
+        if(nullptr == pszTime)
             pszTime = "00:00:00.000000";
 
         char buffer[80];
@@ -147,7 +154,7 @@ void GDALMDReaderResursDK1::LoadMetadata()
 time_t GDALMDReaderResursDK1::GetAcquisitionTimeFromString(
         const char* pszDateTime)
 {
-    if(NULL == pszDateTime)
+    if(nullptr == pszDateTime)
         return 0;
 
     int iYear;
@@ -187,7 +194,7 @@ char** GDALMDReaderResursDK1::AddXMLNameValueToList(char** papszList,
     char** papszTokens = CSLTokenizeString2( pszValue, "\n",
         CSLT_STRIPLEADSPACES | CSLT_STRIPENDSPACES );
 
-    for(int i = 0; papszTokens[i] != NULL; i++ )
+    for(int i = 0; papszTokens[i] != nullptr; i++ )
     {
 
         char** papszSubTokens = CSLTokenizeString2( papszTokens[i], "=",

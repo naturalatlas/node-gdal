@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdaljp2abstractdataset.h 33794 2016-03-26 13:19:07Z goatbar $
+ * $Id: gdaljp2abstractdataset.h e37e476c4cf8f4b0df8995e0d95d5d672fca1a9b 2018-05-05 16:54:18 +0200 Even Rouault $
  *
  * Project:  GDAL
  * Purpose:  GDALGeorefPamDataset with helper to read georeferencing and other
@@ -31,30 +31,35 @@
 #ifndef GDAL_JP2_ABSTRACT_DATASET_H_INCLUDED
 #define GDAL_JP2_ABSTRACT_DATASET_H_INCLUDED
 
+//! @cond Doxygen_Suppress
 #include "gdalgeorefpamdataset.h"
 
 class CPL_DLL GDALJP2AbstractDataset: public GDALGeorefPamDataset
 {
-    char*               pszWldFilename;
+    char*               pszWldFilename = nullptr;
 
-    GDALDataset*        poMemDS;
-    char**              papszMetadataFiles;
+    GDALDataset*        poMemDS = nullptr;
+    char**              papszMetadataFiles = nullptr;
+    int                 m_nWORLDFILEIndex = -1;
+
+    CPL_DISALLOW_COPY_ASSIGN(GDALJP2AbstractDataset)
 
   protected:
-    virtual int         CloseDependentDatasets();
+    int CloseDependentDatasets() override;
 
   public:
-        GDALJP2AbstractDataset();
-        virtual ~GDALJP2AbstractDataset();
+    GDALJP2AbstractDataset();
+    ~GDALJP2AbstractDataset() override;
 
-        void LoadJP2Metadata(GDALOpenInfo* poOpenInfo,
-                             const char* pszOverrideFilename = NULL);
-        void            LoadVectorLayers(int bOpenRemoteResources = FALSE);
+    void LoadJP2Metadata( GDALOpenInfo* poOpenInfo,
+                          const char* pszOverrideFilename = nullptr );
+    void LoadVectorLayers( int bOpenRemoteResources = FALSE );
 
-        virtual char      **GetFileList(void);
+    char **GetFileList( void ) override;
 
-        virtual int         GetLayerCount();
-        virtual OGRLayer   *GetLayer(int i);
+    int GetLayerCount() override;
+    OGRLayer *GetLayer( int i ) override;
 };
+//! @endcond
 
 #endif /* GDAL_JP2_ABSTRACT_DATASET_H_INCLUDED */

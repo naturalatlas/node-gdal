@@ -24,6 +24,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
+
 #include "pcidsk_config.h"
 #include "pcidsk_types.h"
 #include "pcidsk_exception.h"
@@ -35,13 +36,14 @@
 #include <cctype>
 #include <cstdio>
 #include <cmath>
+#include <cstdarg>
 #include <iostream>
 
-using namespace PCIDSK;
-
-#if defined(_MSC_VER) && (_MSC_VER < 1500)
-#  define vsnprintf _vsnprintf
+#if !defined(va_copy) && defined(__va_copy)
+#define va_copy __va_copy
 #endif
+
+using namespace PCIDSK;
 
 /************************************************************************/
 /*                         GetCurrentDateTime()                         */
@@ -52,10 +54,10 @@ using namespace PCIDSK;
 #include <time.h>
 #include <sys/types.h>
 
-void	PCIDSK::GetCurrentDateTime( char *out_time )
+void    PCIDSK::GetCurrentDateTime( char *out_time )
 
 {
-    time_t	    clock;
+    time_t          clock;
     char            ctime_out[25];
 
     time( &clock );
@@ -399,7 +401,7 @@ std::vector<double> PCIDSK::ProjParmsFromText( std::string geosys,
             next++;
 
         // move past white space.
-        while( *next != '\0' && *next == ' ' )
+        while( *next == ' ' )
             next++;
     }
 
@@ -507,7 +509,7 @@ std::string PCIDSK::MergeRelativePath( const PCIDSK::IOInterfaces *io_interfaces
 /* -------------------------------------------------------------------- */
 /*      Does src_filename appear to be absolute?                        */
 /* -------------------------------------------------------------------- */
-    if( src_filename.size() == 0 )
+    if( src_filename.empty() )
         return src_filename; // we can't do anything with a blank.
     else if( src_filename.size() > 2 && src_filename[1] == ':' )
         return src_filename; // has a drive letter?
@@ -567,7 +569,7 @@ void PCIDSK::DefaultDebug( const char * message )
 
     if( !initialized )
     {
-        if( getenv( "PCIDSK_DEBUG" ) != NULL )
+        if( getenv( "PCIDSK_DEBUG" ) != nullptr )
             enabled = true;
 
         initialized = true;
@@ -637,14 +639,20 @@ static void vDebug( void (*pfnDebug)(const char *),
                || nPR == -1 )
         {
             nWorkBufferSize *= 4;
-            pszWorkBuffer = (char *) realloc(pszWorkBuffer, 
-                                             nWorkBufferSize );
+            char* pszWorkBufferNew = (char *) realloc(pszWorkBuffer, 
+                                                      nWorkBufferSize );
 #ifdef va_copy
             va_end( wrk_args );
             va_copy( wrk_args, args );
 #else
             wrk_args = args;
 #endif
+            if( pszWorkBufferNew == nullptr )
+            {
+                strcpy( pszWorkBuffer, "(message too large)" );
+                break;
+            }
+            pszWorkBuffer = pszWorkBufferNew;
         }
         message = pszWorkBuffer;
         free( pszWorkBuffer );
@@ -673,7 +681,7 @@ static void vDebug( void (*pfnDebug)(const char *),
 void PCIDSK::Debug( void (*pfnDebug)(const char *), const char *fmt, ... )
 
 {
-    if( pfnDebug == NULL )
+    if( pfnDebug == nullptr )
         return;
 
     std::va_list args;

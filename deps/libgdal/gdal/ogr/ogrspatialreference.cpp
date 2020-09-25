@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrspatialreference.cpp 33432 2016-02-12 01:11:41Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  The OGRSpatialReference class.
@@ -28,20 +27,55 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#include "cpl_atomic_ops.h"
-#include "cpl_csv.h"
-#include "cpl_http.h"
-#include "cpl_multiproc.h"
-#include "ogr_p.h"
+#include "cpl_port.h"
 #include "ogr_spatialref.h"
 
-CPL_CVSID("$Id: ogrspatialreference.cpp 33432 2016-02-12 01:11:41Z goatbar $");
+#include <cmath>
+#include <cstddef>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <limits>
+#include <string>
+#include <vector>
+
+#include "cpl_atomic_ops.h"
+#include "cpl_conv.h"
+#include "cpl_csv.h"
+#include "cpl_error.h"
+#include "cpl_http.h"
+#include "cpl_multiproc.h"
+#include "cpl_string.h"
+#include "cpl_vsi.h"
+#include "ogr_core.h"
+#include "ogr_p.h"
+#include "ogr_srs_api.h"
+
+CPL_CVSID("$Id: ogrspatialreference.cpp 501ca3703ff4d33badbc539ab7121f6263ff1ac3 2018-09-21 20:07:47 +0200 Even Rouault $")
 
 // The current opinion is that WKT longitudes like central meridian
 // should be relative to Greenwich, not the prime meridian in use.
 // Define the following if they should be relative to the prime meridian
 // of then geogcs.
 #undef WKT_LONGITUDE_RELATIVE_TO_PM
+
+/************************************************************************/
+/*                           ToPointer()                                */
+/************************************************************************/
+
+inline OGRSpatialReference* ToPointer(OGRSpatialReferenceH hSRS)
+{
+    return OGRSpatialReference::FromHandle(hSRS);
+}
+
+/************************************************************************/
+/*                           ToHandle()                                 */
+/************************************************************************/
+
+inline OGRSpatialReferenceH ToHandle(OGRSpatialReference* poSRS)
+{
+    return OGRSpatialReference::ToHandle(poSRS);
+}
 
 /************************************************************************/
 /*                           OGRsnPrintDouble()                         */
@@ -59,20 +93,19 @@ void OGRsnPrintDouble( char * pszStrBuf, size_t size, double dfValue )
     // The following hack is intended to truncate some "precision" in cases
     // that appear to be roundoff error.
     if( nLen > 15
-        && (strcmp(pszStrBuf+nLen-6,"999999") == 0
-            || strcmp(pszStrBuf+nLen-6,"000001") == 0) )
+        && (strcmp(pszStrBuf+nLen-6, "999999") == 0
+            || strcmp(pszStrBuf+nLen-6, "000001") == 0) )
     {
         CPLsnprintf( pszStrBuf, size, "%.15g", dfValue );
     }
 
     // Force to user periods regardless of locale.
-    if( strchr( pszStrBuf, ',' ) != NULL )
+    if( strchr( pszStrBuf, ',' ) != nullptr )
     {
         char * const pszDelim = strchr( pszStrBuf, ',' );
         *pszDelim = '.';
     }
 }
-
 
 /************************************************************************/
 /*                        OGRSpatialReference()                         */
@@ -98,12 +131,12 @@ OGRSpatialReference::OGRSpatialReference( const char * pszWKT ) :
     dfFromGreenwich(0.0),
     dfToMeter(0.0),
     dfToDegrees(0.0),
-    poRoot(NULL),
+    poRoot(nullptr),
     nRefCount(1),
     bNormInfoSet(FALSE)
 {
-    if( pszWKT != NULL )
-        importFromWkt( (char **) &pszWKT );
+    if( pszWKT != nullptr )
+        importFromWkt( pszWKT );
 }
 
 /************************************************************************/
@@ -120,33 +153,34 @@ OGRSpatialReferenceH CPL_STDCALL OSRNewSpatialReference( const char *pszWKT )
 {
     OGRSpatialReference * poSRS = new OGRSpatialReference();
 
-    if( pszWKT != NULL && strlen(pszWKT) > 0 )
+    if( pszWKT != nullptr && strlen(pszWKT) > 0 )
     {
-        if( poSRS->importFromWkt( (char **) (&pszWKT) ) != OGRERR_NONE )
+        if( poSRS->importFromWkt( pszWKT ) != OGRERR_NONE )
         {
             delete poSRS;
-            poSRS = NULL;
+            poSRS = nullptr;
         }
     }
 
-    return reinterpret_cast<OGRSpatialReferenceH>( poSRS );
+    return ToHandle( poSRS );
 }
 
 /************************************************************************/
 /*                        OGRSpatialReference()                         */
-/*                                                                      */
-/*      Simple copy constructor.  See also Clone().                     */
 /************************************************************************/
 
+/** Simple copy constructor. See also Clone().
+ * @param oOther other spatial reference
+ */
 OGRSpatialReference::OGRSpatialReference(const OGRSpatialReference &oOther) :
     dfFromGreenwich(0.0),
     dfToMeter(0.0),
     dfToDegrees(0.0),
-    poRoot(NULL),
+    poRoot(nullptr),
     nRefCount(1),
     bNormInfoSet(FALSE)
 {
-    if( oOther.poRoot != NULL )
+    if( oOther.poRoot != nullptr )
         poRoot = oOther.poRoot->Clone();
 }
 
@@ -166,8 +200,7 @@ OGRSpatialReference::OGRSpatialReference(const OGRSpatialReference &oOther) :
 OGRSpatialReference::~OGRSpatialReference()
 
 {
-    if( poRoot != NULL )
-        delete poRoot;
+    delete poRoot;
 }
 
 /************************************************************************/
@@ -209,7 +242,7 @@ void OGRSpatialReference::DestroySpatialReference(OGRSpatialReference* poSRS)
 void CPL_STDCALL OSRDestroySpatialReference( OGRSpatialReferenceH hSRS )
 
 {
-    delete reinterpret_cast<OGRSpatialReference *>(hSRS);
+    delete ToPointer(hSRS);
 }
 
 /************************************************************************/
@@ -226,10 +259,8 @@ void CPL_STDCALL OSRDestroySpatialReference( OGRSpatialReferenceH hSRS )
 void OGRSpatialReference::Clear()
 
 {
-    if( poRoot )
-        delete poRoot;
-
-    poRoot = NULL;
+    delete poRoot;
+    poRoot = nullptr;
 
     bNormInfoSet = FALSE;
     dfFromGreenwich = 1.0;
@@ -241,14 +272,25 @@ void OGRSpatialReference::Clear()
 /*                             operator=()                              */
 /************************************************************************/
 
+/** Assignment operator.
+ * @param oSource SRS to assign to *this
+ * @return *this
+ */
 OGRSpatialReference &
 OGRSpatialReference::operator=(const OGRSpatialReference &oSource)
 
 {
-    Clear();
+    if( &oSource != this )
+    {
+        Clear();
+#ifdef CPPCHECK
+        // Otherwise cppcheck would protest that nRefCount isn't modified
+        nRefCount = (nRefCount + 1) - 1;
+#endif
 
-    if( oSource.poRoot != NULL )
-        poRoot = oSource.poRoot->Clone();
+        if( oSource.poRoot != nullptr )
+            poRoot = oSource.poRoot->Clone();
+    }
 
     return *this;
 }
@@ -288,7 +330,7 @@ int OSRReference( OGRSpatialReferenceH hSRS )
 {
     VALIDATE_POINTER1( hSRS, "OSRReference", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->Reference();
+    return ToPointer(hSRS)->Reference();
 }
 
 /************************************************************************/
@@ -328,7 +370,7 @@ int OSRDereference( OGRSpatialReferenceH hSRS )
 {
     VALIDATE_POINTER1( hSRS, "OSRDereference", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->Dereference();
+    return ToPointer(hSRS)->Dereference();
 }
 
 /************************************************************************/
@@ -356,8 +398,6 @@ int OSRDereference( OGRSpatialReferenceH hSRS )
 void OGRSpatialReference::Release()
 
 {
-    CPLAssert( NULL != this );
-
     if( Dereference() <= 0 )
         delete this;
 }
@@ -376,7 +416,7 @@ void OSRRelease( OGRSpatialReferenceH hSRS )
 {
     VALIDATE_POINTER0( hSRS, "OSRRelease" );
 
-    reinterpret_cast<OGRSpatialReference *>(hSRS)->Release();
+    ToPointer(hSRS)->Release();
 }
 
 /************************************************************************/
@@ -396,9 +436,7 @@ void OSRRelease( OGRSpatialReferenceH hSRS )
 void OGRSpatialReference::SetRoot( OGR_SRSNode * poNewRoot )
 
 {
-    if( poRoot != NULL )
-        delete poRoot;
-
+    delete poRoot;
     poRoot = poNewRoot;
 }
 
@@ -427,17 +465,26 @@ void OGRSpatialReference::SetRoot( OGR_SRSNode * poNewRoot )
 OGR_SRSNode *OGRSpatialReference::GetAttrNode( const char * pszNodePath )
 
 {
+    if( strchr(pszNodePath, '|') == nullptr )
+    {
+        // Fast path
+        OGR_SRSNode *poNode = GetRoot();
+        if( poNode )
+            poNode = poNode->GetNode( pszNodePath );
+        return poNode;
+    }
+
     char **papszPathTokens =
         CSLTokenizeStringComplex(pszNodePath, "|", TRUE, FALSE);
 
     if( CSLCount( papszPathTokens ) < 1 )
     {
         CSLDestroy(papszPathTokens);
-        return NULL;
+        return nullptr;
     }
 
     OGR_SRSNode *poNode = GetRoot();
-    for( int i = 0; poNode != NULL && papszPathTokens[i] != NULL; i++ )
+    for( int i = 0; poNode != nullptr && papszPathTokens[i] != nullptr; i++ )
     {
         poNode = poNode->GetNode( papszPathTokens[i] );
     }
@@ -446,6 +493,24 @@ OGR_SRSNode *OGRSpatialReference::GetAttrNode( const char * pszNodePath )
 
     return poNode;
 }
+
+/**
+ * \brief Find named node in tree.
+ *
+ * This method does a pre-order traversal of the node tree searching for
+ * a node with this exact value (case insensitive), and returns it.  Leaf
+ * nodes are not considered, under the assumption that they are just
+ * attribute value nodes.
+ *
+ * If a node appears more than once in the tree (such as UNIT for instance),
+ * the first encountered will be returned.  Use GetNode() on a subtree to be
+ * more specific.
+ *
+ * @param pszNodePath the name of the node to search for.  May contain multiple
+ * components such as "GEOGCS|UNIT".
+ *
+ * @return a pointer to the node found, or NULL if none.
+ */
 
 const OGR_SRSNode *
 OGRSpatialReference::GetAttrNode( const char * pszNodePath ) const
@@ -482,11 +547,11 @@ const char *OGRSpatialReference::GetAttrValue( const char * pszNodeName,
 
 {
     const OGR_SRSNode *poNode = GetAttrNode( pszNodeName );
-    if( poNode == NULL )
-        return NULL;
+    if( poNode == nullptr )
+        return nullptr;
 
     if( iAttr < 0 || iAttr >= poNode->GetChildCount() )
-        return NULL;
+        return nullptr;
 
     return poNode->GetChild(iAttr)->GetValue();
 }
@@ -504,9 +569,9 @@ const char * CPL_STDCALL OSRGetAttrValue( OGRSpatialReferenceH hSRS,
                              const char * pszKey, int iChild )
 
 {
-    VALIDATE_POINTER1( hSRS, "OSRGetAttrValue", NULL );
+    VALIDATE_POINTER1( hSRS, "OSRGetAttrValue", nullptr );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+    return ToPointer(hSRS)->
         GetAttrValue( pszKey, iChild );
 }
 
@@ -527,7 +592,7 @@ OGRSpatialReference *OGRSpatialReference::Clone() const
 {
     OGRSpatialReference *poNewRef = new OGRSpatialReference();
 
-    if( poRoot != NULL )
+    if( poRoot != nullptr )
         poNewRef->poRoot = poRoot->Clone();
 
     return poNewRef;
@@ -545,25 +610,25 @@ OGRSpatialReference *OGRSpatialReference::Clone() const
 OGRSpatialReferenceH CPL_STDCALL OSRClone( OGRSpatialReferenceH hSRS )
 
 {
-    VALIDATE_POINTER1( hSRS, "OSRClone", NULL );
+    VALIDATE_POINTER1( hSRS, "OSRClone", nullptr );
 
-    return reinterpret_cast<OGRSpatialReferenceH>(
-        reinterpret_cast<OGRSpatialReference *>(hSRS)->Clone() );
+    return ToHandle(
+        ToPointer(hSRS)->Clone() );
 }
 
 /************************************************************************/
 /*                            dumpReadable()                            */
-/*                                                                      */
-/*      Dump pretty wkt to stdout, mostly for debugging.                */
 /************************************************************************/
 
+/** Dump pretty wkt to stdout, mostly for debugging.
+ */
 void OGRSpatialReference::dumpReadable()
 
 {
-    char *pszPrettyWkt = NULL;
+    char *pszPrettyWkt = nullptr;
 
     exportToPrettyWkt( &pszPrettyWkt, FALSE );
-    printf( "%s\n", pszPrettyWkt );
+    printf( "%s\n", pszPrettyWkt );/*ok*/
     CPLFree( pszPrettyWkt );
 }
 
@@ -573,8 +638,11 @@ void OGRSpatialReference::dumpReadable()
 
 /**
  * Convert this SRS into a nicely formatted WKT string for display to a person.
+ * 
+ * Consult also the <a href="wktproblems.html">OGC WKT Coordinate System Issues</a> page
+ * for implementation details of WKT in OGR.
  *
- * Note that the returned WKT string should be freed with OGRFree() or
+ * Note that the returned WKT string should be freed with
  * CPLFree() when no longer needed.  It is the responsibility of the caller.
  *
  * This method is the same as the C function OSRExportToPrettyWkt().
@@ -591,7 +659,7 @@ OGRErr OGRSpatialReference::exportToPrettyWkt( char ** ppszResult,
                                                int bSimplify ) const
 
 {
-    if( poRoot == NULL )
+    if( poRoot == nullptr )
     {
         *ppszResult = CPLStrdup("");
         return OGRERR_NONE;
@@ -617,7 +685,6 @@ OGRErr OGRSpatialReference::exportToPrettyWkt( char ** ppszResult,
 /*                        OSRExportToPrettyWkt()                        */
 /************************************************************************/
 
-
 /**
  * \brief Convert this SRS into a nicely formatted WKT string for display to a
  * person.
@@ -631,9 +698,9 @@ OGRErr CPL_STDCALL OSRExportToPrettyWkt( OGRSpatialReferenceH hSRS, char ** ppsz
 {
     VALIDATE_POINTER1( hSRS, "OSRExportToPrettyWkt", OGRERR_FAILURE );
 
-    *ppszReturn = NULL;
+    *ppszReturn = nullptr;
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+    return ToPointer(hSRS)->
         exportToPrettyWkt( ppszReturn, bSimplify );
 }
 
@@ -643,8 +710,11 @@ OGRErr CPL_STDCALL OSRExportToPrettyWkt( OGRSpatialReferenceH hSRS, char ** ppsz
 
 /**
  * \brief Convert this SRS into WKT format.
+ * 
+ * Consult also the <a href="wktproblems.html">OGC WKT Coordinate System Issues</a> page
+ * for implementation details of WKT in OGR.
  *
- * Note that the returned WKT string should be freed with OGRFree() or
+ * Note that the returned WKT string should be freed with
  * CPLFree() when no longer needed.  It is the responsibility of the caller.
  *
  * This method is the same as the C function OSRExportToWkt().
@@ -658,7 +728,7 @@ OGRErr CPL_STDCALL OSRExportToPrettyWkt( OGRSpatialReferenceH hSRS, char ** ppsz
 OGRErr OGRSpatialReference::exportToWkt( char ** ppszResult ) const
 
 {
-    if( poRoot == NULL )
+    if( poRoot == nullptr )
     {
         *ppszResult = CPLStrdup("");
         return OGRERR_NONE;
@@ -673,6 +743,9 @@ OGRErr OGRSpatialReference::exportToWkt( char ** ppszResult ) const
 
 /**
  * \brief Convert this SRS into WKT format.
+ * 
+ * Consult also the <a href="wktproblems.html">OGC WKT Coordinate System Issues</a> page
+ * for implementation details of WKT in OGR.
  *
  * This function is the same as OGRSpatialReference::exportToWkt().
  */
@@ -683,9 +756,9 @@ OGRErr CPL_STDCALL OSRExportToWkt( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRExportToWkt", OGRERR_FAILURE );
 
-    *ppszReturn = NULL;
+    *ppszReturn = nullptr;
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->exportToWkt( ppszReturn );
+    return ToPointer(hSRS)->exportToWkt( ppszReturn );
 }
 
 /************************************************************************/
@@ -700,6 +773,9 @@ OGRErr CPL_STDCALL OSRExportToWkt( OGRSpatialReferenceH hSRS,
  * much of the input string as needed to construct this SRS is consumed from
  * the input string, and the input string pointer
  * is then updated to point to the remaining (unused) input.
+ * 
+ * Consult also the <a href="wktproblems.html">OGC WKT Coordinate System Issues</a> page
+ * for implementation details of WKT in OGR.
  *
  * This method is the same as the C function OSRImportFromWkt().
  *
@@ -708,20 +784,21 @@ OGRErr CPL_STDCALL OSRExportToWkt( OGRSpatialReferenceH hSRS,
  *
  * @return OGRERR_NONE if import succeeds, or OGRERR_CORRUPT_DATA if it
  * fails for any reason.
+ * @since GDAL 2.3
  */
 
-OGRErr OGRSpatialReference::importFromWkt( char ** ppszInput )
+OGRErr OGRSpatialReference::importFromWkt( const char ** ppszInput )
 
 {
-    if ( !ppszInput || !*ppszInput )
+    if( !ppszInput || !*ppszInput )
         return OGRERR_FAILURE;
 
     Clear();
 
     poRoot = new OGR_SRSNode();
 
-    OGRErr eErr = poRoot->importFromWkt( ppszInput );
-    if (eErr != OGRERR_NONE)
+    const OGRErr eErr = poRoot->importFromWkt( ppszInput );
+    if( eErr != OGRERR_NONE )
         return eErr;
 
 /* -------------------------------------------------------------------- */
@@ -731,16 +808,68 @@ OGRErr OGRSpatialReference::importFromWkt( char ** ppszInput )
 /*      need to extend this somewhat to bring it into an acceptable     */
 /*      OGRSpatialReference organization at some point.                 */
 /* -------------------------------------------------------------------- */
-    if (strlen(*ppszInput) > 0 && strstr(*ppszInput, "VERTCS"))
+    if( strlen(*ppszInput) > 0 && strstr(*ppszInput, "VERTCS") )
     {
-        if(((*ppszInput)[0]) == ',')
+        if( ((*ppszInput)[0]) == ',' )
             (*ppszInput)++;
         OGR_SRSNode *poNewChild = new OGR_SRSNode();
         poRoot->AddChild( poNewChild );
         return poNewChild->importFromWkt( ppszInput );
     }
 
-    return eErr;
+    return OGRERR_NONE;
+}
+
+/**
+ * \brief Import from WKT string.
+ *
+ * This method will wipe the existing SRS definition, and
+ * reassign it based on the contents of the passed WKT string.  Only as
+ * much of the input string as needed to construct this SRS is consumed from
+ * the input string, and the input string pointer
+ * is then updated to point to the remaining (unused) input.
+ * 
+ * Consult also the <a href="wktproblems.html">OGC WKT Coordinate System Issues</a> page
+ * for implementation details of WKT in OGR.
+ *
+ * This method is the same as the C function OSRImportFromWkt().
+ *
+ * @param ppszInput Pointer to pointer to input.  The pointer is updated to
+ * point to remaining unused input text.
+ *
+ * @return OGRERR_NONE if import succeeds, or OGRERR_CORRUPT_DATA if it
+ * fails for any reason.
+ * @deprecated GDAL 2.3. Use importFromWkt(const char**) or importFromWkt(const char*)
+ */
+
+OGRErr OGRSpatialReference::importFromWkt( char ** ppszInput )
+
+{
+    return importFromWkt( const_cast<const char**>(ppszInput) );
+}
+
+/**
+ * \brief Import from WKT string.
+ *
+ * This method will wipe the existing SRS definition, and
+ * reassign it based on the contents of the passed WKT string.  Only as
+ * much of the input string as needed to construct this SRS is consumed from
+ * the input string, and the input string pointer
+ * is then updated to point to the remaining (unused) input.
+ *
+ * Consult also the <a href="wktproblems.html">OGC WKT Coordinate System Issues</a> page
+ * for implementation details of WKT in OGR.
+ *
+ * @param pszInput Input WKT
+ *
+ * @return OGRERR_NONE if import succeeds, or OGRERR_CORRUPT_DATA if it
+ * fails for any reason.
+ * @since GDAL 2.3
+ */
+
+OGRErr OGRSpatialReference::importFromWkt( const char* pszInput )
+{
+    return importFromWkt(&pszInput);
 }
 
 /************************************************************************/
@@ -749,6 +878,9 @@ OGRErr OGRSpatialReference::importFromWkt( char ** ppszInput )
 
 /**
  * \brief Import from WKT string.
+ * 
+ * Consult also the <a href="wktproblems.html">OGC WKT Coordinate System Issues</a> page
+ * for implementation details of WKT in OGR.
  *
  * This function is the same as OGRSpatialReference::importFromWkt().
  */
@@ -758,7 +890,8 @@ OGRErr OSRImportFromWkt( OGRSpatialReferenceH hSRS, char **ppszInput )
 {
     VALIDATE_POINTER1( hSRS, "OSRImportFromWkt", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->importFromWkt( ppszInput );
+    return ToPointer(hSRS)->importFromWkt(
+                const_cast<const char**>(ppszInput) );
 }
 
 /************************************************************************/
@@ -797,19 +930,19 @@ OGRErr OGRSpatialReference::SetNode( const char * pszNodePath,
         return OGRERR_FAILURE;
     }
 
-    if( GetRoot() == NULL || !EQUAL(papszPathTokens[0],GetRoot()->GetValue()) )
+    if( GetRoot() == nullptr || !EQUAL(papszPathTokens[0], GetRoot()->GetValue()) )
     {
         SetRoot( new OGR_SRSNode( papszPathTokens[0] ) );
     }
 
     OGR_SRSNode *poNode = GetRoot();
-    for( int i = 1; papszPathTokens[i] != NULL; i++ )
+    for( int i = 1; papszPathTokens[i] != nullptr; i++ )
     {
-        int j;
+        int j = 0;  // Used after for.
 
-        for( j = 0; j < poNode->GetChildCount(); j++ )
+        for( ; j < poNode->GetChildCount(); j++ )
         {
-            if( EQUAL(poNode->GetChild( j )->GetValue(),papszPathTokens[i]) )
+            if( EQUAL(poNode->GetChild( j )->GetValue(), papszPathTokens[i]) )
             {
                 poNode = poNode->GetChild(j);
                 j = -1;
@@ -827,7 +960,7 @@ OGRErr OGRSpatialReference::SetNode( const char * pszNodePath,
 
     CSLDestroy( papszPathTokens );
 
-    if( pszNewNodeValue != NULL )
+    if( pszNewNodeValue != nullptr )
     {
         if( poNode->GetChildCount() > 0 )
             poNode->GetChild(0)->SetValue( pszNewNodeValue );
@@ -853,7 +986,7 @@ OGRErr CPL_STDCALL OSRSetAttrValue( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetAttrValue", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+    return ToPointer(hSRS)->
         SetNode( pszPath, pszValue );
 }
 
@@ -861,13 +994,30 @@ OGRErr CPL_STDCALL OSRSetAttrValue( OGRSpatialReferenceH hSRS,
 /*                              SetNode()                               */
 /************************************************************************/
 
+/**
+ * \brief Set attribute value in spatial reference.
+ *
+ * Missing intermediate nodes in the path will be created if not already
+ * in existence.  If the attribute has no children one will be created and
+ * assigned the value otherwise the zeroth child will be assigned the value.
+ *
+ * This method does the same as the C function OSRSetAttrValue().
+ *
+ * @param pszNodePath full path to attribute to be set.  For instance
+ * "PROJCS|GEOGCS|UNIT".
+ *
+ * @param dfValue value to be assigned to node.
+ *
+ * @return OGRERR_NONE on success.
+ */
+
 OGRErr OGRSpatialReference::SetNode( const char *pszNodePath,
                                      double dfValue )
 
 {
     char szValue[64] = { '\0' };
 
-    if( ABS(dfValue - static_cast<int>(dfValue)) == 0.0 )
+    if( std::abs(dfValue - static_cast<int>(dfValue)) == 0.0 )
         snprintf( szValue, sizeof(szValue), "%d", static_cast<int>(dfValue) );
     else
         OGRsnPrintDouble( szValue, sizeof(szValue), dfValue );
@@ -905,17 +1055,17 @@ OGRErr OGRSpatialReference::SetAngularUnits( const char * pszUnitsName,
 
     OGR_SRSNode *poCS = GetAttrNode( "GEOGCS" );
 
-    if( poCS == NULL )
+    if( poCS == nullptr )
         return OGRERR_FAILURE;
 
     char szValue[128] = { '\0' };
     OGRsnPrintDouble( szValue, sizeof(szValue), dfInRadians );
 
-    OGR_SRSNode *poUnits = NULL;
+    OGR_SRSNode *poUnits = nullptr;
     if( poCS->FindChild( "UNIT" ) >= 0 )
     {
         poUnits = poCS->GetChild( poCS->FindChild( "UNIT" ) );
-        if (poUnits->GetChildCount() < 2)
+        if( poUnits->GetChildCount() < 2 )
             return OGRERR_FAILURE;
         poUnits->GetChild(0)->SetValue( pszUnitsName );
         poUnits->GetChild(1)->SetValue( szValue );
@@ -947,7 +1097,7 @@ OGRErr OSRSetAngularUnits( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetAngularUnits", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+    return ToPointer(hSRS)->
         SetAngularUnits( pszUnits, dfInRadians );
 }
 
@@ -971,35 +1121,60 @@ OGRErr OSRSetAngularUnits( OGRSpatialReferenceH hSRS,
  *
  * @return the value to multiply by angular distances to transform them to
  * radians.
+ * @deprecated GDAL 2.3.0. Use GetAngularUnits(const char**) const.
  */
 
-double OGRSpatialReference::GetAngularUnits( char ** ppszName ) const
+double OGRSpatialReference::GetAngularUnits( const char ** ppszName ) const
 
 {
     const OGR_SRSNode *poCS = GetAttrNode( "GEOGCS" );
 
-    if( ppszName != NULL )
-        *ppszName = (char* ) "degree";
+    if( ppszName != nullptr )
+        *ppszName = "degree";
 
-    if( poCS == NULL )
+    if( poCS == nullptr )
         return CPLAtof(SRS_UA_DEGREE_CONV);
 
     for( int iChild = 0; iChild < poCS->GetChildCount(); iChild++ )
     {
         const OGR_SRSNode *poChild = poCS->GetChild(iChild);
 
-        if( EQUAL(poChild->GetValue(),"UNIT")
+        if( EQUAL(poChild->GetValue(), "UNIT")
             && poChild->GetChildCount() >= 2 )
         {
-            if( ppszName != NULL )
-              *ppszName =
-                  const_cast<char *>(poChild->GetChild(0)->GetValue());
+            if( ppszName != nullptr )
+              *ppszName = poChild->GetChild(0)->GetValue();
 
             return CPLAtof( poChild->GetChild(1)->GetValue() );
         }
     }
 
     return 1.0;
+}
+
+/**
+ * \brief Fetch angular geographic coordinate system units.
+ *
+ * If no units are available, a value of "degree" and SRS_UA_DEGREE_CONV
+ * will be assumed.  This method only checks directly under the GEOGCS node
+ * for units.
+ *
+ * This method does the same thing as the C function OSRGetAngularUnits().
+ *
+ * @param ppszName a pointer to be updated with the pointer to the units name.
+ * The returned value remains internal to the OGRSpatialReference and should
+ * not be freed, or modified.  It may be invalidated on the next
+ * OGRSpatialReference call.
+ *
+ * @return the value to multiply by angular distances to transform them to
+ * radians.
+ * @since GDAL 2.3.0
+ */
+
+double OGRSpatialReference::GetAngularUnits( char ** ppszName ) const
+
+{
+    return GetAngularUnits( const_cast<const char**>(ppszName) );
 }
 
 /************************************************************************/
@@ -1016,8 +1191,8 @@ double OSRGetAngularUnits( OGRSpatialReferenceH hSRS, char ** ppszName )
 {
     VALIDATE_POINTER1( hSRS, "OSRGetAngularUnits", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
-        GetAngularUnits( ppszName );
+    return ToPointer(hSRS)->
+        GetAngularUnits( const_cast<const char**>(ppszName) );
 }
 
 /************************************************************************/
@@ -1053,17 +1228,18 @@ OGRErr OGRSpatialReference::SetLinearUnitsAndUpdateParameters(
     const double dfOldInMeters = GetLinearUnits();
     OGR_SRSNode *poPROJCS = GetAttrNode( "PROJCS" );
 
-    if( dfInMeters == dfOldInMeters || poPROJCS == NULL )
+    if( dfInMeters == dfOldInMeters || poPROJCS == nullptr )
         return SetLinearUnits( pszName, dfInMeters );
 
     for( int iChild = 0; iChild < poPROJCS->GetChildCount(); iChild++ )
     {
         const OGR_SRSNode *poChild = poPROJCS->GetChild(iChild);
 
-        if( EQUAL(poChild->GetValue(),"PARAMETER")
+        if( EQUAL(poChild->GetValue(), "PARAMETER")
             && poChild->GetChildCount() > 1 )
         {
-            char * const pszParmName = CPLStrdup(poChild->GetChild(0)->GetValue());
+            char *const pszParmName =
+                CPLStrdup(poChild->GetChild(0)->GetValue());
 
             if( IsLinearParameter( pszParmName ) )
             {
@@ -1098,7 +1274,7 @@ OGRErr OSRSetLinearUnitsAndUpdateParameters( OGRSpatialReferenceH hSRS,
     VALIDATE_POINTER1( hSRS, "OSRSetLinearUnitsAndUpdateParameters",
                        OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+    return ToPointer(hSRS)->
         SetLinearUnitsAndUpdateParameters( pszUnits, dfInMeters );
 }
 
@@ -1129,7 +1305,7 @@ OGRErr OGRSpatialReference::SetLinearUnits( const char * pszUnitsName,
                                             double dfInMeters )
 
 {
-    return SetTargetLinearUnits( NULL, pszUnitsName, dfInMeters );
+    return SetTargetLinearUnits( nullptr, pszUnitsName, dfInMeters );
 }
 
 /************************************************************************/
@@ -1147,7 +1323,7 @@ OGRErr OSRSetLinearUnits( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetLinearUnits", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+    return ToPointer(hSRS)->
         SetLinearUnits( pszUnits, dfInMeters );
 }
 
@@ -1184,37 +1360,43 @@ OGRErr OGRSpatialReference::SetTargetLinearUnits( const char *pszTargetKey,
                                                   double dfInMeters )
 
 {
+    if( dfInMeters <= 0.0 )
+        return OGRERR_FAILURE;
+
     bNormInfoSet = FALSE;
 
-    OGR_SRSNode *poCS = NULL;
-    if( pszTargetKey == NULL )
+    OGR_SRSNode *poCS = nullptr;
+    if( pszTargetKey == nullptr )
     {
         poCS = GetAttrNode( "PROJCS" );
 
-        if( poCS == NULL )
+        if( poCS == nullptr )
             poCS = GetAttrNode( "LOCAL_CS" );
-        if( poCS == NULL )
+        if( poCS == nullptr )
             poCS = GetAttrNode( "GEOCCS" );
-        if( poCS == NULL && IsVertical() )
+        if( poCS == nullptr && IsVertical() )
             poCS = GetAttrNode( "VERT_CS" );
     }
     else
         poCS = GetAttrNode( pszTargetKey );
 
-    if( poCS == NULL )
+    if( poCS == nullptr )
         return OGRERR_FAILURE;
 
     char szValue[128] = { '\0' };
-    if( dfInMeters == (int) dfInMeters )
-        snprintf( szValue, sizeof(szValue), "%d", static_cast<int>(dfInMeters) );
+    if( dfInMeters < std::numeric_limits<int>::max() &&
+        dfInMeters > std::numeric_limits<int>::min() &&
+        dfInMeters == static_cast<int>(dfInMeters) )
+        snprintf( szValue, sizeof(szValue),
+                  "%d", static_cast<int>(dfInMeters) );
     else
         OGRsnPrintDouble( szValue, sizeof(szValue), dfInMeters );
 
-    OGR_SRSNode *poUnits = NULL;
+    OGR_SRSNode *poUnits = nullptr;
     if( poCS->FindChild( "UNIT" ) >= 0 )
     {
         poUnits = poCS->GetChild( poCS->FindChild( "UNIT" ) );
-        if (poUnits->GetChildCount() < 2)
+        if( poUnits->GetChildCount() < 2 )
             return OGRERR_FAILURE;
         poUnits->GetChild(0)->SetValue( pszUnitsName );
         poUnits->GetChild(1)->SetValue( szValue );
@@ -1251,7 +1433,7 @@ OGRErr OSRSetTargetLinearUnits( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetTargetLinearUnits", OGRERR_FAILURE );
 
-    return ((OGRSpatialReference *) hSRS)->
+    return ToPointer(hSRS)->
         SetTargetLinearUnits( pszTargetKey, pszUnits, dfInMeters );
 }
 
@@ -1266,7 +1448,7 @@ OGRErr OSRSetTargetLinearUnits( OGRSpatialReferenceH hSRS,
  * This method only checks directly under the PROJCS, GEOCCS or LOCAL_CS node
  * for units.
  *
- * This method does the same thing as the C function OSRGetLinearUnits()/
+ * This method does the same thing as the C function OSRGetLinearUnits()
  *
  * @param ppszName a pointer to be updated with the pointer to the units name.
  * The returned value remains internal to the OGRSpatialReference and should
@@ -1275,12 +1457,38 @@ OGRErr OSRSetTargetLinearUnits( OGRSpatialReferenceH hSRS,
  *
  * @return the value to multiply by linear distances to transform them to
  * meters.
+ * @deprecated GDAL 2.3.0. Use GetLinearUnits(const char**) const.
  */
 
 double OGRSpatialReference::GetLinearUnits( char ** ppszName ) const
 
 {
-    return GetTargetLinearUnits( NULL, ppszName );
+    return GetTargetLinearUnits( nullptr, const_cast<const char**>(ppszName) );
+}
+
+/**
+ * \brief Fetch linear projection units.
+ *
+ * If no units are available, a value of "Meters" and 1.0 will be assumed.
+ * This method only checks directly under the PROJCS, GEOCCS or LOCAL_CS node
+ * for units.
+ *
+ * This method does the same thing as the C function OSRGetLinearUnits()
+ *
+ * @param ppszName a pointer to be updated with the pointer to the units name.
+ * The returned value remains internal to the OGRSpatialReference and should
+ * not be freed, or modified.  It may be invalidated on the next
+ * OGRSpatialReference call.
+ *
+ * @return the value to multiply by linear distances to transform them to
+ * meters.
+ * @since GDAL 2.3.0
+ */
+
+double OGRSpatialReference::GetLinearUnits( const char ** ppszName ) const
+
+{
+    return GetTargetLinearUnits( nullptr, ppszName );
 }
 
 /************************************************************************/
@@ -1297,7 +1505,7 @@ double OSRGetLinearUnits( OGRSpatialReferenceH hSRS, char ** ppszName )
 {
     VALIDATE_POINTER1( hSRS, "OSRGetLinearUnits", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->GetLinearUnits( ppszName );
+    return ToPointer(hSRS)->GetLinearUnits( const_cast<const char**>(ppszName) );
 }
 
 /************************************************************************/
@@ -1309,61 +1517,93 @@ double OSRGetLinearUnits( OGRSpatialReferenceH hSRS, char ** ppszName )
  *
  * If no units are available, a value of "Meters" and 1.0 will be assumed.
  *
- * This method does the same thing as the C function OSRGetTargetLinearUnits()/
+ * This method does the same thing as the C function OSRGetTargetLinearUnits()
  *
- * @param pszTargetKey the key to look on. i.e. "PROJCS" or "VERT_CS".  @param
- * ppszName a pointer to be updated with the pointer to the units name.  The
- * returned value remains internal to the OGRSpatialReference and should not
+ * @param pszTargetKey the key to look on. i.e. "PROJCS" or "VERT_CS". Might be
+ * NULL, in which case PROJCS will be implied (and if not found, LOCAL_CS,
+ * GEOCCS and VERT_CS are looked up)
+ * @param ppszName a pointer to be updated with the pointer to the units name.
+ * The returned value remains internal to the OGRSpatialReference and should not
  * be freed, or modified.  It may be invalidated on the next
- * OGRSpatialReference call.
+ * OGRSpatialReference call. ppszName can be set to NULL.
  *
  * @return the value to multiply by linear distances to transform them to
  * meters.
  *
  * @since OGR 1.9.0
+ * @deprecated GDAL 2.3.0. Use GetTargetLinearUnits(const char*, const char**) const.
  */
 
 double OGRSpatialReference::GetTargetLinearUnits( const char *pszTargetKey,
-                                                  char ** ppszName ) const
+                                                  const char ** ppszName ) const
 
 {
-    const OGR_SRSNode *poCS = NULL;
+    const OGR_SRSNode *poCS = nullptr;
 
-    if( pszTargetKey == NULL )
+    if( pszTargetKey == nullptr )
     {
         poCS = GetAttrNode( "PROJCS" );
 
-        if( poCS == NULL )
+        if( poCS == nullptr )
             poCS = GetAttrNode( "LOCAL_CS" );
-        if( poCS == NULL )
+        if( poCS == nullptr )
             poCS = GetAttrNode( "GEOCCS" );
-        if( poCS == NULL && IsVertical() )
+        if( poCS == nullptr && IsVertical() )
             poCS = GetAttrNode( "VERT_CS" );
     }
     else
         poCS = GetAttrNode( pszTargetKey );
 
-    if( ppszName != NULL )
-        *ppszName = (char*) "unknown";
+    if( ppszName != nullptr )
+        *ppszName = "unknown";
 
-    if( poCS == NULL )
+    if( poCS == nullptr )
         return 1.0;
 
     for( int iChild = 0; iChild < poCS->GetChildCount(); iChild++ )
     {
         const OGR_SRSNode *poChild = poCS->GetChild(iChild);
 
-        if( EQUAL(poChild->GetValue(),"UNIT")
+        if( EQUAL(poChild->GetValue(), "UNIT")
             && poChild->GetChildCount() >= 2 )
         {
-            if( ppszName != NULL )
-              *ppszName = const_cast<char *>(poChild->GetChild(0)->GetValue());
+            if( ppszName != nullptr )
+              *ppszName = poChild->GetChild(0)->GetValue();
 
             return CPLAtof( poChild->GetChild(1)->GetValue() );
         }
     }
 
     return 1.0;
+}
+
+/**
+ * \brief Fetch linear units for target.
+ *
+ * If no units are available, a value of "Meters" and 1.0 will be assumed.
+ *
+ * This method does the same thing as the C function OSRGetTargetLinearUnits()
+ *
+ * @param pszTargetKey the key to look on. i.e. "PROJCS" or "VERT_CS". Might be
+ * NULL, in which case PROJCS will be implied (and if not found, LOCAL_CS,
+ * GEOCCS and VERT_CS are looked up)
+ * @param ppszName a pointer to be updated with the pointer to the units name.
+ * The returned value remains internal to the OGRSpatialReference and should not
+ * be freed, or modified.  It may be invalidated on the next
+ * OGRSpatialReference call. ppszName can be set to NULL.
+ *
+ * @return the value to multiply by linear distances to transform them to
+ * meters.
+ *
+ * @since GDAL 2.3.0
+ */
+
+double OGRSpatialReference::GetTargetLinearUnits( const char *pszTargetKey,
+                                                  char ** ppszName ) const
+
+{
+    return GetTargetLinearUnits( pszTargetKey,
+                                 const_cast<const char**>(ppszName) );
 }
 
 /************************************************************************/
@@ -1384,8 +1624,8 @@ double OSRGetTargetLinearUnits( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRGetTargetLinearUnits", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
-        GetTargetLinearUnits( pszTargetKey, ppszName );
+    return ToPointer(hSRS)->
+        GetTargetLinearUnits( pszTargetKey, const_cast<const char**>(ppszName) );
 }
 
 /************************************************************************/
@@ -1411,25 +1651,54 @@ double OSRGetTargetLinearUnits( OGRSpatialReferenceH hSRS,
  *
  * @return the offset to the GEOGCS prime meridian from greenwich in decimal
  * degrees.
+ * @deprecated GDAL 2.3.0. Use GetPrimeMeridian(const char**) const.
+ */
+
+double OGRSpatialReference::GetPrimeMeridian( const char **ppszName ) const
+
+{
+    const OGR_SRSNode *poPRIMEM = GetAttrNode( "PRIMEM" );
+
+    if( poPRIMEM != nullptr && poPRIMEM->GetChildCount() >= 2
+        && CPLAtof(poPRIMEM->GetChild(1)->GetValue()) != 0.0 )
+    {
+        if( ppszName != nullptr )
+            *ppszName = poPRIMEM->GetChild(0)->GetValue();
+        return CPLAtof(poPRIMEM->GetChild(1)->GetValue());
+    }
+
+    if( ppszName != nullptr )
+        *ppszName = SRS_PM_GREENWICH;
+
+    return 0.0;
+}
+
+/**
+ * \brief Fetch prime meridian info.
+ *
+ * Returns the offset of the prime meridian from greenwich in degrees,
+ * and the prime meridian name (if requested).   If no PRIMEM value exists
+ * in the coordinate system definition a value of "Greenwich" and an
+ * offset of 0.0 is assumed.
+ *
+ * If the prime meridian name is returned, the pointer is to an internal
+ * copy of the name. It should not be freed, altered or depended on after
+ * the next OGR call.
+ *
+ * This method is the same as the C function OSRGetPrimeMeridian().
+ *
+ * @param ppszName return location for prime meridian name.  If NULL, name
+ * is not returned.
+ *
+ * @return the offset to the GEOGCS prime meridian from greenwich in decimal
+ * degrees.
+ * @since GDAL 2.3.0
  */
 
 double OGRSpatialReference::GetPrimeMeridian( char **ppszName ) const
 
 {
-    const OGR_SRSNode *poPRIMEM = GetAttrNode( "PRIMEM" );
-
-    if( poPRIMEM != NULL && poPRIMEM->GetChildCount() >= 2
-        && CPLAtof(poPRIMEM->GetChild(1)->GetValue()) != 0.0 )
-    {
-        if( ppszName != NULL )
-            *ppszName = const_cast<char *>(poPRIMEM->GetChild(0)->GetValue());
-        return CPLAtof(poPRIMEM->GetChild(1)->GetValue());
-    }
-
-    if( ppszName != NULL )
-        *ppszName = (char*) SRS_PM_GREENWICH;
-
-    return 0.0;
+    return GetPrimeMeridian( const_cast<const char**>(ppszName) );
 }
 
 /************************************************************************/
@@ -1446,8 +1715,8 @@ double OSRGetPrimeMeridian( OGRSpatialReferenceH hSRS, char **ppszName )
 {
     VALIDATE_POINTER1( hSRS, "OSRGetPrimeMeridian", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
-        GetPrimeMeridian( ppszName );
+    return ToPointer(hSRS)->
+        GetPrimeMeridian( const_cast<const char**>(ppszName) );
 }
 
 /************************************************************************/
@@ -1458,7 +1727,7 @@ double OSRGetPrimeMeridian( OGRSpatialReferenceH hSRS, char **ppszName )
  * \brief Set geographic coordinate system.
  *
  * This method is used to set the datum, ellipsoid, prime meridian and
- * angular units for a geographic coordinate system.  It can be used on it's
+ * angular units for a geographic coordinate system.  It can be used on its
  * own to establish a geographic spatial reference, or applied to a
  * projected coordinate system to establish the underlying geographic
  * coordinate system.
@@ -1529,13 +1798,13 @@ OGRSpatialReference::SetGeogCS( const char * pszGeogName,
 /*      Do we already have a GEOGCS?  If so, blow it away so it can     */
 /*      be properly replaced.                                           */
 /* -------------------------------------------------------------------- */
-    if( GetAttrNode( "GEOGCS" ) != NULL )
+    if( GetAttrNode( "GEOGCS" ) != nullptr )
     {
-        OGR_SRSNode *poCS = NULL;
+        OGR_SRSNode *poCS = nullptr;
 
-        if( EQUAL(GetRoot()->GetValue(),"GEOGCS") )
+        if( EQUAL(GetRoot()->GetValue(), "GEOGCS") )
             Clear();
-        else if( (poCS = GetAttrNode( "PROJCS" )) != NULL
+        else if( (poCS = GetAttrNode( "PROJCS" )) != nullptr
                  && poCS->FindChild( "GEOGCS" ) != -1 )
             poCS->DestroyChild( poCS->FindChild( "GEOGCS" ) );
         else
@@ -1545,19 +1814,19 @@ OGRSpatialReference::SetGeogCS( const char * pszGeogName,
 /* -------------------------------------------------------------------- */
 /*      Set defaults for various parameters.                            */
 /* -------------------------------------------------------------------- */
-    if( pszGeogName == NULL )
+    if( pszGeogName == nullptr )
         pszGeogName = "unnamed";
 
-    if( pszPMName == NULL )
+    if( pszPMName == nullptr )
         pszPMName = SRS_PM_GREENWICH;
 
-    if( pszDatumName == NULL )
+    if( pszDatumName == nullptr )
         pszDatumName = "unknown";
 
-    if( pszSpheroidName == NULL )
+    if( pszSpheroidName == nullptr )
         pszSpheroidName = "unnamed";
 
-    if( pszAngularUnits == NULL )
+    if( pszAngularUnits == nullptr )
     {
         pszAngularUnits = SRS_UA_DEGREE;
         dfConvertToRadians = CPLAtof(SRS_UA_DEGREE_CONV);
@@ -1575,7 +1844,7 @@ OGRSpatialReference::SetGeogCS( const char * pszGeogName,
     OGR_SRSNode *poSpheroid = new OGR_SRSNode( "SPHEROID" );
     poSpheroid->AddChild( new OGR_SRSNode( pszSpheroidName ) );
 
-    char szValue[128];
+    char szValue[128] = {};
     OGRsnPrintDouble( szValue, sizeof(szValue), dfSemiMajor );
     poSpheroid->AddChild( new OGR_SRSNode(szValue) );
 
@@ -1620,7 +1889,7 @@ OGRSpatialReference::SetGeogCS( const char * pszGeogName,
 /* -------------------------------------------------------------------- */
 /*      Attach below the PROJCS if there is one, or make this the root. */
 /* -------------------------------------------------------------------- */
-    if( GetRoot() != NULL && EQUAL(GetRoot()->GetValue(),"PROJCS") )
+    if( GetRoot() != nullptr && EQUAL(GetRoot()->GetValue(), "PROJCS") )
         poRoot->InsertChild( poGeogCS, 1 );
     else
         SetRoot( poGeogCS );
@@ -1649,7 +1918,7 @@ OGRErr OSRSetGeogCS( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetGeogCS", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetGeogCS(
+    return ToPointer(hSRS)->SetGeogCS(
         pszGeogName, pszDatumName,
         pszSpheroidName, dfSemiMajor, dfInvFlattening,
         pszPMName, dfPMOffset, pszAngularUnits, dfConvertToRadians );
@@ -1673,7 +1942,7 @@ OGRErr OSRSetGeogCS( OGRSpatialReferenceH hSRS,
  * <li> "WGS72": same as "EPSG:4322" but has no dependence on EPSG data files.
  * <li> "NAD27": same as "EPSG:4267" but has no dependence on EPSG data files.
  * <li> "NAD83": same as "EPSG:4269" but has no dependence on EPSG data files.
- * <li> "EPSG:n": same as doing an ImportFromEPSG(n).
+ * <li> "EPSG:n": where n is the code a Geographic coordinate reference system.
  * </ul>
  *
  * @param pszName name of well known geographic coordinate system.
@@ -1720,22 +1989,40 @@ OGRErr OGRSpatialReference::SetWellKnownGeogCS( const char * pszName )
 /* -------------------------------------------------------------------- */
 /*      Check for simple names.                                         */
 /* -------------------------------------------------------------------- */
-    char *pszWKT = NULL;
+    const char *pszWKT = nullptr;
 
-    if( EQUAL(pszName, "WGS84") || EQUAL(pszName,"CRS84") || EQUAL(pszName,"CRS:84") )
-        pszWKT = (char* ) SRS_WKT_WGS84;
+    if( EQUAL(pszName, "WGS84") || EQUAL(pszName, "CRS84") ||
+        EQUAL(pszName, "CRS:84") )
+        pszWKT = SRS_WKT_WGS84;
 
     else if( EQUAL(pszName, "WGS72") )
-        pszWKT = const_cast<char *>(
-            "GEOGCS[\"WGS 72\",DATUM[\"WGS_1972\",SPHEROID[\"WGS 72\",6378135,298.26,AUTHORITY[\"EPSG\",\"7043\"]],TOWGS84[0,0,4.5,0,0,0.554,0.2263],AUTHORITY[\"EPSG\",\"6322\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4322\"]]" );
+        pszWKT =
+            "GEOGCS[\"WGS 72\",DATUM[\"WGS_1972\","
+            "SPHEROID[\"WGS 72\",6378135,298.26,AUTHORITY[\"EPSG\",\"7043\"]],"
+            "TOWGS84[0,0,4.5,0,0,0.554,0.2263],AUTHORITY[\"EPSG\",\"6322\"]],"
+            "PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],"
+            "UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],"
+            "AUTHORITY[\"EPSG\",\"4322\"]]";
 
-    else if( EQUAL(pszName, "NAD27") || EQUAL(pszName, "CRS27") || EQUAL(pszName,"CRS:27") )
-      pszWKT = const_cast<char *>(
-          "GEOGCS[\"NAD27\",DATUM[\"North_American_Datum_1927\",SPHEROID[\"Clarke 1866\",6378206.4,294.9786982138982,AUTHORITY[\"EPSG\",\"7008\"]],AUTHORITY[\"EPSG\",\"6267\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4267\"]]" );
+    else if( EQUAL(pszName, "NAD27") || EQUAL(pszName, "CRS27") ||
+             EQUAL(pszName, "CRS:27") )
+        pszWKT =
+            "GEOGCS[\"NAD27\",DATUM[\"North_American_Datum_1927\","
+            "SPHEROID[\"Clarke 1866\",6378206.4,294.9786982138982,"
+            "AUTHORITY[\"EPSG\",\"7008\"]],AUTHORITY[\"EPSG\",\"6267\"]],"
+            "PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],"
+            "UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],"
+            "AUTHORITY[\"EPSG\",\"4267\"]]";
 
-    else if( EQUAL(pszName, "NAD83") || EQUAL(pszName,"CRS83") || EQUAL(pszName,"CRS:83") )
-      pszWKT = const_cast<char *>(
-          "GEOGCS[\"NAD83\",DATUM[\"North_American_Datum_1983\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",\"6269\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4269\"]]" );
+    else if( EQUAL(pszName, "NAD83") || EQUAL(pszName, "CRS83") ||
+             EQUAL(pszName, "CRS:83") )
+        pszWKT =
+            "GEOGCS[\"NAD83\",DATUM[\"North_American_Datum_1983\","
+            "SPHEROID[\"GRS 1980\",6378137,298.257222101,"
+            "AUTHORITY[\"EPSG\",\"7019\"]],TOWGS84[0,0,0,0,0,0,0],"
+            "AUTHORITY[\"EPSG\",\"6269\"]],PRIMEM[\"Greenwich\",0,"
+            "AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,"
+            "AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4269\"]]";
 
     else
         return OGRERR_FAILURE;
@@ -1744,7 +2031,7 @@ OGRErr OGRSpatialReference::SetWellKnownGeogCS( const char * pszName )
 /*      Import the WKT                                                  */
 /* -------------------------------------------------------------------- */
     OGRSpatialReference oSRS2;
-    const OGRErr eErr = oSRS2.importFromWkt( &pszWKT );
+    const OGRErr eErr = oSRS2.importFromWkt( pszWKT );
     if( eErr != OGRERR_NONE )
         return eErr;
 
@@ -1768,7 +2055,7 @@ OGRErr OSRSetWellKnownGeogCS( OGRSpatialReferenceH hSRS, const char *pszName )
 {
     VALIDATE_POINTER1( hSRS, "OSRSetWellKnownGeogCS", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+    return ToPointer(hSRS)->
         SetWellKnownGeogCS( pszName );
 }
 
@@ -1787,7 +2074,6 @@ OGRErr OSRSetWellKnownGeogCS( OGRSpatialReferenceH hSRS, const char *pszName )
  *
  * @return OGRERR_NONE on success or an error code.
  */
-
 
 OGRErr OGRSpatialReference::CopyGeogCSFrom(
     const OGRSpatialReference * poSrcSRS )
@@ -1809,7 +2095,7 @@ OGRErr OGRSpatialReference::CopyGeogCSFrom(
         const OGR_SRSNode *poDatum = poSrcSRS->GetAttrNode( "DATUM" );
         const OGR_SRSNode *poPrimeM = poSrcSRS->GetAttrNode( "PRIMEM" );
 
-        if( poDatum == NULL || poPrimeM == NULL )
+        if( poDatum == nullptr || poPrimeM == nullptr )
             return OGRERR_FAILURE;
 
         poRoot->InsertChild( poDatum->Clone(), 1 );
@@ -1822,13 +2108,13 @@ OGRErr OGRSpatialReference::CopyGeogCSFrom(
 /*      Do we already have a GEOGCS?  If so, blow it away so it can     */
 /*      be properly replaced.                                           */
 /* -------------------------------------------------------------------- */
-    if( GetAttrNode( "GEOGCS" ) != NULL )
+    if( GetAttrNode( "GEOGCS" ) != nullptr )
     {
-        OGR_SRSNode *poPROJCS = NULL;
+        OGR_SRSNode *poPROJCS = nullptr;
 
-        if( EQUAL(GetRoot()->GetValue(),"GEOGCS") )
+        if( EQUAL(GetRoot()->GetValue(), "GEOGCS") )
             Clear();
-        else if( (poPROJCS = GetAttrNode( "PROJCS" )) != NULL
+        else if( (poPROJCS = GetAttrNode( "PROJCS" )) != nullptr
                  && poPROJCS->FindChild( "GEOGCS" ) != -1 )
             poPROJCS->DestroyChild( poPROJCS->FindChild( "GEOGCS" ) );
         else
@@ -1838,14 +2124,14 @@ OGRErr OGRSpatialReference::CopyGeogCSFrom(
 /* -------------------------------------------------------------------- */
 /*      Find the GEOGCS node on the source.                             */
 /* -------------------------------------------------------------------- */
-    const OGR_SRSNode  *poGeogCS = poSrcSRS->GetAttrNode( "GEOGCS" );
-    if( poGeogCS == NULL )
+    const OGR_SRSNode *poGeogCS = poSrcSRS->GetAttrNode( "GEOGCS" );
+    if( poGeogCS == nullptr )
         return OGRERR_FAILURE;
 
 /* -------------------------------------------------------------------- */
 /*      Attach below the PROJCS if there is one, or make this the root. */
 /* -------------------------------------------------------------------- */
-    if( GetRoot() != NULL && EQUAL(GetRoot()->GetValue(),"PROJCS") )
+    if( GetRoot() != nullptr && EQUAL(GetRoot()->GetValue(), "PROJCS") )
         poRoot->InsertChild( poGeogCS->Clone(), 1 );
     else
         SetRoot( poGeogCS->Clone() );
@@ -1869,8 +2155,7 @@ OGRErr OSRCopyGeogCSFrom( OGRSpatialReferenceH hSRS,
     VALIDATE_POINTER1( hSRS, "OSRCopyGeogCSFrom", OGRERR_FAILURE );
     VALIDATE_POINTER1( hSrcSRS, "OSRCopyGeogCSFrom", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->CopyGeogCSFrom(
-        reinterpret_cast<const OGRSpatialReference *>(hSrcSRS) );
+    return ToPointer(hSRS)->CopyGeogCSFrom(ToPointer(hSrcSRS) );
 }
 
 /************************************************************************/
@@ -1903,7 +2188,7 @@ OGRErr OSRCopyGeogCSFrom( OGRSpatialReferenceH hSRS,
  * XML and perhaps a simplified "minilanguage" for indicating common UTM and
  * State Plane definitions.
  *
- * This method is intended to be flexible, but by it's nature it is
+ * This method is intended to be flexible, but by its nature it is
  * imprecise as it must guess information about the format intended.  When
  * possible applications should call the specific method appropriate if the
  * input is known to be in a particular format.
@@ -1938,7 +2223,7 @@ OGRErr OGRSpatialReference::SetFromUserInput( const char * pszDefinition )
         || STARTS_WITH_CI(pszDefinition, "VERT_CS")
         || STARTS_WITH_CI(pszDefinition, "LOCAL_CS") )
     {
-        OGRErr err = importFromWkt( (char **) &pszDefinition );
+        OGRErr err = importFromWkt( pszDefinition );
         if( err == OGRERR_NONE && bESRI )
             err = morphFromESRI();
 
@@ -1953,17 +2238,17 @@ OGRErr OGRSpatialReference::SetFromUserInput( const char * pszDefinition )
         if( STARTS_WITH_CI(pszDefinition, "EPSG:") )
             eStatus = importFromEPSG( atoi(pszDefinition+5) );
 
-        else /* if( STARTS_WITH_CI(pszDefinition, "EPSGA:") ) */
+        else // if( STARTS_WITH_CI(pszDefinition, "EPSGA:") )
             eStatus = importFromEPSGA( atoi(pszDefinition+6) );
 
         // Do we want to turn this into a compound definition
         // with a vertical datum?
-        if( eStatus == OGRERR_NONE && strchr( pszDefinition, '+' ) != NULL )
+        if( eStatus == OGRERR_NONE && strchr( pszDefinition, '+' ) != nullptr )
         {
             OGRSpatialReference oVertSRS;
 
             eStatus = oVertSRS.importFromEPSG(
-                atoi(strchr(pszDefinition,'+')+1) );
+                atoi(strchr(pszDefinition, '+') + 1) );
             if( eStatus == OGRERR_NONE )
             {
                 OGR_SRSNode *poHorizSRS = GetRoot()->Clone();
@@ -2006,10 +2291,10 @@ OGRErr OGRSpatialReference::SetFromUserInput( const char * pszDefinition )
         return SetWellKnownGeogCS( pszDefinition );
 
     if( STARTS_WITH_CI(pszDefinition, "DICT:")
-        && strstr(pszDefinition,",") )
+        && strstr(pszDefinition, ",") )
     {
         char *pszFile = CPLStrdup(pszDefinition+5);
-        char *pszCode = strstr(pszFile,",") + 1;
+        char *pszCode = strstr(pszFile, ",") + 1;
 
         pszCode[-1] = '\0';
 
@@ -2022,7 +2307,7 @@ OGRErr OGRSpatialReference::SetFromUserInput( const char * pszDefinition )
         return err;
     }
 
-    if( EQUAL(pszDefinition,"NAD27")
+    if( EQUAL(pszDefinition, "NAD27")
         || EQUAL(pszDefinition,"NAD83")
         || EQUAL(pszDefinition,"WGS84")
         || EQUAL(pszDefinition,"WGS72") )
@@ -2031,13 +2316,14 @@ OGRErr OGRSpatialReference::SetFromUserInput( const char * pszDefinition )
         return SetWellKnownGeogCS( pszDefinition );
     }
 
-    if( strstr(pszDefinition,"+proj") != NULL
-             || strstr(pszDefinition,"+init") != NULL )
+    if( strstr(pszDefinition, "+proj") != nullptr
+             || strstr(pszDefinition, "+init") != nullptr )
         return importFromProj4( pszDefinition );
 
     if( STARTS_WITH_CI(pszDefinition, "IGNF:") )
     {
-        char* pszProj4Str = (char*) CPLMalloc(6 + strlen(pszDefinition) + 1);
+        char* pszProj4Str =
+            static_cast<char *>(CPLMalloc(6 + strlen(pszDefinition) + 1));
         strcpy(pszProj4Str, "+init=");
         strcat(pszProj4Str, pszDefinition);
         const OGRErr err = importFromProj4( pszProj4Str );
@@ -2051,7 +2337,7 @@ OGRErr OGRSpatialReference::SetFromUserInput( const char * pszDefinition )
         return importFromUrl (pszDefinition);
     }
 
-    if( EQUAL(pszDefinition,"osgb:BNG") )
+    if( EQUAL(pszDefinition, "osgb:BNG") )
     {
         return importFromEPSG(27700);
     }
@@ -2059,8 +2345,9 @@ OGRErr OGRSpatialReference::SetFromUserInput( const char * pszDefinition )
 /* -------------------------------------------------------------------- */
 /*      Try to open it as a file.                                       */
 /* -------------------------------------------------------------------- */
+    CPLConfigOptionSetter oSetter("CPL_ALLOW_VSISTDIN", "NO", true);
     VSILFILE * const fp = VSIFOpenL( pszDefinition, "rt" );
-    if( fp == NULL )
+    if( fp == nullptr )
         return OGRERR_CORRUPT_DATA;
 
     const size_t nBufMax = 100000;
@@ -2071,8 +2358,8 @@ OGRErr OGRSpatialReference::SetFromUserInput( const char * pszDefinition )
     if( nBytes == nBufMax-1 )
     {
         CPLDebug( "OGR",
-                  "OGRSpatialReference::SetFromUserInput(%s), opened file\n"
-                  "but it is to large for our generous buffer.  Is it really\n"
+                  "OGRSpatialReference::SetFromUserInput(%s), opened file "
+                  "but it is to large for our generous buffer.  Is it really "
                   "just a WKT definition?", pszDefinition );
         CPLFree( pszBuffer );
         return OGRERR_FAILURE;
@@ -2087,10 +2374,10 @@ OGRErr OGRSpatialReference::SetFromUserInput( const char * pszDefinition )
     OGRErr err = OGRERR_NONE;
     if( pszBufPtr[0] == '<' )
         err = importFromXML( pszBufPtr );
-    else if( (strstr(pszBuffer,"+proj") != NULL
-              || strstr(pszBuffer,"+init") != NULL)
-             && (strstr(pszBuffer,"EXTENSION") == NULL
-                 && strstr(pszBuffer,"extension") == NULL) )
+    else if( (strstr(pszBuffer, "+proj") != nullptr
+              || strstr(pszBuffer, "+init") != nullptr)
+             && (strstr(pszBuffer, "EXTENSION") == nullptr
+                 && strstr(pszBuffer, "extension") == nullptr) )
         err = importFromProj4( pszBufPtr );
     else
     {
@@ -2100,8 +2387,8 @@ OGRErr OGRSpatialReference::SetFromUserInput( const char * pszDefinition )
             pszBufPtr += 6;
         }
 
-        /* coverity[tainted_data] */
-        err = importFromWkt( &pszBufPtr );
+        // coverity[tainted_data]
+        err = importFromWkt( pszBufPtr );
         if( err == OGRERR_NONE && bESRI )
             err = morphFromESRI();
     }
@@ -2126,9 +2413,8 @@ OGRErr CPL_STDCALL OSRSetFromUserInput( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetFromUserInput", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetFromUserInput( pszDef );
+    return ToPointer(hSRS)->SetFromUserInput( pszDef );
 }
-
 
 /************************************************************************/
 /*                          ImportFromUrl()                             */
@@ -2169,7 +2455,7 @@ OGRErr OGRSpatialReference::importFromUrl( const char * pszUrl )
     char *apszOptions[] = {
         const_cast<char *>(pszHeaders),
         const_cast<char *>(pszTimeout),
-        NULL
+        nullptr
     };
 
     CPLHTTPResult *psResult = CPLHTTPFetch( pszUrl, apszOptions );
@@ -2178,12 +2464,12 @@ OGRErr OGRSpatialReference::importFromUrl( const char * pszUrl )
 /*      Try to handle errors.                                           */
 /* -------------------------------------------------------------------- */
 
-    if ( psResult == NULL)
+    if( psResult == nullptr )
         return OGRERR_FAILURE;
     if( psResult->nDataLen == 0
-        || CPLGetLastErrorNo() != 0 || psResult->pabyData == NULL  )
+        || CPLGetLastErrorNo() != 0 || psResult->pabyData == nullptr )
     {
-        if (CPLGetLastErrorNo() == 0)
+        if( CPLGetLastErrorNo() == 0 )
         {
             CPLError( CE_Failure, CPLE_AppDefined,
                     "No data was returned from the given URL" );
@@ -2192,15 +2478,17 @@ OGRErr OGRSpatialReference::importFromUrl( const char * pszUrl )
         return OGRERR_FAILURE;
     }
 
-    if (psResult->nStatus != 0)
+    if( psResult->nStatus != 0 )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
-                  "Curl reports error: %d: %s", psResult->nStatus, psResult->pszErrBuf );
+                  "Curl reports error: %d: %s",
+                  psResult->nStatus, psResult->pszErrBuf );
         CPLHTTPDestroyResult( psResult );
         return OGRERR_FAILURE;
     }
 
-    if( STARTS_WITH_CI((const char*) psResult->pabyData, "http://") )
+    const char* pszData = reinterpret_cast<const char*>(psResult->pabyData);
+    if( STARTS_WITH_CI(pszData, "http://") )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "The data that was downloaded also starts with 'http://' "
@@ -2209,7 +2497,7 @@ OGRErr OGRSpatialReference::importFromUrl( const char * pszUrl )
         CPLHTTPDestroyResult( psResult );
         return OGRERR_FAILURE;
     }
-    if( OGRERR_NONE != SetFromUserInput( (const char *) psResult->pabyData )) {
+    if( OGRERR_NONE != SetFromUserInput(pszData)) {
         CPLHTTPDestroyResult( psResult );
         return OGRERR_FAILURE;
     }
@@ -2232,7 +2520,8 @@ OGRErr OSRImportFromUrl( OGRSpatialReferenceH hSRS, const char *pszUrl )
 {
     VALIDATE_POINTER1( hSRS, "OSRImportFromUrl", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->importFromUrl( pszUrl );
+    return
+        ToPointer(hSRS)->importFromUrl( pszUrl );
 }
 
 /************************************************************************/
@@ -2244,7 +2533,7 @@ OGRErr OGRSpatialReference::importFromURNPart(const char* pszAuthority,
 {
 /* -------------------------------------------------------------------- */
 /*      Is this an EPSG code? Note that we import it with EPSG          */
-/*      preferred axis ordering for geographic coordinate systems!      */
+/*      preferred axis ordering for geographic coordinate systems.      */
 /* -------------------------------------------------------------------- */
     if( STARTS_WITH_CI(pszAuthority, "EPSG") )
         return importFromEPSGA( atoi(pszCode) );
@@ -2272,7 +2561,7 @@ OGRErr OGRSpatialReference::importFromURNPart(const char* pszAuthority,
         return SetWellKnownGeogCS( pszCode );
     else if( STARTS_WITH_CI(pszCode, "CRS27") )
         return SetWellKnownGeogCS( pszCode );
-    else if( STARTS_WITH_CI(pszCode, "84") ) /* urn:ogc:def:crs:OGC:2:84 */
+    else if( STARTS_WITH_CI(pszCode, "84") )  // urn:ogc:def:crs:OGC:2:84
         return SetWellKnownGeogCS( "CRS84" );
 
 /* -------------------------------------------------------------------- */
@@ -2281,13 +2570,12 @@ OGRErr OGRSpatialReference::importFromURNPart(const char* pszAuthority,
 /* -------------------------------------------------------------------- */
     else if( STARTS_WITH_CI(pszCode, "AUTO") )
     {
-      char szWMSAuto[100] = { '\0' };
+        char szWMSAuto[100] = { '\0' };
 
         if( strlen(pszCode) > sizeof(szWMSAuto)-2 )
             return OGRERR_FAILURE;
 
-        strcpy( szWMSAuto, "AUTO:" );
-        strcpy( szWMSAuto + 5, pszCode + 4 );
+        snprintf( szWMSAuto, sizeof(szWMSAuto), "AUTO:%s", pszCode + 4 );
         for( int i = 5; szWMSAuto[i] != '\0'; i++ )
         {
             if( szWMSAuto[i] == ':' )
@@ -2332,7 +2620,7 @@ OGRErr OGRSpatialReference::importFromURNPart(const char* pszAuthority,
 OGRErr OGRSpatialReference::importFromURN( const char *pszURN )
 
 {
-    const char *pszCur = NULL;
+    const char *pszCur = nullptr;
 
     if( STARTS_WITH_CI(pszURN, "urn:ogc:def:crs:") )
         pszCur = pszURN + 16;
@@ -2354,11 +2642,7 @@ OGRErr OGRSpatialReference::importFromURN( const char *pszURN )
 /* -------------------------------------------------------------------- */
 /*      Clear any existing definition.                                  */
 /* -------------------------------------------------------------------- */
-    if( GetRoot() != NULL )
-    {
-        delete poRoot;
-        poRoot = NULL;
-    }
+    Clear();
 
 /* -------------------------------------------------------------------- */
 /*      Find code (ignoring version) out of string like:                */
@@ -2389,12 +2673,12 @@ OGRErr OGRSpatialReference::importFromURN( const char *pszURN )
     const char *pszCode = pszCur;
 
     const char* pszComma = strchr(pszCur, ',');
-    if (pszComma == NULL)
+    if( pszComma == nullptr )
         return importFromURNPart(pszAuthority, pszCode, pszURN);
 
-    /* There's a second part with the vertical SRS */
+    // There's a second part with the vertical SRS.
     pszCur = pszComma + 1;
-    if (!STARTS_WITH(pszCur, "crs:"))
+    if( !STARTS_WITH(pszCur, "crs:") )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "URN %s not a supported format.", pszURN );
@@ -2482,7 +2766,7 @@ OGRErr OGRSpatialReference::importFromURN( const char *pszURN )
 OGRErr OGRSpatialReference::importFromCRSURL( const char *pszURL )
 
 {
-    const char *pszCur = NULL;
+    const char *pszCur = nullptr;
 
     if( STARTS_WITH_CI(pszURL, "http://opengis.net/def/crs") )
         pszCur = pszURL + 26;
@@ -2497,14 +2781,16 @@ OGRErr OGRSpatialReference::importFromCRSURL( const char *pszURL )
         return OGRERR_FAILURE;
     }
 
+    if( *pszCur == '\0' )
+    {
+        CPLError(CE_Failure, CPLE_AppDefined, "URL %s malformed.", pszURL);
+        return OGRERR_FAILURE;
+    }
+
 /* -------------------------------------------------------------------- */
 /*      Clear any existing definition.                                  */
 /* -------------------------------------------------------------------- */
-    if( GetRoot() != NULL )
-    {
-        delete poRoot;
-        poRoot = NULL;
-    }
+    Clear();
 
     if( STARTS_WITH_CI(pszCur, "-compound?1=") )
     {
@@ -2515,26 +2801,26 @@ OGRErr OGRSpatialReference::importFromCRSURL( const char *pszURL )
 /* -------------------------------------------------------------------- */
         pszCur += 12;
 
-        // extract each component CRS URL
+        // Extract each component CRS URL.
         int iComponentUrl = 2;
 
         CPLString osName = "";
         Clear();
 
-        while (iComponentUrl != -1)
+        while( iComponentUrl != -1 )
         {
-            char searchStr[5];
+            char searchStr[15] = {};
             snprintf(searchStr, sizeof(searchStr), "&%d=", iComponentUrl);
 
             const char* pszUrlEnd = strstr(pszCur, searchStr);
 
-            // figure out the next component URL
-            char* pszComponentUrl;
+            // Figure out the next component URL.
+            char* pszComponentUrl = nullptr;
 
             if( pszUrlEnd )
             {
                 size_t nLen = pszUrlEnd - pszCur;
-                pszComponentUrl = (char*) CPLMalloc(nLen + 1);
+                pszComponentUrl = static_cast<char *>(CPLMalloc(nLen + 1));
                 strncpy(pszComponentUrl, pszCur, nLen);
                 pszComponentUrl[nLen] = '\0';
 
@@ -2561,7 +2847,7 @@ OGRErr OGRSpatialReference::importFromCRSURL( const char *pszURL )
             OGRErr eStatus = oComponentSRS.importFromCRSURL( pszComponentUrl );
 
             CPLFree(pszComponentUrl);
-            pszComponentUrl = NULL;
+            pszComponentUrl = nullptr;
 
             if( eStatus == OGRERR_NONE )
             {
@@ -2655,7 +2941,6 @@ OGRErr OGRSpatialReference::importFromWMSAUTO( const char * pszDefinition )
         nUnitsId = 9001;
         dfRefLong = CPLAtof(papszTokens[1]);
         dfRefLat = CPLAtof(papszTokens[2]);
-
     }
     else if( CSLCount(papszTokens) == 2 && atoi(papszTokens[0]) == 42005 )
     {
@@ -2674,7 +2959,7 @@ OGRErr OGRSpatialReference::importFromWMSAUTO( const char * pszDefinition )
     }
 
     CSLDestroy( papszTokens );
-    papszTokens = NULL;
+    papszTokens = nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Build coordsys.                                                 */
@@ -2684,7 +2969,7 @@ OGRErr OGRSpatialReference::importFromWMSAUTO( const char * pszDefinition )
     switch( nProjId )
     {
       case 42001: // Auto UTM
-        SetUTM( (int) floor( (dfRefLong + 180.0) / 6.0 ) + 1,
+        SetUTM( static_cast<int>(floor( (dfRefLong + 180.0) / 6.0 )) + 1,
                 dfRefLat >= 0.0 );
         break;
 
@@ -2768,15 +3053,15 @@ double OGRSpatialReference::GetSemiMajor( OGRErr * pnErr ) const
 {
     const OGR_SRSNode *poSpheroid = GetAttrNode( "SPHEROID" );
 
-    if( pnErr != NULL )
+    if( pnErr != nullptr )
         *pnErr = OGRERR_NONE;
 
-    if( poSpheroid != NULL && poSpheroid->GetChildCount() >= 3 )
+    if( poSpheroid != nullptr && poSpheroid->GetChildCount() >= 3 )
     {
         return CPLAtof( poSpheroid->GetChild(1)->GetValue() );
     }
 
-    if( pnErr != NULL )
+    if( pnErr != nullptr )
         *pnErr = OGRERR_FAILURE;
 
     return SRS_WGS84_SEMIMAJOR;
@@ -2796,7 +3081,7 @@ double OSRGetSemiMajor( OGRSpatialReferenceH hSRS, OGRErr *pnErr )
 {
     VALIDATE_POINTER1( hSRS, "OSRGetSemiMajor", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->GetSemiMajor( pnErr );
+    return ToPointer(hSRS)->GetSemiMajor( pnErr );
 }
 
 /************************************************************************/
@@ -2819,15 +3104,15 @@ double OGRSpatialReference::GetInvFlattening( OGRErr * pnErr ) const
 {
     const OGR_SRSNode *poSpheroid = GetAttrNode( "SPHEROID" );
 
-    if( pnErr != NULL )
+    if( pnErr != nullptr )
         *pnErr = OGRERR_NONE;
 
-    if( poSpheroid != NULL && poSpheroid->GetChildCount() >= 3 )
+    if( poSpheroid != nullptr && poSpheroid->GetChildCount() >= 3 )
     {
         return CPLAtof( poSpheroid->GetChild(2)->GetValue() );
     }
 
-    if( pnErr != NULL )
+    if( pnErr != nullptr )
         *pnErr = OGRERR_FAILURE;
 
     return SRS_WGS84_INVFLATTENING;
@@ -2847,7 +3132,63 @@ double OSRGetInvFlattening( OGRSpatialReferenceH hSRS, OGRErr *pnErr )
 {
     VALIDATE_POINTER1( hSRS, "OSRGetInvFlattening", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->GetInvFlattening( pnErr );
+    return ToPointer(hSRS)->GetInvFlattening( pnErr );
+}
+
+/************************************************************************/
+/*                           GetEccentricity()                          */
+/************************************************************************/
+
+/**
+ * \brief Get spheroid eccentricity
+ *
+ * @return eccentricity (or -1 in case of error)
+ * @since GDAL 2.3
+ */
+
+double OGRSpatialReference::GetEccentricity() const
+
+{
+    OGRErr eErr = OGRERR_NONE;
+    const double dfInvFlattening = GetInvFlattening(&eErr);
+    if( eErr != OGRERR_NONE )
+    {
+        return -1.0;
+    }
+    if( dfInvFlattening == 0.0 )
+        return 0.0;
+    if( dfInvFlattening < 0.5 )
+        return -1.0;
+    return sqrt(2.0 / dfInvFlattening -
+                    1.0 / (dfInvFlattening * dfInvFlattening));
+}
+
+/************************************************************************/
+/*                      GetSquaredEccentricity()                        */
+/************************************************************************/
+
+/**
+ * \brief Get spheroid squared eccentricity
+ *
+ * @return squared eccentricity (or -1 in case of error)
+ * @since GDAL 2.3
+ */
+
+double OGRSpatialReference::GetSquaredEccentricity() const
+
+{
+    OGRErr eErr = OGRERR_NONE;
+    const double dfInvFlattening = GetInvFlattening(&eErr);
+    if( eErr != OGRERR_NONE )
+    {
+        return -1.0;
+    }
+    if( dfInvFlattening == 0.0 )
+        return 0.0;
+    if( dfInvFlattening < 0.5 )
+        return -1.0;
+    return 2.0 / dfInvFlattening -
+                    1.0 / (dfInvFlattening * dfInvFlattening);
 }
 
 /************************************************************************/
@@ -2888,7 +3229,7 @@ double OSRGetSemiMinor( OGRSpatialReferenceH hSRS, OGRErr *pnErr )
 {
     VALIDATE_POINTER1( hSRS, "OSRGetSemiMinor", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->GetSemiMinor( pnErr );
+    return ToPointer(hSRS)->GetSemiMinor( pnErr );
 }
 
 /************************************************************************/
@@ -2913,11 +3254,11 @@ OGRErr OGRSpatialReference::SetLocalCS( const char * pszName )
 {
     const OGR_SRSNode * const poCS = GetAttrNode( "LOCAL_CS" );
 
-    if( poCS == NULL && GetRoot() != NULL )
+    if( poCS == nullptr && GetRoot() != nullptr )
     {
         CPLDebug( "OGR",
-                  "OGRSpatialReference::SetLocalCS(%s) failed.\n"
-                  "It appears an incompatible root node (%s) already exists.\n",
+                  "OGRSpatialReference::SetLocalCS(%s) failed.  "
+                  "It appears an incompatible root node (%s) already exists.",
                   pszName, GetRoot()->GetValue() );
         return OGRERR_FAILURE;
     }
@@ -2940,7 +3281,7 @@ OGRErr OSRSetLocalCS( OGRSpatialReferenceH hSRS, const char * pszName )
 {
     VALIDATE_POINTER1( hSRS, "OSRSetLocalCS", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetLocalCS( pszName );
+    return ToPointer(hSRS)->SetLocalCS( pszName );
 }
 
 /************************************************************************/
@@ -2967,31 +3308,31 @@ OGRErr OSRSetLocalCS( OGRSpatialReferenceH hSRS, const char * pszName )
 OGRErr OGRSpatialReference::SetGeocCS( const char * pszName )
 
 {
-    OGR_SRSNode *poGeogCS = NULL;
+    OGR_SRSNode *poGeogCS = nullptr;
     OGR_SRSNode *poGeocCS = GetAttrNode( "GEOCCS" );
 
-    if( poRoot != NULL && EQUAL(poRoot->GetValue(),"GEOGCS") )
+    if( poRoot != nullptr && EQUAL(poRoot->GetValue(),"GEOGCS") )
     {
         poGeogCS = poRoot;
-        poRoot = NULL;
+        poRoot = nullptr;
     }
 
-    if( poGeocCS == NULL && GetRoot() != NULL )
+    if( poGeocCS == nullptr && GetRoot() != nullptr )
     {
         CPLDebug( "OGR",
-                  "OGRSpatialReference::SetGeocCS(%s) failed.\n"
-                  "It appears an incompatible root node (%s) already exists.\n",
+                  "OGRSpatialReference::SetGeocCS(%s) failed.  "
+                  "It appears an incompatible root node (%s) already exists.",
                   pszName, GetRoot()->GetValue() );
         return OGRERR_FAILURE;
     }
 
     SetNode( "GEOCCS", pszName );
 
-    if( poGeogCS != NULL )
+    if( poGeogCS != nullptr )
     {
         OGR_SRSNode *poDatum = poGeogCS->GetNode( "DATUM" );
         OGR_SRSNode *poPRIMEM = poGeogCS->GetNode( "PRIMEM" );
-        if ( poRoot != NULL && poDatum != NULL && poPRIMEM != NULL )
+        if( poRoot != nullptr && poDatum != nullptr && poPRIMEM != nullptr )
         {
             poRoot->InsertChild( poDatum->Clone(), 1 );
             poRoot->InsertChild( poPRIMEM->Clone(), 2 );
@@ -3018,7 +3359,7 @@ OGRErr OSRSetGeocCS( OGRSpatialReferenceH hSRS, const char * pszName )
 {
     VALIDATE_POINTER1( hSRS, "OSRSetGeocCS", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetGeocCS( pszName );
+    return ToPointer(hSRS)->SetGeocCS( pszName );
 }
 
 /************************************************************************/
@@ -3063,7 +3404,7 @@ OGRErr OGRSpatialReference::SetVertCS( const char * pszVertCSName,
         poRoot = poNewRoot;
     }
 
-    else if( GetAttrNode( "VERT_CS" ) == NULL )
+    else if( GetAttrNode( "VERT_CS" ) == nullptr )
         Clear();
 
 /* -------------------------------------------------------------------- */
@@ -3072,14 +3413,14 @@ OGRErr OGRSpatialReference::SetVertCS( const char * pszVertCSName,
 /* -------------------------------------------------------------------- */
     OGR_SRSNode *poVertCS = GetAttrNode( "VERT_CS" );
 
-    if( poVertCS != NULL )
+    if( poVertCS != nullptr )
     {
         poVertCS->ClearChildren();
     }
     else
     {
         poVertCS = new OGR_SRSNode( "VERT_CS" );
-        if( poRoot != NULL && EQUAL(poRoot->GetValue(),"COMPD_CS") )
+        if( poRoot != nullptr && EQUAL(poRoot->GetValue(), "COMPD_CS") )
         {
             poRoot->AddChild( poVertCS );
         }
@@ -3132,7 +3473,7 @@ OGRErr OSRSetVertCS( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetVertCS", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+    return ToPointer(hSRS)->
         SetVertCS( pszVertCSName, pszVertDatumName, nVertDatumType );
 }
 
@@ -3213,10 +3554,10 @@ OGRErr OSRSetCompoundCS( OGRSpatialReferenceH hSRS,
     VALIDATE_POINTER1( hHorizSRS, "OSRSetCompoundCS", OGRERR_FAILURE );
     VALIDATE_POINTER1( hVertSRS, "OSRSetCompoundCS", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+    return ToPointer(hSRS)->
         SetCompoundCS( pszName,
-                       reinterpret_cast<OGRSpatialReference *>(hHorizSRS),
-                       reinterpret_cast<OGRSpatialReference *>(hVertSRS) );
+                       ToPointer(hHorizSRS),
+                       ToPointer(hVertSRS) );
 }
 
 /************************************************************************/
@@ -3240,27 +3581,27 @@ OGRErr OSRSetCompoundCS( OGRSpatialReferenceH hSRS,
 OGRErr OGRSpatialReference::SetProjCS( const char * pszName )
 
 {
-    OGR_SRSNode *poGeogCS = NULL;
+    OGR_SRSNode *poGeogCS = nullptr;
     OGR_SRSNode *poProjCS = GetAttrNode( "PROJCS" );
 
-    if( poRoot != NULL && EQUAL(poRoot->GetValue(),"GEOGCS") )
+    if( poRoot != nullptr && EQUAL(poRoot->GetValue(), "GEOGCS") )
     {
         poGeogCS = poRoot;
-        poRoot = NULL;
+        poRoot = nullptr;
     }
 
-    if( poProjCS == NULL && GetRoot() != NULL )
+    if( poProjCS == nullptr && GetRoot() != nullptr )
     {
         CPLDebug( "OGR",
-                  "OGRSpatialReference::SetProjCS(%s) failed.\n"
-                  "It appears an incompatible root node (%s) already exists.\n",
+                  "OGRSpatialReference::SetProjCS(%s) failed.  "
+                  "It appears an incompatible root node (%s) already exists.",
                   pszName, GetRoot()->GetValue() );
         return OGRERR_FAILURE;
     }
 
     SetNode( "PROJCS", pszName );
 
-    if( poRoot != NULL && poGeogCS != NULL )
+    if( poRoot != nullptr && poGeogCS != nullptr )
         poRoot->InsertChild( poGeogCS, 1 );
 
     return OGRERR_NONE;
@@ -3280,7 +3621,7 @@ OGRErr OSRSetProjCS( OGRSpatialReferenceH hSRS, const char * pszName )
 {
     VALIDATE_POINTER1( hSRS, "OSRSetProjCS", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetProjCS( pszName );
+    return ToPointer(hSRS)->SetProjCS( pszName );
 }
 
 /************************************************************************/
@@ -3301,12 +3642,12 @@ OGRErr OSRSetProjCS( OGRSpatialReferenceH hSRS, const char * pszName )
 OGRErr OGRSpatialReference::SetProjection( const char * pszProjection )
 
 {
-    OGR_SRSNode *poGeogCS = NULL;
+    OGR_SRSNode *poGeogCS = nullptr;
 
-    if( poRoot != NULL && EQUAL(poRoot->GetValue(),"GEOGCS") )
+    if( poRoot != nullptr && EQUAL(poRoot->GetValue(), "GEOGCS") )
     {
         poGeogCS = poRoot;
-        poRoot = NULL;
+        poRoot = nullptr;
     }
 
     if( !GetAttrNode( "PROJCS" ) )
@@ -3318,7 +3659,7 @@ OGRErr OGRSpatialReference::SetProjection( const char * pszProjection )
     if( eErr != OGRERR_NONE )
         return eErr;
 
-    if( poGeogCS != NULL )
+    if( poGeogCS != nullptr )
         poRoot->InsertChild( poGeogCS, 1 );
 
     return OGRERR_NONE;
@@ -3339,7 +3680,7 @@ OGRErr OSRSetProjection( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetProjection", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+    return ToPointer(hSRS)->
         SetProjection( pszProjection );
 }
 
@@ -3372,7 +3713,7 @@ OGRErr OGRSpatialReference::SetProjParm( const char * pszParmName,
 {
     OGR_SRSNode *poPROJCS = GetAttrNode( "PROJCS" );
 
-    if( poPROJCS == NULL )
+    if( poPROJCS == nullptr )
         return OGRERR_FAILURE;
 
     char szValue[64] = { '\0' };
@@ -3381,14 +3722,14 @@ OGRErr OGRSpatialReference::SetProjParm( const char * pszParmName,
 /* -------------------------------------------------------------------- */
 /*      Try to find existing parameter with this name.                  */
 /* -------------------------------------------------------------------- */
-    OGR_SRSNode *poParm = NULL;
+    OGR_SRSNode *poParm = nullptr;
     for( int iChild = 0; iChild < poPROJCS->GetChildCount(); iChild++ )
     {
         poParm = poPROJCS->GetChild( iChild );
 
-        if( EQUAL(poParm->GetValue(),"PARAMETER")
+        if( EQUAL(poParm->GetValue(), "PARAMETER")
             && poParm->GetChildCount() == 2
-            && EQUAL(poParm->GetChild(0)->GetValue(),pszParmName) )
+            && EQUAL(poParm->GetChild(0)->GetValue(), pszParmName) )
         {
             poParm->GetChild(1)->SetValue( szValue );
             return OGRERR_NONE;
@@ -3422,7 +3763,7 @@ OGRErr OSRSetProjParm( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetProjParm", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+    return ToPointer(hSRS)->
         SetProjParm( pszParmName, dfValue );
 }
 
@@ -3444,10 +3785,10 @@ int OGRSpatialReference::FindProjParm( const char *pszParameter,
                                        const OGR_SRSNode *poPROJCS ) const
 
 {
-    if( poPROJCS == NULL )
+    if( poPROJCS == nullptr )
         poPROJCS = GetAttrNode( "PROJCS" );
 
-    if( poPROJCS == NULL )
+    if( poPROJCS == nullptr )
         return -1;
 
 /* -------------------------------------------------------------------- */
@@ -3457,7 +3798,7 @@ int OGRSpatialReference::FindProjParm( const char *pszParameter,
     {
         const OGR_SRSNode *poParameter = poPROJCS->GetChild(iChild);
 
-        if( EQUAL(poParameter->GetValue(),"PARAMETER")
+        if( EQUAL(poParameter->GetValue(), "PARAMETER")
             && poParameter->GetChildCount() == 2
             && EQUAL(poPROJCS->GetChild(iChild)->GetChild(0)->GetValue(),
                      pszParameter) )
@@ -3469,12 +3810,12 @@ int OGRSpatialReference::FindProjParm( const char *pszParameter,
 /* -------------------------------------------------------------------- */
 /*      Try similar names, for selected parameters.                     */
 /* -------------------------------------------------------------------- */
-    if( EQUAL(pszParameter,SRS_PP_LATITUDE_OF_ORIGIN) )
+    if( EQUAL(pszParameter, SRS_PP_LATITUDE_OF_ORIGIN) )
     {
         return FindProjParm( SRS_PP_LATITUDE_OF_CENTER, poPROJCS );
     }
 
-    if( EQUAL(pszParameter,SRS_PP_CENTRAL_MERIDIAN) )
+    if( EQUAL(pszParameter, SRS_PP_CENTRAL_MERIDIAN) )
     {
         int iChild = FindProjParm(SRS_PP_LONGITUDE_OF_CENTER, poPROJCS );
         if( iChild == -1 )
@@ -3512,16 +3853,16 @@ double OGRSpatialReference::GetProjParm( const char * pszName,
                                          OGRErr *pnErr ) const
 
 {
-    if( pnErr != NULL )
+    if( pnErr != nullptr )
         *pnErr = OGRERR_NONE;
 
 /* -------------------------------------------------------------------- */
 /*      Find the desired parameter.                                     */
 /* -------------------------------------------------------------------- */
     const OGR_SRSNode *poPROJCS = GetAttrNode( "PROJCS" );
-    if ( poPROJCS == NULL )
+    if( poPROJCS == nullptr )
     {
-        if( pnErr != NULL )
+        if( pnErr != nullptr )
             *pnErr = OGRERR_FAILURE;
         return dfDefaultValue;
     }
@@ -3529,7 +3870,7 @@ double OGRSpatialReference::GetProjParm( const char * pszName,
     const int iChild = FindProjParm( pszName, poPROJCS );
     if( iChild == -1 )
     {
-        if( pnErr != NULL )
+        if( pnErr != nullptr )
             *pnErr = OGRERR_FAILURE;
         return dfDefaultValue;
     }
@@ -3553,7 +3894,7 @@ double OSRGetProjParm( OGRSpatialReferenceH hSRS, const char *pszName,
 {
     VALIDATE_POINTER1( hSRS, "OSRGetProjParm", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+    return ToPointer(hSRS)->
         GetProjParm(pszName, dfDefaultValue, pnErr);
 }
 
@@ -3589,7 +3930,7 @@ double OGRSpatialReference::GetNormProjParm( const char * pszName,
 
     OGRErr nError = OGRERR_NONE;
     double dfRawResult = GetProjParm( pszName, dfDefaultValue, &nError );
-    if( pnErr != NULL )
+    if( pnErr != nullptr )
         *pnErr = nError;
 
     // If we got the default just return it unadjusted.
@@ -3624,7 +3965,7 @@ double OSRGetNormProjParm( OGRSpatialReferenceH hSRS, const char *pszName,
 {
     VALIDATE_POINTER1( hSRS, "OSRGetNormProjParm", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+    return ToPointer(hSRS)->
         GetNormProjParm(pszName, dfDefaultValue, pnErr);
 }
 
@@ -3656,7 +3997,8 @@ OGRErr OGRSpatialReference::SetNormProjParm( const char * pszName,
 {
     GetNormInfo();
 
-    if( (dfToDegrees != 1.0 || dfFromGreenwich != 0.0)
+    if( dfToDegrees != 0.0 &&
+        (dfToDegrees != 1.0 || dfFromGreenwich != 0.0)
         && IsAngularParameter(pszName) )
     {
 #ifdef WKT_LONGITUDE_RELATIVE_TO_PM
@@ -3666,7 +4008,8 @@ OGRErr OGRSpatialReference::SetNormProjParm( const char * pszName,
 
         dfValue /= dfToDegrees;
     }
-    else if( dfToMeter != 1.0 && IsLinearParameter( pszName ) )
+    else if( dfToMeter != 1.0 && dfToMeter != 0.0 &&
+             IsLinearParameter( pszName ) )
         dfValue /= dfToMeter;
 
     return SetProjParm( pszName, dfValue );
@@ -3687,7 +4030,7 @@ OGRErr OSRSetNormProjParm( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetNormProjParm", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+    return ToPointer(hSRS)->
         SetNormProjParm( pszParmName, dfValue );
 }
 
@@ -3724,7 +4067,7 @@ OGRErr OSRSetTM( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetTM", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetTM(
+    return ToPointer(hSRS)->SetTM(
         dfCenterLat, dfCenterLong,
         dfScale,
         dfFalseEasting, dfFalseNorthing );
@@ -3766,7 +4109,7 @@ OGRErr OSRSetTMVariant( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetTMVariant", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetTMVariant(
+    return ToPointer(hSRS)->SetTMVariant(
         pszVariantName,
         dfCenterLat, dfCenterLong,
         dfScale,
@@ -3826,7 +4169,7 @@ OGRErr OSRSetTPED( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetTPED", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetTPED(
+    return ToPointer(hSRS)->SetTPED(
         dfLat1, dfLong1, dfLat2, dfLong2,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -3844,7 +4187,7 @@ OGRErr OSRSetTMSO( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetTMSO", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetTMSO(
+    return ToPointer(hSRS)->SetTMSO(
         dfCenterLat, dfCenterLong,
         dfScale,
         dfFalseEasting, dfFalseNorthing );
@@ -3880,7 +4223,7 @@ OGRErr OSRSetTMG( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetTMG", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetTMG(
+    return ToPointer(hSRS)->SetTMG(
         dfCenterLat, dfCenterLong,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -3919,7 +4262,7 @@ OGRErr OSRSetACEA( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetACEA", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetACEA(
+    return ToPointer(hSRS)->SetACEA(
         dfStdP1, dfStdP2,
         dfCenterLat, dfCenterLong,
         dfFalseEasting, dfFalseNorthing );
@@ -3955,7 +4298,7 @@ OGRErr OSRSetAE( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetACEA", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetAE(
+    return ToPointer(hSRS)->SetAE(
         dfCenterLat, dfCenterLong,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -3989,7 +4332,7 @@ OGRErr OSRSetBonne( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetBonne", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetBonne(
+    return ToPointer(hSRS)->SetBonne(
         dfStdP1, dfCentralMeridian,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -4023,7 +4366,7 @@ OGRErr OSRSetCEA( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetCEA", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetCEA(
+    return ToPointer(hSRS)->SetCEA(
         dfStdP1, dfCentralMeridian,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -4058,7 +4401,7 @@ OGRErr OSRSetCS( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetCS", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetCS(
+    return ToPointer(hSRS)->SetCS(
         dfCenterLat, dfCenterLong,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -4097,7 +4440,7 @@ OGRErr OSRSetEC( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetEC", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetEC(
+    return ToPointer(hSRS)->SetEC(
         dfStdP1, dfStdP2,
         dfCenterLat, dfCenterLong,
         dfFalseEasting, dfFalseNorthing );
@@ -4107,7 +4450,7 @@ OGRErr OSRSetEC( OGRSpatialReferenceH hSRS,
 /*                             SetEckert()                              */
 /************************************************************************/
 
-OGRErr OGRSpatialReference::SetEckert( int nVariation /* 1-6 */,
+OGRErr OGRSpatialReference::SetEckert( int nVariation,  // 1-6.
                                        double dfCentralMeridian,
                                        double dfFalseEasting,
                                        double dfFalseNorthing )
@@ -4153,7 +4496,7 @@ OGRErr OSRSetEckert( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetEckert", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetEckert(
+    return ToPointer(hSRS)->SetEckert(
         nVariation, dfCentralMeridian,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -4189,7 +4532,7 @@ OGRErr OSRSetEckertIV( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetEckertIV", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetEckertIV(
+    return ToPointer(hSRS)->SetEckertIV(
         dfCentralMeridian,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -4225,7 +4568,7 @@ OGRErr OSRSetEckertVI( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetEckertVI", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetEckertVI(
+    return ToPointer(hSRS)->SetEckertVI(
         dfCentralMeridian,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -4261,7 +4604,7 @@ OGRErr OSRSetEquirectangular( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetEquirectangular", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetEquirectangular(
+    return ToPointer(hSRS)->SetEquirectangular(
         dfCenterLat, dfCenterLong,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -4301,7 +4644,7 @@ OGRErr OSRSetEquirectangular2( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetEquirectangular2", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetEquirectangular2(
+    return ToPointer(hSRS)->SetEquirectangular2(
         dfCenterLat, dfCenterLong,
         dfStdParallel1,
         dfFalseEasting, dfFalseNorthing );
@@ -4336,7 +4679,7 @@ OGRErr OSRSetGS( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetGS", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetGS(
+    return ToPointer(hSRS)->SetGS(
         dfCentralMeridian,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -4370,7 +4713,7 @@ OGRErr OSRSetGH( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetGH", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetGH(
+    return ToPointer(hSRS)->SetGH(
         dfCentralMeridian,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -4396,7 +4739,7 @@ OGRErr OSRSetIGH( OGRSpatialReferenceH hSRS )
 {
     VALIDATE_POINTER1( hSRS, "OSRSetIGH", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetIGH();
+    return ToPointer(hSRS)->SetIGH();
 }
 
 /************************************************************************/
@@ -4431,7 +4774,7 @@ OGRErr OSRSetGEOS( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetGEOS", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetGEOS(
+    return ToPointer(hSRS)->SetGEOS(
         dfCentralMeridian, dfSatelliteHeight,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -4470,7 +4813,7 @@ OGRErr OSRSetGaussSchreiberTMercator( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetGaussSchreiberTMercator", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetGaussSchreiberTMercator(
+    return ToPointer(hSRS)->SetGaussSchreiberTMercator(
         dfCenterLat, dfCenterLong, dfScale,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -4506,7 +4849,7 @@ OGRErr OSRSetGnomonic( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetGnomonic", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetGnomonic(
+    return ToPointer(hSRS)->SetGnomonic(
         dfCenterLat, dfCenterLong,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -4574,7 +4917,7 @@ OGRErr OSRSetHOMAC( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetHOMAC", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetHOMAC(
+    return ToPointer(hSRS)->SetHOMAC(
         dfCenterLat, dfCenterLong,
         dfAzimuth, dfRectToSkew,
         dfScale,
@@ -4642,7 +4985,7 @@ OGRErr OSRSetHOM( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetHOM", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetHOM(
+    return ToPointer(hSRS)->SetHOM(
         dfCenterLat, dfCenterLong,
         dfAzimuth, dfRectToSkew,
         dfScale,
@@ -4696,8 +5039,8 @@ OGRErr OGRSpatialReference::SetHOM2PNO( double dfCenterLat,
 /*                           OSRSetHOM2PNO()                            */
 /************************************************************************/
 /**
- * \brief  Set a Hotine Oblique Mercator projection using two points on projection
- *  centerline.
+ * \brief Set a Hotine Oblique Mercator projection using two points on
+ *  projection centerline.
  *
  * This is the same as the C++ method OGRSpatialReference::SetHOM2PNO()
  */
@@ -4711,7 +5054,7 @@ OGRErr OSRSetHOM2PNO( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetHOM2PNO", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetHOM2PNO(
+    return ToPointer(hSRS)->SetHOM2PNO(
         dfCenterLat,
         dfLat1, dfLong1,
         dfLat2, dfLong2,
@@ -4751,7 +5094,7 @@ OGRErr OSRSetIWMPolyconic( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetIWMPolyconic", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetIWMPolyconic(
+    return ToPointer(hSRS)->SetIWMPolyconic(
         dfLat1, dfLat2, dfCenterLong,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -4760,6 +5103,11 @@ OGRErr OSRSetIWMPolyconic( OGRSpatialReferenceH hSRS,
 /*                             SetKrovak()                              */
 /************************************************************************/
 
+/** Krovak east-north projection.
+ *
+ * Note that dfAzimuth and dfPseudoStdParallel1 are ignored when exporting
+ * to PROJ and should be respectively set to 30.28813972222222 and 78.5
+ */
 OGRErr OGRSpatialReference::SetKrovak( double dfCenterLat, double dfCenterLong,
                                        double dfAzimuth,
                                        double dfPseudoStdParallel1,
@@ -4794,7 +5142,7 @@ OGRErr OSRSetKrovak( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetKrovak", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetKrovak(
+    return ToPointer(hSRS)->SetKrovak(
         dfCenterLat, dfCenterLong,
         dfAzimuth, dfPseudoStdParallel1,
         dfScale,
@@ -4830,7 +5178,7 @@ OGRErr OSRSetLAEA( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetLAEA", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetLAEA(
+    return ToPointer(hSRS)->SetLAEA(
         dfCenterLat, dfCenterLong,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -4868,7 +5216,7 @@ OGRErr OSRSetLCC( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetLCC", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetLCC(
+    return ToPointer(hSRS)->SetLCC(
         dfStdP1, dfStdP2,
         dfCenterLat, dfCenterLong,
         dfFalseEasting, dfFalseNorthing );
@@ -4906,7 +5254,7 @@ OGRErr OSRSetLCC1SP( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetLCC1SP", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetLCC1SP(
+    return ToPointer(hSRS)->SetLCC1SP(
         dfCenterLat, dfCenterLong,
         dfScale,
         dfFalseEasting, dfFalseNorthing );
@@ -4945,7 +5293,7 @@ OGRErr OSRSetLCCB( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetLCCB", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetLCCB(
+    return ToPointer(hSRS)->SetLCCB(
         dfStdP1, dfStdP2,
         dfCenterLat, dfCenterLong,
         dfFalseEasting, dfFalseNorthing );
@@ -4980,7 +5328,7 @@ OGRErr OSRSetMC( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetMC", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetMC(
+    return ToPointer(hSRS)->SetMC(
         dfCenterLat, dfCenterLong,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -5020,7 +5368,7 @@ OGRErr OSRSetMercator( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetMercator", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetMercator(
+    return ToPointer(hSRS)->SetMercator(
         dfCenterLat, dfCenterLong,
         dfScale,
         dfFalseEasting, dfFalseNorthing );
@@ -5062,7 +5410,7 @@ OGRErr OSRSetMercator2SP( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetMercator2SP", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetMercator2SP(
+    return ToPointer(hSRS)->SetMercator2SP(
         dfStdP1,
         dfCenterLat, dfCenterLong,
         dfFalseEasting, dfFalseNorthing );
@@ -5096,7 +5444,7 @@ OGRErr OSRSetMollweide( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetMollweide", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetMollweide(
+    return ToPointer(hSRS)->SetMollweide(
         dfCentralMeridian,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -5130,7 +5478,7 @@ OGRErr OSRSetNZMG( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetNZMG", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetNZMG(
+    return ToPointer(hSRS)->SetNZMG(
         dfCenterLat, dfCenterLong,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -5167,7 +5515,7 @@ OGRErr OSRSetOS( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetOS", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetOS(
+    return ToPointer(hSRS)->SetOS(
         dfOriginLat, dfCMeridian,
         dfScale,
         dfFalseEasting, dfFalseNorthing );
@@ -5202,7 +5550,7 @@ OGRErr OSRSetOrthographic( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetOrthographic", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetOrthographic(
+    return ToPointer(hSRS)->SetOrthographic(
         dfCenterLat, dfCenterLong,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -5239,7 +5587,7 @@ OGRErr OSRSetPolyconic( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetPolyconic", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetPolyconic(
+    return ToPointer(hSRS)->SetPolyconic(
         dfCenterLat, dfCenterLong,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -5276,7 +5624,7 @@ OGRErr OSRSetPS( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetPS", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetPS(
+    return ToPointer(hSRS)->SetPS(
         dfCenterLat, dfCenterLong,
         dfScale,
         dfFalseEasting, dfFalseNorthing );
@@ -5310,7 +5658,7 @@ OGRErr OSRSetRobinson( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetRobinson", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetRobinson(
+    return ToPointer(hSRS)->SetRobinson(
         dfCenterLong,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -5343,7 +5691,7 @@ OGRErr OSRSetSinusoidal( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetSinusoidal", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetSinusoidal(
+    return ToPointer(hSRS)->SetSinusoidal(
         dfCenterLong,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -5381,7 +5729,7 @@ OGRErr OSRSetStereographic( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetStereographic", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetStereographic(
+    return ToPointer(hSRS)->SetStereographic(
         dfOriginLat, dfCMeridian,
         dfScale,
         dfFalseEasting, dfFalseNorthing );
@@ -5423,7 +5771,7 @@ OGRErr OSRSetSOC( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetSOC", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetSOC(
+    return ToPointer(hSRS)->SetSOC(
         dfLatitudeOfOrigin, dfCentralMeridian,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -5456,7 +5804,7 @@ OGRErr OSRSetVDG( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetVDG", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetVDG(
+    return ToPointer(hSRS)->SetVDG(
         dfCentralMeridian,
         dfFalseEasting, dfFalseNorthing );
 }
@@ -5502,14 +5850,16 @@ OGRErr OGRSpatialReference::SetUTM( int nZone, int bNorth )
     else
         SetNormProjParm( SRS_PP_FALSE_NORTHING, 10000000 );
 
-    if( EQUAL(GetAttrValue("PROJCS"),"unnamed") )
+    if( EQUAL(GetAttrValue("PROJCS"), "unnamed") )
     {
-        char    szUTMName[128];
+        char szUTMName[128] = {};
 
         if( bNorth )
-            snprintf( szUTMName, sizeof(szUTMName), "UTM Zone %d, Northern Hemisphere", nZone );
+            snprintf(szUTMName, sizeof(szUTMName),
+                     "UTM Zone %d, Northern Hemisphere", nZone);
         else
-            snprintf( szUTMName, sizeof(szUTMName), "UTM Zone %d, Southern Hemisphere", nZone );
+            snprintf(szUTMName, sizeof(szUTMName),
+                     "UTM Zone %d, Southern Hemisphere", nZone);
 
         SetNode( "PROJCS", szUTMName );
     }
@@ -5533,7 +5883,7 @@ OGRErr OSRSetUTM( OGRSpatialReferenceH hSRS, int nZone, int bNorth )
 {
     VALIDATE_POINTER1( hSRS, "OSRSetUTM", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetUTM( nZone, bNorth );
+    return ToPointer(hSRS)->SetUTM( nZone, bNorth );
 }
 
 /************************************************************************/
@@ -5560,10 +5910,10 @@ OGRErr OSRSetUTM( OGRSpatialReferenceH hSRS, int nZone, int bNorth )
 int OGRSpatialReference::GetUTMZone( int * pbNorth ) const
 
 {
-    const char  *pszProjection = GetAttrValue( "PROJECTION" );
+    const char *pszProjection = GetAttrValue( "PROJECTION" );
 
-    if( pszProjection == NULL
-        || !EQUAL(pszProjection,SRS_PT_TRANSVERSE_MERCATOR) )
+    if( pszProjection == nullptr
+        || !EQUAL(pszProjection, SRS_PT_TRANSVERSE_MERCATOR) )
         return 0;
 
     if( GetNormProjParm( SRS_PP_LATITUDE_OF_ORIGIN, 0.0 ) != 0.0 )
@@ -5575,25 +5925,26 @@ int OGRSpatialReference::GetUTMZone( int * pbNorth ) const
     if( fabs(GetNormProjParm( SRS_PP_FALSE_EASTING, 0.0 )-500000.0) > 0.001 )
         return 0;
 
-    double      dfFalseNorthing = GetNormProjParm( SRS_PP_FALSE_NORTHING, 0.0);
+    const double dfFalseNorthing = GetNormProjParm( SRS_PP_FALSE_NORTHING, 0.0);
 
     if( dfFalseNorthing != 0.0
         && fabs(dfFalseNorthing-10000000.0) > 0.001 )
         return 0;
 
-    if( pbNorth != NULL )
+    if( pbNorth != nullptr )
         *pbNorth = (dfFalseNorthing == 0);
 
-    double      dfCentralMeridian = GetNormProjParm( SRS_PP_CENTRAL_MERIDIAN,
-                                                     0.0);
-    double      dfZone = ( dfCentralMeridian + 186.0 ) / 6.0;
+    const double dfCentralMeridian =
+        GetNormProjParm( SRS_PP_CENTRAL_MERIDIAN, 0.0);
+    const double dfZone = (dfCentralMeridian + 186.0) / 6.0;
 
-    if( ABS(dfZone - (int) dfZone - 0.5 ) > 0.00001
-        || dfCentralMeridian < -177.00001
-        || dfCentralMeridian > 177.000001 )
-        return 0;
-    else
-        return (int) dfZone;
+    if( dfCentralMeridian < -177.00001 ||
+        dfCentralMeridian > 177.000001 ||
+        CPLIsNan(dfZone) ||
+        std::abs(dfZone - static_cast<int>(dfZone) - 0.5 ) > 0.00001 )
+      return 0;
+
+    return static_cast<int>(dfZone);
 }
 
 /************************************************************************/
@@ -5610,14 +5961,14 @@ int OSRGetUTMZone( OGRSpatialReferenceH hSRS, int *pbNorth )
 {
     VALIDATE_POINTER1( hSRS, "OSRGetUTMZone", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->GetUTMZone( pbNorth );
+    return ToPointer(hSRS)->GetUTMZone( pbNorth );
 }
 
 /************************************************************************/
 /*                             SetWagner()                              */
 /************************************************************************/
 
-OGRErr OGRSpatialReference::SetWagner( int nVariation /* 1 -- 7 */,
+OGRErr OGRSpatialReference::SetWagner( int nVariation,  // 1--7.
                                        double dfCenterLat,
                                        double dfFalseEasting,
                                        double dfFalseNorthing )
@@ -5665,7 +6016,7 @@ OGRErr OSRSetWagner( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetWagner", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetWagner(
+    return ToPointer(hSRS)->SetWagner(
         nVariation, dfCenterLat, dfFalseEasting, dfFalseNorthing );
 }
 
@@ -5693,7 +6044,7 @@ OGRErr OSRSetQSC( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetQSC", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetQSC(
+    return ToPointer(hSRS)->SetQSC(
         dfCenterLat, dfCenterLong );
 }
 
@@ -5725,7 +6076,7 @@ OGRErr OSRSetSCH( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetSCH", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetSCH(
+    return ToPointer(hSRS)->SetSCH(
         dfPegLat, dfPegLong, dfPegHeading, dfPegHgt );
 }
 
@@ -5756,9 +6107,9 @@ OGRErr OGRSpatialReference::SetAuthority( const char *pszTargetKey,
 /* -------------------------------------------------------------------- */
 /*      Find the node below which the authority should be put.          */
 /* -------------------------------------------------------------------- */
-    OGR_SRSNode  *poNode = GetAttrNode( pszTargetKey );
+    OGR_SRSNode *poNode = GetAttrNode( pszTargetKey );
 
-    if( poNode == NULL )
+    if( poNode == nullptr )
         return OGRERR_FAILURE;
 
 /* -------------------------------------------------------------------- */
@@ -5772,12 +6123,11 @@ OGRErr OGRSpatialReference::SetAuthority( const char *pszTargetKey,
 /* -------------------------------------------------------------------- */
 /*      Create a new authority node.                                    */
 /* -------------------------------------------------------------------- */
-    char   szCode[32];
-    OGR_SRSNode *poAuthNode;
+    char szCode[32] = {};
 
     snprintf( szCode, sizeof(szCode), "%d", nCode );
 
-    poAuthNode = new OGR_SRSNode( "AUTHORITY" );
+    OGR_SRSNode *poAuthNode = new OGR_SRSNode( "AUTHORITY" );
     poAuthNode->AddChild( new OGR_SRSNode( pszAuthority ) );
     poAuthNode->AddChild( new OGR_SRSNode( szCode ) );
 
@@ -5803,7 +6153,7 @@ OGRErr OSRSetAuthority( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetAuthority", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetAuthority( pszTargetKey,
+    return ToPointer(hSRS)->SetAuthority( pszTargetKey,
                                                          pszAuthority,
                                                          nCode );
 }
@@ -5838,21 +6188,18 @@ OGRSpatialReference::GetAuthorityCode( const char *pszTargetKey ) const
 /* -------------------------------------------------------------------- */
 /*      Find the node below which the authority should be put.          */
 /* -------------------------------------------------------------------- */
-    const OGR_SRSNode  *poNode;
+    const OGR_SRSNode *poNode = pszTargetKey == nullptr
+        ? poRoot
+        : GetAttrNode( pszTargetKey );
 
-    if( pszTargetKey == NULL )
-        poNode = poRoot;
-    else
-        poNode= ((OGRSpatialReference *) this)->GetAttrNode( pszTargetKey );
-
-    if( poNode == NULL )
-        return NULL;
+    if( poNode == nullptr )
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Fetch AUTHORITY child if there is one.                          */
 /* -------------------------------------------------------------------- */
     if( poNode->FindChild("AUTHORITY") == -1 )
-        return NULL;
+        return nullptr;
 
     poNode = poNode->GetChild(poNode->FindChild("AUTHORITY"));
 
@@ -5860,7 +6207,7 @@ OGRSpatialReference::GetAuthorityCode( const char *pszTargetKey ) const
 /*      Create a new authority node.                                    */
 /* -------------------------------------------------------------------- */
     if( poNode->GetChildCount() < 2 )
-        return NULL;
+        return nullptr;
 
     return poNode->GetChild(1)->GetValue();
 }
@@ -5878,9 +6225,9 @@ const char *OSRGetAuthorityCode( OGRSpatialReferenceH hSRS,
                                  const char *pszTargetKey )
 
 {
-    VALIDATE_POINTER1( hSRS, "OSRGetAuthorityCode", NULL );
+    VALIDATE_POINTER1( hSRS, "OSRGetAuthorityCode", nullptr );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+    return ToPointer(hSRS)->
         GetAuthorityCode( pszTargetKey );
 }
 
@@ -5913,22 +6260,21 @@ OGRSpatialReference::GetAuthorityName( const char *pszTargetKey ) const
 /* -------------------------------------------------------------------- */
 /*      Find the node below which the authority should be put.          */
 /* -------------------------------------------------------------------- */
-    const OGR_SRSNode  *poNode = NULL;
+    const OGR_SRSNode *poNode = nullptr;
 
-    if( pszTargetKey == NULL )
+    if( pszTargetKey == nullptr )
         poNode = poRoot;
     else
-        poNode = const_cast<OGRSpatialReference *>(this)->
-            GetAttrNode( pszTargetKey );
+        poNode = GetAttrNode( pszTargetKey );
 
-    if( poNode == NULL )
-        return NULL;
+    if( poNode == nullptr )
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Fetch AUTHORITY child if there is one.                          */
 /* -------------------------------------------------------------------- */
     if( poNode->FindChild("AUTHORITY") == -1 )
-        return NULL;
+        return nullptr;
 
     poNode = poNode->GetChild(poNode->FindChild("AUTHORITY"));
 
@@ -5936,7 +6282,7 @@ OGRSpatialReference::GetAuthorityName( const char *pszTargetKey ) const
 /*      Create a new authority node.                                    */
 /* -------------------------------------------------------------------- */
     if( poNode->GetChildCount() < 2 )
-        return NULL;
+        return nullptr;
 
     return poNode->GetChild(0)->GetValue();
 }
@@ -5954,9 +6300,9 @@ const char *OSRGetAuthorityName( OGRSpatialReferenceH hSRS,
                                  const char *pszTargetKey )
 
 {
-    VALIDATE_POINTER1( hSRS, "OSRGetAuthorityName", NULL );
+    VALIDATE_POINTER1( hSRS, "OSRGetAuthorityName", nullptr );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+    return ToPointer(hSRS)->
         GetAuthorityName( pszTargetKey );
 }
 
@@ -5979,12 +6325,12 @@ const char *OSRGetAuthorityName( OGRSpatialReferenceH hSRS,
 OGRErr OGRSpatialReference::StripVertical()
 
 {
-    if( GetRoot() == NULL
-        || !EQUAL(GetRoot()->GetValue(),"COMPD_CS") )
+    if( GetRoot() == nullptr
+        || !EQUAL(GetRoot()->GetValue(), "COMPD_CS") )
         return OGRERR_NONE;
 
     OGR_SRSNode *poHorizontalCS = GetRoot()->GetChild( 1 );
-    if( poHorizontalCS != NULL )
+    if( poHorizontalCS != nullptr )
         poHorizontalCS = poHorizontalCS->Clone();
     SetRoot( poHorizontalCS );
 
@@ -6013,19 +6359,19 @@ OGRErr OGRSpatialReference::StripVertical()
 OGRErr OGRSpatialReference::StripCTParms( OGR_SRSNode * poCurrent )
 
 {
-    if( poCurrent == NULL )
+    if( poCurrent == nullptr )
     {
         StripVertical();
         poCurrent = GetRoot();
     }
 
-    if( poCurrent == NULL )
+    if( poCurrent == nullptr )
         return OGRERR_NONE;
 
-    if( poCurrent == GetRoot() && EQUAL(poCurrent->GetValue(),"LOCAL_CS") )
+    if( poCurrent == GetRoot() && EQUAL(poCurrent->GetValue(), "LOCAL_CS") )
     {
         delete poCurrent;
-        poRoot = NULL;
+        poRoot = nullptr;
 
         return OGRERR_NONE;
     }
@@ -6052,7 +6398,7 @@ OGRErr OSRStripCTParms( OGRSpatialReferenceH hSRS )
 {
     VALIDATE_POINTER1( hSRS, "OSRStripCTParms", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->StripCTParms( NULL );
+    return ToPointer(hSRS)->StripCTParms( nullptr );
 }
 
 /************************************************************************/
@@ -6070,10 +6416,10 @@ OGRErr OSRStripCTParms( OGRSpatialReferenceH hSRS )
 int OGRSpatialReference::IsCompound() const
 
 {
-    if( poRoot == NULL )
+    if( poRoot == nullptr )
         return FALSE;
 
-    return EQUAL(poRoot->GetValue(),"COMPD_CS");
+    return EQUAL(poRoot->GetValue(), "COMPD_CS");
 }
 
 /************************************************************************/
@@ -6090,7 +6436,7 @@ int OSRIsCompound( OGRSpatialReferenceH hSRS )
 {
     VALIDATE_POINTER1( hSRS, "OSRIsCompound", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->IsCompound();
+    return ToPointer(hSRS)->IsCompound();
 }
 
 /************************************************************************/
@@ -6109,13 +6455,14 @@ int OSRIsCompound( OGRSpatialReferenceH hSRS )
 int OGRSpatialReference::IsProjected() const
 
 {
-    if( poRoot == NULL )
+    if( poRoot == nullptr )
         return FALSE;
 
-    if( EQUAL(poRoot->GetValue(),"PROJCS") )
+
+    if( EQUAL(poRoot->GetValue(), "PROJCS") )
         return TRUE;
-    else if( EQUAL(poRoot->GetValue(),"COMPD_CS") )
-        return GetAttrNode( "PROJCS" ) != NULL;
+    else if( EQUAL(poRoot->GetValue(), "COMPD_CS") )
+        return GetAttrNode( "PROJCS" ) != nullptr;
     else
         return FALSE;
 }
@@ -6133,7 +6480,7 @@ int OSRIsProjected( OGRSpatialReferenceH hSRS )
 {
     VALIDATE_POINTER1( hSRS, "OSRIsProjected", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->IsProjected();
+    return ToPointer(hSRS)->IsProjected();
 }
 
 /************************************************************************/
@@ -6154,10 +6501,10 @@ int OSRIsProjected( OGRSpatialReferenceH hSRS )
 int OGRSpatialReference::IsGeocentric() const
 
 {
-    if( poRoot == NULL )
+    if( poRoot == nullptr )
         return FALSE;
 
-    if( EQUAL(poRoot->GetValue(),"GEOCCS") )
+    if( EQUAL(poRoot->GetValue(), "GEOCCS") )
         return TRUE;
 
     return FALSE;
@@ -6178,7 +6525,7 @@ int OSRIsGeocentric( OGRSpatialReferenceH hSRS )
 {
     VALIDATE_POINTER1( hSRS, "OSRIsGeocentric", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->IsGeocentric();
+    return ToPointer(hSRS)->IsGeocentric();
 }
 
 /************************************************************************/
@@ -6197,15 +6544,15 @@ int OSRIsGeocentric( OGRSpatialReferenceH hSRS )
 int OGRSpatialReference::IsGeographic() const
 
 {
-    if( GetRoot() == NULL )
+    if( GetRoot() == nullptr )
         return FALSE;
 
-    if( EQUAL(poRoot->GetValue(),"GEOGCS") )
+    if( EQUAL(poRoot->GetValue(), "GEOGCS") )
         return TRUE;
 
-    if( EQUAL(poRoot->GetValue(),"COMPD_CS") )
-        return GetAttrNode( "GEOGCS" ) != NULL
-            && GetAttrNode( "PROJCS" ) == NULL;
+    if( EQUAL(poRoot->GetValue(), "COMPD_CS") )
+        return GetAttrNode( "GEOGCS" ) != nullptr
+            && GetAttrNode( "PROJCS" ) == nullptr;
 
     return FALSE;
 }
@@ -6223,7 +6570,7 @@ int OSRIsGeographic( OGRSpatialReferenceH hSRS )
 {
     VALIDATE_POINTER1( hSRS, "OSRIsGeographic", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->IsGeographic();
+    return ToPointer(hSRS)->IsGeographic();
 }
 
 /************************************************************************/
@@ -6242,10 +6589,10 @@ int OSRIsGeographic( OGRSpatialReferenceH hSRS )
 int OGRSpatialReference::IsLocal() const
 
 {
-    if( GetRoot() == NULL )
+    if( GetRoot() == nullptr )
         return FALSE;
 
-    return EQUAL(GetRoot()->GetValue(),"LOCAL_CS");
+    return EQUAL(GetRoot()->GetValue(), "LOCAL_CS");
 }
 
 /************************************************************************/
@@ -6261,7 +6608,7 @@ int OSRIsLocal( OGRSpatialReferenceH hSRS )
 {
     VALIDATE_POINTER1( hSRS, "OSRIsLocal", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->IsLocal();
+    return ToPointer(hSRS)->IsLocal();
 }
 
 /************************************************************************/
@@ -6282,14 +6629,14 @@ int OSRIsLocal( OGRSpatialReferenceH hSRS )
 int OGRSpatialReference::IsVertical() const
 
 {
-    if( poRoot == NULL )
+    if( poRoot == nullptr )
         return FALSE;
 
-    if( EQUAL(poRoot->GetValue(),"VERT_CS") )
+    if( EQUAL(poRoot->GetValue(), "VERT_CS") )
         return TRUE;
 
-    if( EQUAL(poRoot->GetValue(),"COMPD_CS") )
-        return GetAttrNode( "VERT_CS" ) != NULL;
+    if( EQUAL(poRoot->GetValue(), "COMPD_CS") )
+        return GetAttrNode( "VERT_CS" ) != nullptr;
 
     return FALSE;
 }
@@ -6309,7 +6656,7 @@ int OSRIsVertical( OGRSpatialReferenceH hSRS )
 {
     VALIDATE_POINTER1( hSRS, "OSRIsVertical", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->IsVertical();
+    return ToPointer(hSRS)->IsVertical();
 }
 
 /************************************************************************/
@@ -6324,7 +6671,7 @@ int OSRIsVertical( OGRSpatialReferenceH hSRS )
 OGRSpatialReference *OGRSpatialReference::CloneGeogCS() const
 
 {
-    OGRSpatialReference * poNewSRS = NULL;
+    OGRSpatialReference * poNewSRS = nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      We have to reconstruct the GEOGCS node for geocentric           */
@@ -6334,10 +6681,10 @@ OGRSpatialReference *OGRSpatialReference::CloneGeogCS() const
     {
         const OGR_SRSNode *poDatum = GetAttrNode( "DATUM" );
         const OGR_SRSNode *poPRIMEM = GetAttrNode( "PRIMEM" );
-        OGR_SRSNode *poGeogCS = NULL;
+        OGR_SRSNode *poGeogCS = nullptr;
 
-        if( poDatum == NULL || poPRIMEM == NULL )
-            return NULL;
+        if( poDatum == nullptr || poPRIMEM == nullptr )
+            return nullptr;
 
         poGeogCS = new OGR_SRSNode( "GEOGCS" );
         poGeogCS->AddChild( new OGR_SRSNode( "unnamed" ) );
@@ -6356,8 +6703,8 @@ OGRSpatialReference *OGRSpatialReference::CloneGeogCS() const
 /*      For all others we just search the tree, and duplicate.          */
 /* -------------------------------------------------------------------- */
     const OGR_SRSNode *poGeogCS = GetAttrNode( "GEOGCS" );
-    if( poGeogCS == NULL )
-        return NULL;
+    if( poGeogCS == nullptr )
+        return nullptr;
 
     poNewSRS = new OGRSpatialReference();
     poNewSRS->SetRoot( poGeogCS->Clone() );
@@ -6376,10 +6723,19 @@ OGRSpatialReference *OGRSpatialReference::CloneGeogCS() const
 OGRSpatialReferenceH CPL_STDCALL OSRCloneGeogCS( OGRSpatialReferenceH hSource )
 
 {
-    VALIDATE_POINTER1( hSource, "OSRCloneGeogCS", NULL );
+    VALIDATE_POINTER1( hSource, "OSRCloneGeogCS", nullptr );
 
-    return reinterpret_cast<OGRSpatialReferenceH>(
-        reinterpret_cast<OGRSpatialReference *>(hSource)->CloneGeogCS() );
+    return ToHandle(
+        ToPointer(hSource)->CloneGeogCS() );
+}
+
+/************************************************************************/
+/*                      IsRelativeErrorSmaller()                        */
+/************************************************************************/
+
+static bool IsRelativeErrorSmaller(double dfA, double dfB, double dfRelError)
+{
+    return fabs(dfA - dfB) <= dfRelError * fabs(dfA);
 }
 
 /************************************************************************/
@@ -6399,6 +6755,25 @@ OGRSpatialReferenceH CPL_STDCALL OSRCloneGeogCS( OGRSpatialReferenceH hSource )
 int OGRSpatialReference::IsSameGeogCS( const OGRSpatialReference *poOther ) const
 
 {
+    return IsSameGeogCS( poOther, nullptr );
+}
+
+/**
+ * \brief Do the GeogCS'es match?
+ *
+ * This method is the same as the C function OSRIsSameGeogCS().
+ *
+ * @param poOther the SRS being compared against.
+ * @param papszOptions options. DATUM=STRICT/IGNORE. TOWGS84=STRICT/ONLY_IF_IN_BOTH/IGNORE
+ *
+ * @return TRUE if they are the same or FALSE otherwise.
+ */
+
+int OGRSpatialReference::IsSameGeogCS( const OGRSpatialReference *poOther,
+                                       const char* const * papszOptions ) const
+
+{
+
     const char *pszThisValue, *pszOtherValue;
 
 /* -------------------------------------------------------------------- */
@@ -6408,52 +6783,83 @@ int OGRSpatialReference::IsSameGeogCS( const OGRSpatialReference *poOther ) cons
     pszThisValue = this->GetAttrValue( "DATUM" );
     pszOtherValue = poOther->GetAttrValue( "DATUM" );
 
-    if( pszThisValue != NULL && pszOtherValue != NULL
-        && !EQUAL(pszThisValue,pszOtherValue) )
+    const char* pszDatumRule =
+        CSLFetchNameValueDef( papszOptions, "DATUM", "STRICT");
+    if( pszThisValue != nullptr && pszOtherValue != nullptr
+        && !EQUAL(pszThisValue, pszOtherValue)
+        && EQUAL(pszDatumRule, "STRICT") )
+    {
+#if DEBUG_VERBOSE
+        CPLDebug("OSR", "DATUM names do not match");
+#endif
         return FALSE;
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Do the datum TOWGS84 values match if present?                   */
 /* -------------------------------------------------------------------- */
+    const char* pszTOWGS84Rule =
+        CSLFetchNameValueDef( papszOptions, "TOWGS84", "STRICT" );
     double adfTOWGS84[7] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     double adfOtherTOWGS84[7] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
-    this->GetTOWGS84( adfTOWGS84, 7 );
-    poOther->GetTOWGS84( adfOtherTOWGS84, 7 );
-
-    for( int i = 0; i < 7; i++ )
+    bool bThisHasTOWGS84 = this->GetTOWGS84( adfTOWGS84, 7 ) == OGRERR_NONE;
+    bool bOtherHasTOWGS84 = poOther->GetTOWGS84( adfOtherTOWGS84, 7 ) == OGRERR_NONE;
+    if( EQUAL(pszTOWGS84Rule, "STRICT" ) ||
+        (bThisHasTOWGS84 && bOtherHasTOWGS84 &&
+         EQUAL(pszTOWGS84Rule, "ONLY_IF_IN_BOTH")) )
     {
-        if( fabs(adfTOWGS84[i] - adfOtherTOWGS84[i]) > 0.00001 )
-            return FALSE;
+        for( int i = 0; i < 7; i++ )
+        {
+            if( fabs(adfTOWGS84[i] - adfOtherTOWGS84[i]) > 0.00001 )
+            {
+#ifdef DEBUG_VERBOSE
+                CPLDebug("OSR", "TOWGS84 do not match");
+#endif
+                return FALSE;
+            }
+        }
     }
 
 /* -------------------------------------------------------------------- */
-/*      Do the prime meridians match?  If missing assume a value of zero.*/
+/*    Do the prime meridians match?  If missing assume a value of zero. */
 /* -------------------------------------------------------------------- */
     pszThisValue = this->GetAttrValue( "PRIMEM", 1 );
-    if( pszThisValue == NULL )
+    if( pszThisValue == nullptr )
         pszThisValue = "0.0";
 
     pszOtherValue = poOther->GetAttrValue( "PRIMEM", 1 );
-    if( pszOtherValue == NULL )
+    if( pszOtherValue == nullptr )
         pszOtherValue = "0.0";
 
-    if( CPLAtof(pszOtherValue) != CPLAtof(pszThisValue) )
+    if( !IsRelativeErrorSmaller(CPLAtof(pszOtherValue),
+                                CPLAtof(pszThisValue), 1e-8) )
+    {
+#ifdef DEBUG_VERBOSE
+        CPLDebug("OSR", "PRIMEM do not match");
+#endif
         return FALSE;
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Do the units match?                                             */
 /* -------------------------------------------------------------------- */
     pszThisValue = this->GetAttrValue( "GEOGCS|UNIT", 1 );
-    if( pszThisValue == NULL )
+    if( pszThisValue == nullptr )
         pszThisValue = SRS_UA_DEGREE_CONV;
 
     pszOtherValue = poOther->GetAttrValue( "GEOGCS|UNIT", 1 );
-    if( pszOtherValue == NULL )
+    if( pszOtherValue == nullptr )
         pszOtherValue = SRS_UA_DEGREE_CONV;
 
-    if( ABS(CPLAtof(pszOtherValue) - CPLAtof(pszThisValue)) > 0.00000001 )
+    if( !IsRelativeErrorSmaller(CPLAtof(pszOtherValue),
+                                CPLAtof(pszThisValue), 1e-8) )
+    {
+#ifdef DEBUG_VERBOSE
+        CPLDebug("OSR", "GEOGCS|UNIT do not match");
+#endif
         return FALSE;
+    }
 
 /* -------------------------------------------------------------------- */
 /*      Does the spheroid match.  Check semi major, and inverse         */
@@ -6461,15 +6867,25 @@ int OGRSpatialReference::IsSameGeogCS( const OGRSpatialReference *poOther ) cons
 /* -------------------------------------------------------------------- */
     pszThisValue = this->GetAttrValue( "SPHEROID", 1 );
     pszOtherValue = poOther->GetAttrValue( "SPHEROID", 1 );
-    if( pszThisValue != NULL && pszOtherValue != NULL
-        && ABS(CPLAtof(pszThisValue) - CPLAtof(pszOtherValue)) > 0.01 )
+    if( pszThisValue != nullptr && pszOtherValue != nullptr
+        && std::abs(CPLAtof(pszThisValue) - CPLAtof(pszOtherValue)) > 0.01 )
+    {
+#ifdef DEBUG_VERBOSE
+        CPLDebug("OSR", "SPHEROID major do not match");
+#endif
         return FALSE;
+    }
 
     pszThisValue = this->GetAttrValue( "SPHEROID", 2 );
     pszOtherValue = poOther->GetAttrValue( "SPHEROID", 2 );
-    if( pszThisValue != NULL && pszOtherValue != NULL
-        && ABS(CPLAtof(pszThisValue) - CPLAtof(pszOtherValue)) > 0.0001 )
+    if( pszThisValue != nullptr && pszOtherValue != nullptr
+        && std::abs(CPLAtof(pszThisValue) - CPLAtof(pszOtherValue)) > 0.0001 )
+    {
+#ifdef DEBUG_VERBOSE
+        CPLDebug("OSR", "SPHEROID inverse flattening do not match");
+#endif
         return FALSE;
+    }
 
     return TRUE;
 }
@@ -6489,8 +6905,8 @@ int OSRIsSameGeogCS( OGRSpatialReferenceH hSRS1, OGRSpatialReferenceH hSRS2 )
     VALIDATE_POINTER1( hSRS1, "OSRIsSameGeogCS", 0 );
     VALIDATE_POINTER1( hSRS2, "OSRIsSameGeogCS", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS1)->IsSameGeogCS(
-        reinterpret_cast<OGRSpatialReference *>(hSRS2) );
+    return ToPointer(hSRS1)->IsSameGeogCS(
+        ToPointer(hSRS2) );
 }
 
 /************************************************************************/
@@ -6516,7 +6932,7 @@ int OGRSpatialReference::IsSameVertCS( const OGRSpatialReference *poOther ) cons
     const char *pszThisValue = this->GetAttrValue( "VERT_DATUM" );
     const char *pszOtherValue = poOther->GetAttrValue( "VERT_DATUM" );
 
-    if( pszThisValue == NULL || pszOtherValue == NULL
+    if( pszThisValue == nullptr || pszOtherValue == nullptr
         || !EQUAL(pszThisValue, pszOtherValue) )
         return FALSE;
 
@@ -6524,14 +6940,14 @@ int OGRSpatialReference::IsSameVertCS( const OGRSpatialReference *poOther ) cons
 /*      Do the units match?                                             */
 /* -------------------------------------------------------------------- */
     pszThisValue = this->GetAttrValue( "VERT_CS|UNIT", 1 );
-    if( pszThisValue == NULL )
+    if( pszThisValue == nullptr )
         pszThisValue = "1.0";
 
     pszOtherValue = poOther->GetAttrValue( "VERT_CS|UNIT", 1 );
-    if( pszOtherValue == NULL )
+    if( pszOtherValue == nullptr )
         pszOtherValue = "1.0";
 
-    if( ABS(CPLAtof(pszOtherValue) - CPLAtof(pszThisValue)) > 0.00000001 )
+    if( std::abs(CPLAtof(pszOtherValue) - CPLAtof(pszThisValue)) > 0.00000001 )
         return FALSE;
 
     return TRUE;
@@ -6552,8 +6968,20 @@ int OSRIsSameVertCS( OGRSpatialReferenceH hSRS1, OGRSpatialReferenceH hSRS2 )
     VALIDATE_POINTER1( hSRS1, "OSRIsSameVertCS", 0 );
     VALIDATE_POINTER1( hSRS2, "OSRIsSameVertCS", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS1)->IsSameVertCS(
-        reinterpret_cast<OGRSpatialReference *>(hSRS2) );
+    return ToPointer(hSRS1)->IsSameVertCS(
+        ToPointer(hSRS2) );
+}
+
+/************************************************************************/
+/*                        IsDefaultParameter()                          */
+/************************************************************************/
+
+static bool IsDefaultParameter(const char* pszParamName, double dfVal)
+{
+    if( STARTS_WITH_CI(pszParamName, "scale") )
+        return dfVal == 1.0;
+    else
+        return dfVal == 0.0;
 }
 
 /************************************************************************/
@@ -6571,48 +6999,227 @@ int OSRIsSameVertCS( OGRSpatialReferenceH hSRS1, OGRSpatialReferenceH hSRS2 )
 int OGRSpatialReference::IsSame( const OGRSpatialReference * poOtherSRS ) const
 
 {
-    if( GetRoot() == NULL && poOtherSRS->GetRoot() == NULL )
+    return IsSame(poOtherSRS, nullptr);
+}
+
+
+/**
+ * \brief Do these two spatial references describe the same system ?
+ *
+ * @param poOtherSRS the SRS being compared to.
+ * @param papszOptions options. DATUM=STRICT/IGNORE. TOWGS84=STRICT/ONLY_IF_IN_BOTH/IGNORE
+ *
+ * @return TRUE if equivalent or FALSE otherwise.
+ */
+
+int OGRSpatialReference::IsSame( const OGRSpatialReference * poOtherSRS,
+                                 const char* const * papszOptions ) const
+
+{
+    if( GetRoot() == nullptr && poOtherSRS->GetRoot() == nullptr )
         return TRUE;
 
-    if( GetRoot() == NULL || poOtherSRS->GetRoot() == NULL )
-        return FALSE;
-
-/* -------------------------------------------------------------------- */
-/*      Compare geographic coordinate system.                           */
-/* -------------------------------------------------------------------- */
-    if( !IsSameGeogCS( poOtherSRS ) )
+    if( GetRoot() == nullptr || poOtherSRS->GetRoot() == nullptr )
         return FALSE;
 
 /* -------------------------------------------------------------------- */
 /*      Do the have the same root types?  i.e. is one PROJCS and one    */
 /*      GEOGCS or perhaps LOCALCS?                                      */
 /* -------------------------------------------------------------------- */
-    if( !EQUAL(GetRoot()->GetValue(),poOtherSRS->GetRoot()->GetValue()) )
+    if( !EQUAL(GetRoot()->GetValue(), poOtherSRS->GetRoot()->GetValue()) )
+        return FALSE;
+
+/* -------------------------------------------------------------------- */
+/*      Compare proj.4 extensions.                                      */
+/* -------------------------------------------------------------------- */
+    const char* pszThisProj4Ext = GetExtension(nullptr, "PROJ4", nullptr);
+    const char* pszOtherProj4Ext = poOtherSRS->GetExtension(nullptr, "PROJ4", nullptr);
+    if( (pszThisProj4Ext == nullptr && pszOtherProj4Ext != nullptr) ||
+        (pszThisProj4Ext != nullptr && pszOtherProj4Ext == nullptr) ||
+        (pszThisProj4Ext != nullptr && pszOtherProj4Ext != nullptr &&
+         !EQUAL(CPLString(pszThisProj4Ext).Trim().replaceAll("  "," "),
+                CPLString(pszOtherProj4Ext).Trim().replaceAll("  "," "))) )
+    {
+#ifdef DEBUG_VERBOSE
+        CPLDebug("OSR", "Different EXTENSION");
+#endif
+        return FALSE;
+    }
+
+/* -------------------------------------------------------------------- */
+/*      Compare geographic coordinate system.                           */
+/* -------------------------------------------------------------------- */
+    if( !IsSameGeogCS( poOtherSRS, papszOptions ) )
         return FALSE;
 
 /* -------------------------------------------------------------------- */
 /*      Compare projected coordinate system.                            */
 /* -------------------------------------------------------------------- */
     const OGR_SRSNode *poPROJCS = GetAttrNode( "PROJCS" );
-    if( poPROJCS != NULL )
+    if( poPROJCS != nullptr )
     {
         const char *pszValue1 = this->GetAttrValue( "PROJECTION" );
         const char *pszValue2 = poOtherSRS->GetAttrValue( "PROJECTION" );
-        if( pszValue1 == NULL || pszValue2 == NULL
-            || !EQUAL(pszValue1,pszValue2) )
-            return FALSE;
 
+        if( pszValue1 == nullptr || pszValue2 == nullptr )
+        {
+#ifdef DEBUG_VERBOSE
+            CPLDebug("OSR", "Different PROJECTION");
+#endif
+            return FALSE;
+        }
+
+        if( !EQUAL(pszValue1, pszValue2) )
+        {
+            OGRSpatialReference* poThisInOtherProj =
+                convertToOtherProjection(pszValue2);
+            if( poThisInOtherProj )
+            {
+                int bRet = poThisInOtherProj->IsSame(poOtherSRS);
+                delete poThisInOtherProj;
+                return bRet;
+            }
+            else
+            {
+                OGRSpatialReference* poOtherSRSInThisProj =
+                    poOtherSRS->convertToOtherProjection(pszValue1);
+                if( poOtherSRSInThisProj )
+                {
+                    int bRet = IsSame(poOtherSRSInThisProj);
+                    delete poOtherSRSInThisProj;
+                    return bRet;
+                }
+            }
+
+#ifdef DEBUG_VERBOSE
+            CPLDebug("OSR", "Different PROJECTION");
+#endif
+            return FALSE;
+        }
+
+        bool bIgnoreStdParallel12 = false;
+        bool bIgnoreRectifiedGridAngle = false;
+        if( EQUAL(pszValue1, SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP) )
+        {
+            double dfThis1 = GetProjParm(SRS_PP_STANDARD_PARALLEL_1);
+            double dfOther1 = poOtherSRS->GetProjParm(SRS_PP_STANDARD_PARALLEL_1);
+            double dfThis2 = GetProjParm(SRS_PP_STANDARD_PARALLEL_2);
+            double dfOther2 = poOtherSRS->GetProjParm(SRS_PP_STANDARD_PARALLEL_2);
+            if( !((IsRelativeErrorSmaller(dfThis1, dfOther1, 1e-8) &&
+                   IsRelativeErrorSmaller(dfThis2, dfOther2, 1e-8)) ||
+                  (IsRelativeErrorSmaller(dfThis1, dfOther2, 1e-8) &&
+                   IsRelativeErrorSmaller(dfThis2, dfOther1, 1e-8))) )
+            {
+#ifdef DEBUG_VERBOSE
+                CPLDebug("OSR", "Relative error for StdParallel1/2 too big");
+#endif
+                return FALSE;
+            }
+            bIgnoreStdParallel12 = true;
+        }
+        else if( EQUAL(pszValue1, SRS_PT_HOTINE_OBLIQUE_MERCATOR) )
+        {
+            double dfAz = fmod(GetProjParm(SRS_PP_AZIMUTH) + 360.0, 360.0);
+            double dfRectToSkew = fmod(GetProjParm(SRS_PP_RECTIFIED_GRID_ANGLE, dfAz) + 360.0, 360.0);
+            double dfAz2 = fmod(poOtherSRS->GetProjParm(SRS_PP_AZIMUTH) + 360.0, 360.0 );
+            double dfRectToSkew2 = fmod(poOtherSRS->GetProjParm(SRS_PP_RECTIFIED_GRID_ANGLE, dfAz2) + 360.0, 360.0);
+            if( !IsRelativeErrorSmaller(dfRectToSkew, dfRectToSkew2, 1e-8) )
+            {
+#ifdef DEBUG_VERBOSE
+                CPLDebug("OSR", "Relative error for rectified_grid_angle too big");
+#endif
+                return FALSE;
+            }
+            bIgnoreRectifiedGridAngle = true;
+        }
+
+        int nCountNonDefaultParameters = 0;
         for( int iChild = 0; iChild < poPROJCS->GetChildCount(); iChild++ )
         {
             const OGR_SRSNode *poNode = poPROJCS->GetChild( iChild );
-            if( !EQUAL(poNode->GetValue(),"PARAMETER")
+            if( !EQUAL(poNode->GetValue(), "PARAMETER")
                 || poNode->GetChildCount() != 2 )
                 continue;
 
-            /* this this eventually test within some epsilon? */
-            if( this->GetProjParm( poNode->GetChild(0)->GetValue() )
-                != poOtherSRS->GetProjParm( poNode->GetChild(0)->GetValue() ) )
+            const char* pszParamName = poNode->GetChild(0)->GetValue();
+            if( bIgnoreStdParallel12 &&
+                (EQUAL( pszParamName, SRS_PP_STANDARD_PARALLEL_1 ) ||
+                 EQUAL( pszParamName, SRS_PP_STANDARD_PARALLEL_2 )) )
+            {
+                continue;
+            }
+
+            if( bIgnoreRectifiedGridAngle &&
+                EQUAL( pszParamName, SRS_PP_RECTIFIED_GRID_ANGLE ) )
+            {
+                continue;
+            }
+
+            double dfVal = GetProjParm( pszParamName );
+            if( !IsDefaultParameter(pszParamName, dfVal) )
+            {
+                nCountNonDefaultParameters ++;
+            }
+
+            double dfOtherVal = poOtherSRS->GetProjParm( pszParamName,
+                STARTS_WITH_CI(pszParamName, "Scale") ? 1.0 : 0.0 );
+
+            if( EQUAL(pszParamName, SRS_PP_AZIMUTH) )
+            {
+                dfVal = fmod(dfVal + 360.0, 360.0);
+                dfOtherVal = fmod(dfOtherVal + 360.0, 360.0);
+            }
+
+            if( !IsRelativeErrorSmaller(dfVal, dfOtherVal, 1e-8) )
+            {
+#ifdef DEBUG_VERBOSE
+                CPLDebug("OSR", "Relative error for %s too big",
+                         pszParamName);
+#endif
                 return FALSE;
+            }
+        }
+
+        const OGR_SRSNode *poOtherPROJCS = poOtherSRS->GetAttrNode( "PROJCS" );
+        if( poOtherPROJCS == nullptr )
+        {
+            return FALSE;
+        }
+        int nCounterOtherNonDefaultParameters = 0;
+        for( int iChild = 0; iChild < poOtherPROJCS->GetChildCount(); iChild++ )
+        {
+            const OGR_SRSNode *poNode = poOtherPROJCS->GetChild( iChild );
+            if( !EQUAL(poNode->GetValue(), "PARAMETER")
+                || poNode->GetChildCount() != 2 )
+                continue;
+
+            const char* pszParamName = poNode->GetChild(0)->GetValue();
+            if( bIgnoreStdParallel12 &&
+                (EQUAL( pszParamName, SRS_PP_STANDARD_PARALLEL_1 ) ||
+                 EQUAL( pszParamName, SRS_PP_STANDARD_PARALLEL_2 )) )
+            {
+                continue;
+            }
+
+            if( bIgnoreRectifiedGridAngle &&
+                EQUAL( pszParamName, SRS_PP_RECTIFIED_GRID_ANGLE ) )
+            {
+                continue;
+            }
+
+            double dfVal = poOtherSRS->GetProjParm( pszParamName );
+            if( !IsDefaultParameter(pszParamName, dfVal) )
+            {
+                nCounterOtherNonDefaultParameters ++;
+            }
+        }
+
+        if( nCountNonDefaultParameters != nCounterOtherNonDefaultParameters )
+        {
+#ifdef DEBUG_VERBOSE
+            CPLDebug("OSR", "Different number of non default PARAMETER");
+#endif
+            return FALSE;
         }
     }
 
@@ -6623,10 +7230,15 @@ int OGRSpatialReference::IsSame( const OGRSpatialReference * poOtherSRS ) const
     {
         if( GetLinearUnits() != 0.0 )
         {
-            const double dfRatio =
-                poOtherSRS->GetLinearUnits() / GetLinearUnits();
-            if( dfRatio < 0.9999999999 || dfRatio > 1.000000001 )
+            // EPSG uses 0.201166195164 for Clarke's link, ESRI 0.2011661949 --> 1.3e-9 relative error
+            if( !IsRelativeErrorSmaller(poOtherSRS->GetLinearUnits(),
+                                        GetLinearUnits(), 1e-8 ) )
+            {
+#ifdef DEBUG_VERBOSE
+                CPLDebug("OSR", "Relative error for linear unit too big");
+#endif
                 return FALSE;
+            }
         }
     }
 
@@ -6654,8 +7266,445 @@ int OSRIsSame( OGRSpatialReferenceH hSRS1, OGRSpatialReferenceH hSRS2 )
     VALIDATE_POINTER1( hSRS1, "OSRIsSame", 0 );
     VALIDATE_POINTER1( hSRS2, "OSRIsSame", 0 );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS1)->IsSame(
-        reinterpret_cast<OGRSpatialReference *>(hSRS2) );
+    return ToPointer(hSRS1)->IsSame(
+        ToPointer(hSRS2) );
+}
+
+/************************************************************************/
+/*                               tsfn()                                 */
+/************************************************************************/
+
+static double tsfn(double phi, double ec)
+{
+    const double sinphi = sin(phi);
+    const double sinphi_ec = sinphi * ec;
+    return tan(0.5 * (M_PI/2 - phi)) /
+               pow( (1.0 - sinphi_ec) / (1.0 + sinphi_ec), 0.5 * ec);
+}
+
+/************************************************************************/
+/*                               msfn()                                 */
+/************************************************************************/
+
+static double msfn(double phi, double ec)
+{
+    const double sinphi = sin(phi);
+    const double cosphi = cos(phi);
+    const double sinphi_ec = sinphi * ec;
+    return cosphi / sqrt(1.0 - sinphi_ec * sinphi_ec);
+}
+
+/************************************************************************/
+/*                         lcc_1sp_to_2sp_f()                           */
+/************************************************************************/
+
+// Function whose zeroes are the sin of the standard parallels of LCC_2SP
+static double lcc_1sp_to_2sp_f(double sinphi, double K, double ec, double n)
+{
+    const double x = sinphi;
+    const double ecx = ec * x;
+    return ( 1 - x* x ) / (1 - ecx * ecx) -
+        K * K * pow((1.0 - x ) / (1.0 + x) *
+                    pow( (1.0 + ecx)/(1.0 - ecx), ec), n);
+}
+
+/************************************************************************/
+/*                    find_zero_lcc_1sp_to_2sp_f()                      */
+/************************************************************************/
+
+// Find the sin of the standard parallels of LCC_2SP
+static double find_zero_lcc_1sp_to_2sp_f(double sinphi0, bool bNorth,
+                                         double K, double ec)
+{
+    double a, b;
+    double f_a;
+    if( bNorth )
+    {
+        // Look for zero above phi0
+        a = sinphi0;
+        b = 1.0; // sin(North pole)
+        f_a = 1.0; // some positive value, but we only care about the sign
+    }
+    else
+    {
+        // Look for zero below phi0
+        a = -1.0; // sin(South pole)
+        b = sinphi0;
+        f_a = -1.0; // minus infinity in fact, but we only care about the sign
+    }
+    // We use dichotomy search. lcc_1sp_to_2sp_f() is positive at sinphi_init,
+    // has a zero in ]-1,sinphi0[ and ]sinphi0,1[ ranges
+    for( int N=0; N<100; N++ )
+    {
+        double c = (a + b) / 2;
+        double f_c = lcc_1sp_to_2sp_f(c, K, ec, sinphi0);
+        if ( f_c == 0.0 || (b-a) < 1e-18 )
+        {
+            return c;
+        }
+        if( (f_c > 0 && f_a > 0) || (f_c < 0 && f_a < 0) )
+        {
+            a = c;
+            f_a = f_c;
+        }
+        else
+        {
+            b = c;
+        }
+    }
+    return (a + b) / 2;
+}
+
+static double DegToRad(double x) { return x / 180.0 * M_PI; }
+static double RadToDeg(double x) { return x / M_PI * 180.0; }
+
+/************************************************************************/
+/*                    convertToOtherProjection()                        */
+/************************************************************************/
+
+/**
+ * \brief Convert to another equivalent projection
+ * 
+ * Currently implemented:
+ * <ul>
+ * <li>SRS_PT_MERCATOR_1SP to SRS_PT_MERCATOR_2SP</li>
+ * <li>SRS_PT_MERCATOR_2SP to SRS_PT_MERCATOR_1SP</li>
+ * <li>SRS_PT_LAMBERT_CONFORMAL_CONIC_1SP to SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP</li>
+ * <li>SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP to SRS_PT_LAMBERT_CONFORMAL_CONIC_1SP</li>
+ * </ul>
+ *
+ * @param pszTargetProjection target projection.
+ * @param papszOptions lists of options. None supported currently.
+ * @return a new SRS, or NULL in case of error.
+ *
+ * @since GDAL 2.3
+ */
+OGRSpatialReference* OGRSpatialReference::convertToOtherProjection(
+                            const char* pszTargetProjection,
+                            CPL_UNUSED const char* const* papszOptions ) const
+{
+    const char *pszProjection = GetAttrValue( "PROJECTION" );
+    if( pszProjection == nullptr || pszTargetProjection == nullptr )
+        return nullptr;
+
+    if( EQUAL(pszProjection, pszTargetProjection) )
+        return Clone();
+
+    if( EQUAL(pszProjection, SRS_PT_MERCATOR_1SP) &&
+        EQUAL(pszTargetProjection, SRS_PT_MERCATOR_2SP) &&
+        GetNormProjParm(SRS_PP_LATITUDE_OF_ORIGIN, 0.0) == 0.0 )
+    {
+        const double k0 = GetNormProjParm(SRS_PP_SCALE_FACTOR, 1.0);
+        if( !(k0 > 0 && k0 <= 1.0+ 1e-10) )
+            return nullptr;
+        const double e2 = GetSquaredEccentricity();
+        if( e2 < 0 )
+            return nullptr;
+        const double dfStdP1Lat = ( k0 >= 1.0 ) ? 0.0 :
+            RadToDeg(acos( sqrt( (1.0 - e2) / ((1.0 / (k0 * k0)) - e2)) ));
+        OGRSpatialReference* poMerc2SP = new OGRSpatialReference();
+        poMerc2SP->CopyGeogCSFrom(this);
+        poMerc2SP->SetMercator2SP(
+                              dfStdP1Lat,
+                              GetNormProjParm(SRS_PP_LATITUDE_OF_ORIGIN, 0.0),
+                              GetNormProjParm(SRS_PP_CENTRAL_MERIDIAN, 0.0),
+                              GetNormProjParm(SRS_PP_FALSE_EASTING, 0.0),
+                              GetNormProjParm(SRS_PP_FALSE_NORTHING, 0.0) );
+        return poMerc2SP;
+    }
+
+    if( EQUAL(pszProjection, SRS_PT_MERCATOR_2SP) &&
+        EQUAL(pszTargetProjection, SRS_PT_MERCATOR_1SP) &&
+        GetNormProjParm(SRS_PP_LATITUDE_OF_ORIGIN, 0.0) == 0.0 )
+    {
+        const double dfStdP1Lat =
+            GetNormProjParm(SRS_PP_STANDARD_PARALLEL_1, 0.0);
+        const double phi1 = DegToRad(dfStdP1Lat);
+        if( !(fabs(phi1) < M_PI / 2) )
+            return nullptr;
+        const double ec = GetEccentricity();
+        if( ec < 0 )
+            return nullptr;
+        const double k0 = msfn(phi1, ec);
+        OGRSpatialReference* poMerc1SP = new OGRSpatialReference();
+        poMerc1SP->CopyGeogCSFrom(this);
+        poMerc1SP->SetMercator(
+                              GetNormProjParm(SRS_PP_LATITUDE_OF_ORIGIN, 0.0),
+                              GetNormProjParm(SRS_PP_CENTRAL_MERIDIAN, 0.0),
+                              k0,
+                              GetNormProjParm(SRS_PP_FALSE_EASTING, 0.0),
+                              GetNormProjParm(SRS_PP_FALSE_NORTHING, 0.0) );
+        return poMerc1SP;
+    }
+
+    if( EQUAL(pszProjection, SRS_PT_LAMBERT_CONFORMAL_CONIC_1SP) &&
+        EQUAL(pszTargetProjection, SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP) )
+    {
+        // Notations m0, t0, n, m1, t1, F are those of the EPSG guidance
+        // "1.3.1.1 Lambert Conic Conformal (2SP)" and
+        // "1.3.1.2 Lambert Conic Conformal (1SP)" and
+        // or Snyder pages 106-109
+        const double dfLatitudeOfOrigin =
+            GetNormProjParm(SRS_PP_LATITUDE_OF_ORIGIN, 0.0);
+        const double phi0 = DegToRad(dfLatitudeOfOrigin);
+        const double k0 = GetNormProjParm(SRS_PP_SCALE_FACTOR, 1.0);
+        if( !(fabs(phi0) < M_PI / 2) )
+            return nullptr;
+        if( !(k0 > 0 && k0 <= 1.0+ 1e-10) )
+            return nullptr;
+        const double ec = GetEccentricity();
+        if( ec < 0 )
+            return nullptr;
+        const double m0 = msfn(phi0, ec);
+        const double t0 = tsfn(phi0, ec);
+        const double n = sin(phi0);
+        if( fabs(n) < 1e-10 )
+            return nullptr;
+        OGRSpatialReference* poLCC2SP = new OGRSpatialReference();
+        poLCC2SP->CopyGeogCSFrom(this);
+        if( fabs(k0 - 1.0) <= 1e-10 )
+        {
+            poLCC2SP->SetLCC( dfLatitudeOfOrigin,
+                              dfLatitudeOfOrigin,
+                              dfLatitudeOfOrigin,
+                              GetNormProjParm(SRS_PP_CENTRAL_MERIDIAN, 0.0),
+                              GetNormProjParm(SRS_PP_FALSE_EASTING, 0.0),
+                              GetNormProjParm(SRS_PP_FALSE_NORTHING, 0.0) );
+        }
+        else
+        {
+            const double K = k0 * m0 / pow(t0, n);
+            const double phi1 =
+                asin(find_zero_lcc_1sp_to_2sp_f(n, true, K, ec));
+            const double phi2 =
+                asin(find_zero_lcc_1sp_to_2sp_f(n, false, K, ec));
+            double phi1Deg = RadToDeg(phi1);
+            double phi2Deg = RadToDeg(phi2);
+
+            // Try to round to hundreth of degree if very close to it
+            if( fabs(phi1Deg * 1000 - floor(phi1Deg * 1000 + 0.5)) < 1e-8 )
+                phi1Deg = floor(phi1Deg * 1000 + 0.5) / 1000;
+            if( fabs(phi2Deg * 1000 - floor(phi2Deg * 1000 + 0.5)) < 1e-8 )
+                phi2Deg = floor(phi2Deg * 1000 + 0.5) / 1000;
+
+            // The following improvement is too turn the LCC1SP equivalent of
+            // EPSG:2154 to the real LCC2SP
+            // If the computed latitude of origin is close to .0 or .5 degrees
+            // then check if rounding it to it will get a false northing
+            // close to an integer
+            const double FN = GetNormProjParm(SRS_PP_FALSE_NORTHING, 0.0);
+            if( fabs(dfLatitudeOfOrigin * 2 -
+                     floor(dfLatitudeOfOrigin * 2 + 0.5)) < 0.2 )
+            {
+                const double dfRoundedLatOfOrig =
+                    floor(dfLatitudeOfOrigin * 2 + 0.5) / 2;
+                const double m1 = msfn(phi1, ec);
+                const double t1 = tsfn(phi1, ec);
+                const double F = m1 / (n * pow(t1, n));
+                const double a = GetSemiMajor();
+                const double tRoundedLatOfOrig =
+                    tsfn(DegToRad(dfRoundedLatOfOrig), ec);
+                const double FN_correction =
+                    a * F * (pow(tRoundedLatOfOrig, n) - pow(t0, n));
+                const double FN_corrected = FN - FN_correction;
+                const double FN_corrected_rounded = floor(FN_corrected + 0.5);
+                if( fabs(FN_corrected - FN_corrected_rounded) < 1e-8 )
+                {
+                    poLCC2SP->SetLCC(
+                              phi1Deg,
+                              phi2Deg,
+                              dfRoundedLatOfOrig,
+                              GetNormProjParm(SRS_PP_CENTRAL_MERIDIAN, 0.0),
+                              GetNormProjParm(SRS_PP_FALSE_EASTING, 0.0),
+                              FN_corrected_rounded );
+                    return poLCC2SP;
+                }
+            }
+
+            poLCC2SP->SetLCC( phi1Deg,
+                              phi2Deg,
+                              dfLatitudeOfOrigin,
+                              GetNormProjParm(SRS_PP_CENTRAL_MERIDIAN, 0.0),
+                              GetNormProjParm(SRS_PP_FALSE_EASTING, 0.0),
+                              FN );
+        }
+        return poLCC2SP;
+    }
+
+    if( EQUAL(pszProjection, SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP) &&
+        EQUAL(pszTargetProjection, SRS_PT_LAMBERT_CONFORMAL_CONIC_1SP) )
+    {
+        // Notations m0, t0, m1, t1, m2, t2 n, F are those of the EPSG guidance
+        // "1.3.1.1 Lambert Conic Conformal (2SP)" and
+        // "1.3.1.2 Lambert Conic Conformal (1SP)" and
+        // or Snyder pages 106-109
+        const double phiF =
+            DegToRad(GetNormProjParm(SRS_PP_LATITUDE_OF_ORIGIN, 0.0));
+        const double phi1 =
+            DegToRad(GetNormProjParm(SRS_PP_STANDARD_PARALLEL_1, 0.0));
+        const double phi2 =
+            DegToRad(GetNormProjParm(SRS_PP_STANDARD_PARALLEL_2, 0.0));
+        if( !(fabs(phiF) < M_PI / 2) )
+            return nullptr;
+        if( !(fabs(phi1) < M_PI / 2) )
+            return nullptr;
+        if( !(fabs(phi2) < M_PI / 2) )
+            return nullptr;
+        const double ec = GetEccentricity();
+        if( ec < 0 )
+            return nullptr;
+        const double m1 = msfn(phi1, ec);
+        const double m2 = msfn(phi2, ec);
+        const double t1 = tsfn(phi1, ec);
+        const double t2 = tsfn(phi2, ec);
+        const double n_denom = log(t1) - log(t2);
+        const double n = (fabs(n_denom) < 1e-10) ? sin(phi1) :
+                                (log(m1) - log(m2)) / n_denom;
+        if( fabs(n) < 1e-10 )
+            return nullptr;
+        const double F = m1 / (n * pow(t1, n));
+        const double phi0 = asin(n);
+        const double m0 = msfn(phi0, ec);
+        const double t0 = tsfn(phi0, ec);
+        const double F0 = m0 / (n * pow(t0, n));
+        const double k0 = F / F0;
+        const double a = GetSemiMajor();
+        const double tF = tsfn(phiF, ec);
+        const double FN_correction = a * F * (pow(tF, n) - pow(t0, n));
+
+        OGRSpatialReference* poLCC1SP = new OGRSpatialReference();
+        poLCC1SP->CopyGeogCSFrom(this);
+        double phi0Deg = RadToDeg(phi0);
+        // Try to round to thousandth of degree if very close to it
+        if( fabs(phi0Deg * 1000 - floor(phi0Deg * 1000 + 0.5)) < 1e-8 )
+            phi0Deg = floor(phi0Deg * 1000 + 0.5) / 1000;
+        poLCC1SP->SetLCC1SP(
+                phi0Deg,
+                GetNormProjParm(SRS_PP_CENTRAL_MERIDIAN, 0.0),
+                k0,
+                GetNormProjParm(SRS_PP_FALSE_EASTING, 0.0),
+                GetNormProjParm(SRS_PP_FALSE_NORTHING, 0.0) +
+                    (fabs(FN_correction) > 1e-8 ? FN_correction : 0) );
+        return poLCC1SP;
+    }
+
+    return nullptr;
+}
+
+
+/************************************************************************/
+/*                    OSRConvertToOtherProjection()                     */
+/************************************************************************/
+
+/**
+ * \brief Convert to another equivalent projection
+ * 
+ * Currently implemented:
+ * <ul>
+ * <li>SRS_PT_MERCATOR_1SP to SRS_PT_MERCATOR_2SP</li>
+ * <li>SRS_PT_MERCATOR_2SP to SRS_PT_MERCATOR_1SP</li>
+ * <li>SRS_PT_LAMBERT_CONFORMAL_CONIC_1SP to SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP</li>
+ * <li>SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP to SRS_PT_LAMBERT_CONFORMAL_CONIC_1SP</li>
+ * </ul>
+ *
+ * @param hSRS source SRS 
+ * @param pszTargetProjection target projection.
+ * @param papszOptions lists of options. None supported currently.
+ * @return a new SRS, or NULL in case of error.
+ *
+ * @since GDAL 2.3
+ */
+OGRSpatialReferenceH OSRConvertToOtherProjection(
+                                    OGRSpatialReferenceH hSRS,
+                                    const char* pszTargetProjection,
+                                    const char* const* papszOptions )
+{
+    VALIDATE_POINTER1( hSRS, "OSRConvertToOtherProjection", nullptr );
+    return ToHandle(
+        ToPointer(hSRS)->
+            convertToOtherProjection(pszTargetProjection, papszOptions));
+}
+
+/************************************************************************/
+/*                           OSRFindMatches()                           */
+/************************************************************************/
+
+/**
+ * \brief Try to identify a match between the passed SRS and a related SRS
+ * in a catalog (currently EPSG only)
+ *
+ * Matching may be partial, or may fail.
+ * Returned entries will be sorted by decreasing match confidence (first
+ * entry has the highest match confidence).
+ *
+ * The exact way matching is done may change in future versions.
+ *
+ * The current algorithm is:
+ * - try first AutoIdentifyEPSG(). If it succeeds, return the corresponding SRS
+ * - otherwise iterate over all SRS from the EPSG catalog (as found in GDAL
+ *   pcs.csv and gcs.csv files+esri_extra.wkt), and find those that match the
+ *   input SRS using the IsSame() function (ignoring TOWGS84 clauses)
+ * - if there is a single match using IsSame() or one of the matches has the
+ *   same SRS name, return it with 100% confidence
+ * - if a SRS has the same SRS name, but does not pass the IsSame() criteria,
+ *   return it with 50% confidence.
+ * - otherwise return all candidate SRS that pass the IsSame() criteria with a
+ *   90% confidence.
+ *
+ * A pre-built SRS cache in ~/.gdal/X.Y/srs_cache will be used if existing,
+ * otherwise it will be built at the first run of this function.
+ *
+ * This function is the same as OGRSpatialReference::FindMatches().
+ *
+ * @param hSRS SRS to match
+ * @param papszOptions NULL terminated list of options or NULL
+ * @param pnEntries Output parameter. Number of values in the returned array.
+ * @param ppanMatchConfidence Output parameter (or NULL). *ppanMatchConfidence
+ * will be allocated to an array of *pnEntries whose values between 0 and 100
+ * indicate the confidence in the match. 100 is the highest confidence level.
+ * The array must be freed with CPLFree().
+ * 
+ * @return an array of SRS that match the passed SRS, or NULL. Must be freed with
+ * OSRFreeSRSArray()
+ *
+ * @since GDAL 2.3
+ */
+OGRSpatialReferenceH* OSRFindMatches( OGRSpatialReferenceH hSRS,
+                                      char** papszOptions,
+                                      int* pnEntries,
+                                      int** ppanMatchConfidence )
+{
+    if( pnEntries )
+        *pnEntries = 0;
+    if( ppanMatchConfidence )
+        *ppanMatchConfidence = nullptr;
+    VALIDATE_POINTER1( hSRS, "OSRFindMatches", nullptr );
+
+    OGRSpatialReference* poSRS = ToPointer(hSRS);
+    return poSRS->FindMatches(papszOptions, pnEntries,
+                              ppanMatchConfidence);
+}
+
+/************************************************************************/
+/*                           OSRFreeSRSArray()                          */
+/************************************************************************/
+
+/**
+ * \brief Free return of OSRIdentifyMatches()
+ *
+ * @param pahSRS array of SRS (must be NULL terminated)
+ * @since GDAL 2.3
+ */
+void OSRFreeSRSArray(OGRSpatialReferenceH* pahSRS)
+{
+    if( pahSRS != nullptr )
+    {
+        for( int i = 0; pahSRS[i] != nullptr; ++i )
+        {
+            OSRRelease(pahSRS[i]);
+        }
+        CPLFree(pahSRS);
+    }
 }
 
 /************************************************************************/
@@ -6692,7 +7741,7 @@ OGRErr OGRSpatialReference::SetTOWGS84( double dfDX, double dfDY, double dfDZ,
 
 {
     OGR_SRSNode *poDatum = GetAttrNode( "DATUM" );
-    if( poDatum == NULL )
+    if( poDatum == nullptr )
         return OGRERR_FAILURE;
 
     if( poDatum->FindChild( "TOWGS84" ) != -1 )
@@ -6750,7 +7799,7 @@ OGRErr OSRSetTOWGS84( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetTOWGS84", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+    return ToPointer(hSRS)->
         SetTOWGS84( dfDX, dfDY, dfDZ, dfEX, dfEY, dfEZ, dfPPM );
 }
 
@@ -6776,7 +7825,7 @@ OGRErr OGRSpatialReference::GetTOWGS84( double * padfCoeff,
 
     memset( padfCoeff, 0, sizeof(double) * nCoeffCount );
 
-    if( poNode == NULL )
+    if( poNode == nullptr )
         return OGRERR_FAILURE;
 
     for( int i = 0; i < nCoeffCount && i < poNode->GetChildCount(); i++ )
@@ -6802,25 +7851,28 @@ OGRErr OSRGetTOWGS84( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRGetTOWGS84", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->
+    return ToPointer(hSRS)->
         GetTOWGS84( padfCoeff, nCoeffCount);
 }
 
 /************************************************************************/
 /*                         IsAngularParameter()                         */
-/*                                                                      */
-/*      Is the passed projection parameter an angular one?              */
 /************************************************************************/
+
+/** Is the passed projection parameter an angular one?
+ *
+ * @return TRUE or FALSE
+ */
 
 int OGRSpatialReference::IsAngularParameter( const char *pszParameterName )
 
 {
     if( STARTS_WITH_CI(pszParameterName, "long")
         || STARTS_WITH_CI(pszParameterName, "lati")
-        || EQUAL(pszParameterName,SRS_PP_CENTRAL_MERIDIAN)
+        || EQUAL(pszParameterName, SRS_PP_CENTRAL_MERIDIAN)
         || STARTS_WITH_CI(pszParameterName, "standard_parallel")
-        || EQUAL(pszParameterName,SRS_PP_AZIMUTH)
-        || EQUAL(pszParameterName,SRS_PP_RECTIFIED_GRID_ANGLE) )
+        || EQUAL(pszParameterName, SRS_PP_AZIMUTH)
+        || EQUAL(pszParameterName, SRS_PP_RECTIFIED_GRID_ANGLE) )
         return TRUE;
 
     return FALSE;
@@ -6828,16 +7880,19 @@ int OGRSpatialReference::IsAngularParameter( const char *pszParameterName )
 
 /************************************************************************/
 /*                        IsLongitudeParameter()                        */
-/*                                                                      */
-/*      Is the passed projection parameter an angular longitude         */
-/*      (relative to a prime meridian)?                                 */
 /************************************************************************/
+
+/** Is the passed projection parameter an angular longitude
+ * (relative to a prime meridian)?
+ *
+ * @return TRUE or FALSE
+ */
 
 int OGRSpatialReference::IsLongitudeParameter( const char *pszParameterName )
 
 {
     if( STARTS_WITH_CI(pszParameterName, "long")
-        || EQUAL(pszParameterName,SRS_PP_CENTRAL_MERIDIAN) )
+        || EQUAL(pszParameterName, SRS_PP_CENTRAL_MERIDIAN) )
         return TRUE;
 
     return FALSE;
@@ -6845,16 +7900,18 @@ int OGRSpatialReference::IsLongitudeParameter( const char *pszParameterName )
 
 /************************************************************************/
 /*                         IsLinearParameter()                          */
-/*                                                                      */
-/*      Is the passed projection parameter an linear one measured in    */
-/*      meters or some similar linear measure.                          */
 /************************************************************************/
 
+/** Is the passed projection parameter an linear one measured in meters or
+ * some similar linear measure.
+ *
+ * @return TRUE or FALSE
+ */
 int OGRSpatialReference::IsLinearParameter( const char *pszParameterName )
 
 {
     if( STARTS_WITH_CI(pszParameterName, "false_")
-        || EQUAL(pszParameterName,SRS_PP_SATELLITE_HEIGHT) )
+        || EQUAL(pszParameterName, SRS_PP_SATELLITE_HEIGHT) )
         return TRUE;
 
     return FALSE;
@@ -6867,7 +7924,7 @@ int OGRSpatialReference::IsLinearParameter( const char *pszParameterName )
 /**
  * \brief Set the internal information for normalizing linear, and angular values.
  */
-void OGRSpatialReference::GetNormInfo(void) const
+void OGRSpatialReference::GetNormInfo() const
 
 {
     if( bNormInfoSet )
@@ -6876,15 +7933,13 @@ void OGRSpatialReference::GetNormInfo(void) const
 /* -------------------------------------------------------------------- */
 /*      Initialize values.                                              */
 /* -------------------------------------------------------------------- */
-    OGRSpatialReference *poThis = (OGRSpatialReference *) this;
+    bNormInfoSet = TRUE;
 
-    poThis->bNormInfoSet = TRUE;
-
-    poThis->dfFromGreenwich = GetPrimeMeridian(NULL);
-    poThis->dfToMeter = GetLinearUnits(NULL);
-    poThis->dfToDegrees = GetAngularUnits(NULL) / CPLAtof(SRS_UA_DEGREE_CONV);
-    if( fabs(poThis->dfToDegrees-1.0) < 0.000000001 )
-        poThis->dfToDegrees = 1.0;
+    dfFromGreenwich = GetPrimeMeridian(nullptr);
+    dfToMeter = GetLinearUnits(nullptr);
+    dfToDegrees = GetAngularUnits(nullptr) / CPLAtof(SRS_UA_DEGREE_CONV);
+    if( fabs(dfToDegrees-1.0) < 0.000000001 )
+        dfToDegrees = 1.0;
 }
 
 /************************************************************************/
@@ -6908,7 +7963,7 @@ void OGRSpatialReference::GetNormInfo(void) const
 OGRErr OGRSpatialReference::FixupOrdering()
 
 {
-    if( GetRoot() != NULL )
+    if( GetRoot() != nullptr )
         return GetRoot()->FixupOrdering();
 
     return OGRERR_NONE;
@@ -6928,7 +7983,7 @@ OGRErr OSRFixupOrdering( OGRSpatialReferenceH hSRS )
 {
     VALIDATE_POINTER1( hSRS, "OSRFixupOrdering", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->FixupOrdering();
+    return ToPointer(hSRS)->FixupOrdering();
 }
 
 /************************************************************************/
@@ -6968,20 +8023,20 @@ OGRErr OGRSpatialReference::Fixup()
 /* -------------------------------------------------------------------- */
     const OGR_SRSNode *poCS = GetAttrNode( "PROJCS" );
 
-    if( poCS == NULL )
+    if( poCS == nullptr )
         poCS = GetAttrNode( "LOCAL_CS" );
 
-    if( poCS == NULL )
+    if( poCS == nullptr )
         poCS = GetAttrNode( "GEOCCS" );
 
-    if( poCS != NULL && poCS->FindChild( "UNIT" ) == -1 )
+    if( poCS != nullptr && poCS->FindChild( "UNIT" ) == -1 )
         SetLinearUnits( SRS_UL_METER, 1.0 );
 
 /* -------------------------------------------------------------------- */
 /*      Ensure angular units defaulted to degrees on the GEOGCS.        */
 /* -------------------------------------------------------------------- */
     poCS = GetAttrNode( "GEOGCS" );
-    if( poCS != NULL && poCS->FindChild( "UNIT" ) == -1 )
+    if( poCS != nullptr && poCS->FindChild( "UNIT" ) == -1 )
         SetAngularUnits( SRS_UA_DEGREE, CPLAtof(SRS_UA_DEGREE_CONV) );
 
     return FixupOrdering();
@@ -7001,7 +8056,7 @@ OGRErr OSRFixup( OGRSpatialReferenceH hSRS )
 {
     VALIDATE_POINTER1( hSRS, "OSRFixup", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->Fixup();
+    return ToPointer(hSRS)->Fixup();
 }
 
 /************************************************************************/
@@ -7029,15 +8084,12 @@ const char *OGRSpatialReference::GetExtension( const char *pszTargetKey,
 /* -------------------------------------------------------------------- */
 /*      Find the target node.                                           */
 /* -------------------------------------------------------------------- */
-    const OGR_SRSNode  *poNode;
+    const OGR_SRSNode *poNode = pszTargetKey == nullptr
+        ? poRoot
+        : GetAttrNode( pszTargetKey );
 
-    if( pszTargetKey == NULL )
-        poNode = poRoot;
-    else
-        poNode = const_cast<OGRSpatialReference *>(this)->GetAttrNode( pszTargetKey );
-
-    if( poNode == NULL )
-        return NULL;
+    if( poNode == nullptr )
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Fetch matching EXTENSION if there is one.                       */
@@ -7046,10 +8098,10 @@ const char *OGRSpatialReference::GetExtension( const char *pszTargetKey,
     {
         const OGR_SRSNode *poChild = poNode->GetChild(i);
 
-        if( EQUAL(poChild->GetValue(),"EXTENSION")
+        if( EQUAL(poChild->GetValue(), "EXTENSION")
             && poChild->GetChildCount() >= 2 )
         {
-            if( EQUAL(poChild->GetChild(0)->GetValue(),pszName) )
+            if( EQUAL(poChild->GetChild(0)->GetValue(), pszName) )
                 return poChild->GetChild(1)->GetValue();
         }
     }
@@ -7081,14 +8133,14 @@ OGRErr OGRSpatialReference::SetExtension( const char *pszTargetKey,
 /* -------------------------------------------------------------------- */
 /*      Find the target node.                                           */
 /* -------------------------------------------------------------------- */
-    OGR_SRSNode  *poNode = NULL;
+    OGR_SRSNode *poNode = nullptr;
 
-    if( pszTargetKey == NULL )
+    if( pszTargetKey == nullptr )
         poNode = poRoot;
     else
-        poNode = const_cast<OGRSpatialReference *>(this)->GetAttrNode( pszTargetKey );
+        poNode = GetAttrNode(pszTargetKey);
 
-    if( poNode == NULL )
+    if( poNode == nullptr )
         return OGRERR_FAILURE;
 
 /* -------------------------------------------------------------------- */
@@ -7098,10 +8150,10 @@ OGRErr OGRSpatialReference::SetExtension( const char *pszTargetKey,
     {
         OGR_SRSNode *poChild = poNode->GetChild(i);
 
-        if( EQUAL(poChild->GetValue(),"EXTENSION")
+        if( EQUAL(poChild->GetValue(), "EXTENSION")
             && poChild->GetChildCount() >= 2 )
         {
-            if( EQUAL(poChild->GetChild(0)->GetValue(),pszName) )
+            if( EQUAL(poChild->GetChild(0)->GetValue(), pszName) )
             {
                 poChild->GetChild(1)->SetValue( pszValue );
                 return OGRERR_NONE;
@@ -7128,7 +8180,8 @@ OGRErr OGRSpatialReference::SetExtension( const char *pszTargetKey,
 CPL_C_START
 void CleanupESRIDatumMappingTable();
 CPL_C_END
-static void CleanupSRSWGS84Thread();
+static void CleanupSRSWGS84Mutex();
+void CleanupFindMatchesCacheAndMutex();
 
 /**
  * \brief Cleanup cached SRS related memory.
@@ -7140,9 +8193,10 @@ void OSRCleanup( void )
 
 {
     CleanupESRIDatumMappingTable();
-    CSVDeaccess( NULL );
+    CSVDeaccess( nullptr );
     OCTCleanupProjMutex();
-    CleanupSRSWGS84Thread();
+    CleanupSRSWGS84Mutex();
+    CleanupFindMatchesCacheAndMutex();
 }
 
 /************************************************************************/
@@ -7172,33 +8226,33 @@ OGRSpatialReference::GetAxis( const char *pszTargetKey, int iAxis,
                               OGRAxisOrientation *peOrientation ) const
 
 {
-    if( peOrientation != NULL )
+    if( peOrientation != nullptr )
         *peOrientation = OAO_Other;
 
 /* -------------------------------------------------------------------- */
 /*      Find the target node.                                           */
 /* -------------------------------------------------------------------- */
-    OGR_SRSNode  *poNode = NULL;
+    const OGR_SRSNode *poNode = nullptr;
 
-    if( pszTargetKey == NULL )
+    if( pszTargetKey == nullptr )
         poNode = poRoot;
     else
-        poNode = const_cast<OGRSpatialReference *>(this)->GetAttrNode( pszTargetKey );
+        poNode = GetAttrNode(pszTargetKey);
 
-    if( poNode == NULL )
-        return NULL;
+    if( poNode == nullptr )
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Find desired child AXIS.                                        */
 /* -------------------------------------------------------------------- */
-    OGR_SRSNode *poAxis = NULL;
+    const OGR_SRSNode *poAxis = nullptr;
     const int nChildCount = poNode->GetChildCount();
 
     for( int iChild = 0; iChild < nChildCount; iChild++ )
     {
-        OGR_SRSNode *poChild = poNode->GetChild( iChild );
+        const OGR_SRSNode *poChild = poNode->GetChild( iChild );
 
-        if( !EQUAL(poChild->GetValue(),"AXIS") )
+        if( !EQUAL(poChild->GetValue(), "AXIS") )
             continue;
 
         if( iAxis == 0 )
@@ -7209,32 +8263,32 @@ OGRSpatialReference::GetAxis( const char *pszTargetKey, int iAxis,
         iAxis--;
     }
 
-    if( poAxis == NULL )
-        return NULL;
+    if( poAxis == nullptr )
+        return nullptr;
 
     if( poAxis->GetChildCount() < 2 )
-        return NULL;
+        return nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Extract name and orientation if possible.                       */
 /* -------------------------------------------------------------------- */
-    if( peOrientation != NULL )
+    if( peOrientation != nullptr )
     {
         const char *pszOrientation = poAxis->GetChild(1)->GetValue();
 
-        if( EQUAL(pszOrientation,"NORTH") )
+        if( EQUAL(pszOrientation, "NORTH") )
             *peOrientation = OAO_North;
-        else if( EQUAL(pszOrientation,"EAST") )
+        else if( EQUAL(pszOrientation, "EAST") )
             *peOrientation = OAO_East;
-        else if( EQUAL(pszOrientation,"SOUTH") )
+        else if( EQUAL(pszOrientation, "SOUTH") )
             *peOrientation = OAO_South;
-        else if( EQUAL(pszOrientation,"WEST") )
+        else if( EQUAL(pszOrientation, "WEST") )
             *peOrientation = OAO_West;
-        else if( EQUAL(pszOrientation,"UP") )
+        else if( EQUAL(pszOrientation, "UP") )
             *peOrientation = OAO_Up;
-        else if( EQUAL(pszOrientation,"DOWN") )
+        else if( EQUAL(pszOrientation, "DOWN") )
             *peOrientation = OAO_Down;
-        else if( EQUAL(pszOrientation,"OTHER") )
+        else if( EQUAL(pszOrientation, "OTHER") )
             *peOrientation = OAO_Other;
         else
         {
@@ -7260,9 +8314,9 @@ const char *OSRGetAxis( OGRSpatialReferenceH hSRS,
                         OGRAxisOrientation *peOrientation )
 
 {
-    VALIDATE_POINTER1( hSRS, "OSRGetAxis", NULL );
+    VALIDATE_POINTER1( hSRS, "OSRGetAxis", nullptr );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->GetAxis( pszTargetKey, iAxis,
+    return ToPointer(hSRS)->GetAxis( pszTargetKey, iAxis,
                                                               peOrientation );
 }
 
@@ -7330,15 +8384,14 @@ OGRSpatialReference::SetAxes( const char *pszTargetKey,
 /* -------------------------------------------------------------------- */
 /*      Find the target node.                                           */
 /* -------------------------------------------------------------------- */
-    OGR_SRSNode *poNode = NULL;
+    OGR_SRSNode *poNode = nullptr;
 
-    if( pszTargetKey == NULL )
+    if( pszTargetKey == nullptr )
         poNode = poRoot;
     else
-        poNode = reinterpret_cast<OGRSpatialReference *>(this)->
-            GetAttrNode( pszTargetKey );
+        poNode = GetAttrNode( pszTargetKey );
 
-    if( poNode == NULL )
+    if( poNode == nullptr )
         return OGRERR_FAILURE;
 
 /* -------------------------------------------------------------------- */
@@ -7384,7 +8437,7 @@ OGRErr OSRSetAxes( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRSetAxes", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->SetAxes( pszTargetKey,
+    return ToPointer(hSRS)->SetAxes( pszTargetKey,
                                                               pszXAxisName,
                                                               eXAxisOrientation,
                                                               pszYAxisName,
@@ -7392,7 +8445,7 @@ OGRErr OSRSetAxes( OGRSpatialReferenceH hSRS,
 }
 
 #ifdef HAVE_MITAB
-char CPL_DLL *MITABSpatialRef2CoordSys( OGRSpatialReference * );
+char CPL_DLL *MITABSpatialRef2CoordSys( const OGRSpatialReference * );
 OGRSpatialReference CPL_DLL * MITABCoordSys2SpatialRef( const char * );
 #endif
 
@@ -7409,9 +8462,9 @@ OGRErr OSRExportToMICoordSys( OGRSpatialReferenceH hSRS, char ** ppszReturn )
 {
     VALIDATE_POINTER1( hSRS, "OSRExportToMICoordSys", OGRERR_FAILURE );
 
-    *ppszReturn = NULL;
+    *ppszReturn = nullptr;
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->exportToMICoordSys( ppszReturn );
+    return ToPointer(hSRS)->exportToMICoordSys( ppszReturn );
 }
 
 /************************************************************************/
@@ -7421,7 +8474,7 @@ OGRErr OSRExportToMICoordSys( OGRSpatialReferenceH hSRS, char ** ppszReturn )
 /**
  * \brief Export coordinate system in Mapinfo style CoordSys format.
  *
- * Note that the returned WKT string should be freed with OGRFree() or
+ * Note that the returned WKT string should be freed with
  * CPLFree() when no longer needed.  It is the responsibility of the caller.
  *
  * This method is the same as the C function OSRExportToMICoordSys().
@@ -7429,7 +8482,7 @@ OGRErr OSRExportToMICoordSys( OGRSpatialReferenceH hSRS, char ** ppszReturn )
  * @param ppszResult pointer to which dynamically allocated Mapinfo CoordSys
  * definition will be assigned.
  *
- * @return  OGRERR_NONE on success, OGRERR_FAILURE on failure,
+ * @return OGRERR_NONE on success, OGRERR_FAILURE on failure,
  * OGRERR_UNSUPPORTED_OPERATION if MITAB library was not linked in.
  */
 
@@ -7437,8 +8490,8 @@ OGRErr OGRSpatialReference::exportToMICoordSys( char **ppszResult ) const
 
 {
 #ifdef HAVE_MITAB
-    *ppszResult = MITABSpatialRef2CoordSys( (OGRSpatialReference *) this );
-    if( *ppszResult != NULL && strlen(*ppszResult) > 0 )
+    *ppszResult = MITABSpatialRef2CoordSys( this );
+    if( *ppszResult != nullptr && strlen(*ppszResult) > 0 )
         return OGRERR_NONE;
 
     return OGRERR_FAILURE;
@@ -7465,7 +8518,7 @@ OGRErr OSRImportFromMICoordSys( OGRSpatialReferenceH hSRS,
 {
     VALIDATE_POINTER1( hSRS, "OSRImportFromMICoordSys", OGRERR_FAILURE );
 
-    return reinterpret_cast<OGRSpatialReference *>(hSRS)->importFromMICoordSys( pszCoordSys );
+    return ToPointer(hSRS)->importFromMICoordSys( pszCoordSys );
 }
 
 /************************************************************************/
@@ -7491,7 +8544,7 @@ OGRErr OGRSpatialReference::importFromMICoordSys( const char *pszCoordSys )
 #ifdef HAVE_MITAB
     OGRSpatialReference *poResult = MITABCoordSys2SpatialRef( pszCoordSys );
 
-    if( poResult == NULL )
+    if( poResult == nullptr )
         return OGRERR_FAILURE;
 
     *this = *poResult;
@@ -7566,8 +8619,8 @@ double OSRCalcSemiMinorFromInvFlattening( double dfSemiMajor, double dfInvFlatte
 /*                        GetWGS84SRS()                                 */
 /************************************************************************/
 
-static OGRSpatialReference* poSRSWGS84 = NULL;
-static CPLMutex* hMutex = NULL;
+static OGRSpatialReference* poSRSWGS84 = nullptr;
+static CPLMutex* hMutex = nullptr;
 
 /**
  * \brief Returns an instance of a SRS object with WGS84 WKT.
@@ -7581,22 +8634,22 @@ static CPLMutex* hMutex = NULL;
 OGRSpatialReference* OGRSpatialReference::GetWGS84SRS()
 {
     CPLMutexHolderD(&hMutex);
-    if( poSRSWGS84 == NULL )
+    if( poSRSWGS84 == nullptr )
         poSRSWGS84 = new OGRSpatialReference(SRS_WKT_WGS84);
     return poSRSWGS84;
 }
 
 /************************************************************************/
-/*                        CleanupSRSWGS84Thread()                       */
+/*                        CleanupSRSWGS84Mutex()                       */
 /************************************************************************/
 
-static void CleanupSRSWGS84Thread()
+static void CleanupSRSWGS84Mutex()
 {
-    if( hMutex != NULL )
+    if( hMutex != nullptr )
     {
         poSRSWGS84->Release();
-        poSRSWGS84 = NULL;
+        poSRSWGS84 = nullptr;
         CPLDestroyMutex(hMutex);
-        hMutex = NULL;
+        hMutex = nullptr;
     }
 }

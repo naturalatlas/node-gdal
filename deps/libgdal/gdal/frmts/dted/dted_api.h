@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: dted_api.h 33720 2016-03-15 00:39:53Z goatbar $
+ * $Id: dted_api.h bde879dd6c2dd67ecf317ad588846089f0905cb9 2016-03-15 00:39:53Z Kurt Schwehr $
  *
  * Project:  DTED Translator
  * Purpose:  Public (C callable) interface for DTED/CDED reading.

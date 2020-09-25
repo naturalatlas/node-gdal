@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrosmdriver.cpp 33039 2016-01-18 17:04:21Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGROSMDriver class.
@@ -28,13 +27,19 @@
  ****************************************************************************/
 
 #include "ogr_osm.h"
+
+#include <cstring>
+
 #include "cpl_conv.h"
+#include "cpl_port.h"
+#include "gdal.h"
+#include "gdal_priv.h"
+#include "ogr_core.h"
+
 
 /* g++ -DHAVE_EXPAT -fPIC -g -Wall ogr/ogrsf_frmts/osm/ogrosmdriver.cpp ogr/ogrsf_frmts/osm/ogrosmdatasource.cpp ogr/ogrsf_frmts/osm/ogrosmlayer.cpp -Iport -Igcore -Iogr -Iogr/ogrsf_frmts/osm -Iogr/ogrsf_frmts/mitab -Iogr/ogrsf_frmts -shared -o ogr_OSM.so -L. -lgdal */
 
-extern "C" void CPL_DLL RegisterOGROSM();
-
-CPL_CVSID("$Id: ogrosmdriver.cpp 33039 2016-01-18 17:04:21Z rouault $");
+CPL_CVSID("$Id: ogrosmdriver.cpp 1758774fff760a0e28521d01de2d9ae74ca66701 2018-02-14 22:17:51Z Kurt Schwehr $")
 
 /************************************************************************/
 /*                      OGROSMDriverIdentify()                          */
@@ -43,10 +48,10 @@ CPL_CVSID("$Id: ogrosmdriver.cpp 33039 2016-01-18 17:04:21Z rouault $");
 static int OGROSMDriverIdentify( GDALOpenInfo* poOpenInfo )
 
 {
-    if (poOpenInfo->fpL == NULL || poOpenInfo->nHeaderBytes == 0)
+    if( poOpenInfo->fpL == nullptr || poOpenInfo->nHeaderBytes == 0 )
         return GDAL_IDENTIFY_FALSE;
 
-    if( strstr((const char*)poOpenInfo->pabyHeader, "<osm") != NULL )
+    if( strstr((const char*)poOpenInfo->pabyHeader, "<osm") != nullptr )
     {
         return GDAL_IDENTIFY_TRUE;
     }
@@ -72,17 +77,17 @@ static int OGROSMDriverIdentify( GDALOpenInfo* poOpenInfo )
 static GDALDataset *OGROSMDriverOpen( GDALOpenInfo* poOpenInfo )
 
 {
-    if (poOpenInfo->eAccess == GA_Update )
-        return NULL;
+    if( poOpenInfo->eAccess == GA_Update )
+        return nullptr;
     if( OGROSMDriverIdentify(poOpenInfo) == FALSE )
-        return NULL;
+        return nullptr;
 
     OGROSMDataSource *poDS = new OGROSMDataSource();
 
     if( !poDS->Open( poOpenInfo->pszFilename, poOpenInfo->papszOpenOptions ) )
     {
         delete poDS;
-        poDS = NULL;
+        poDS = nullptr;
     }
 
     return poDS;
@@ -97,7 +102,7 @@ void RegisterOGROSM()
     if( !GDAL_CHECK_VERSION("OGR/OSM driver") )
         return;
 
-    if( GDALGetDriverByName( "OSM" ) != NULL )
+    if( GDALGetDriverByName( "OSM" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();
@@ -123,4 +128,3 @@ void RegisterOGROSM()
 
     GetGDALDriverManager()->RegisterDriver( poDriver );
 }
-

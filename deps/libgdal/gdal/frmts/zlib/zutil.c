@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: zutil.c 30901 2015-10-08 04:18:30Z goatbar $ */
+/* @(#) $Id: zutil.c 9f9d3ce06ea49f1227077eb168728ce74a51e857 2016-11-21 12:56:56Z Even Rouault $ */
 
 #include "zutil.h"
 
@@ -294,7 +294,8 @@ voidpf zcalloc (opaque, items, size)
     unsigned items;
     unsigned size;
 {
-    if (opaque) items += size - size; /* make compiler happy */
+    /* cppcheck-suppress uselessAssignmentPtrArg */
+    if (opaque) opaque = 0; /* to make compiler happy */
     return sizeof(uInt) > 2 ? (voidpf)malloc(items * size) :
                               (voidpf)calloc(items, size);
 }

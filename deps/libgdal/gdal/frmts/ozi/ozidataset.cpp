@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ozidataset.cpp 33105 2016-01-23 15:27:32Z rouault $
  *
  * Project:   OZF2 and OZFx3 binary files driver
  * Purpose:  GDALDataset driver for OZF2 and OZFx3 binary files.
@@ -33,7 +32,7 @@
 
 /* g++ -fPIC -g -Wall frmts/ozi/ozidataset.cpp -shared -o gdal_OZI.so -Iport -Igcore -Iogr -L. -lgdal  */
 
-CPL_CVSID("$Id: ozidataset.cpp 33105 2016-01-23 15:27:32Z rouault $");
+CPL_CVSID("$Id: ozidataset.cpp 01037e400d90e8bc4a74f8d886ea5a27ecce02c5 2018-01-12 23:49:31Z Kurt Schwehr $")
 
 /************************************************************************/
 /* ==================================================================== */
@@ -87,20 +86,19 @@ class OZIRasterBand : public GDALPamRasterBand
                                GDALColorTable* poColorTable);
     virtual    ~OZIRasterBand();
 
-    virtual CPLErr IReadBlock( int, int, void * );
-    virtual GDALColorInterp GetColorInterpretation();
-    virtual GDALColorTable *GetColorTable();
+    virtual CPLErr IReadBlock( int, int, void * ) override;
+    virtual GDALColorInterp GetColorInterpretation() override;
+    virtual GDALColorTable *GetColorTable() override;
 
-    virtual int         GetOverviewCount();
-    virtual GDALRasterBand* GetOverview(int nLevel);
+    virtual int         GetOverviewCount() override;
+    virtual GDALRasterBand* GetOverview(int nLevel) override;
 };
-
 
 /************************************************************************/
 /*                             I/O functions                            */
 /************************************************************************/
 
-static const GByte abyKey[] =
+constexpr GByte abyKey[] =
 {
     0x2D, 0x4A, 0x43, 0xF1, 0x27, 0x9B, 0x69, 0x4F,
     0x36, 0x52, 0x87, 0xEC, 0x5F, 0x42, 0x53, 0x22,
@@ -135,7 +133,7 @@ static short ReadShort(GByte**pptr)
     return nVal;
 }
 
-static int ReadInt(VSILFILE* fp, int bOzi3 = FALSE, int nKeyInit = 0)
+static int ReadInt( VSILFILE* fp, int bOzi3 = FALSE, int nKeyInit = 0 )
 {
     int nVal;
     VSIFReadL(&nVal, 1, 4, fp);
@@ -145,7 +143,7 @@ static int ReadInt(VSILFILE* fp, int bOzi3 = FALSE, int nKeyInit = 0)
     return nVal;
 }
 
-static short ReadShort(VSILFILE* fp, int bOzi3 = FALSE, int nKeyInit = 0)
+static short ReadShort( VSILFILE* fp, int bOzi3 = FALSE, int nKeyInit = 0 )
 {
     short nVal;
     VSIFReadL(&nVal, 1, 2, fp);
@@ -163,21 +161,21 @@ OZIRasterBand::OZIRasterBand( OZIDataset *poDSIn, int nZoomLevelIn,
                               int nRasterXSizeIn, int nRasterYSizeIn,
                               int nXBlocksIn,
                               GDALColorTable* poColorTableIn ) :
-    pabyTranslationTable(NULL)
+    nXBlocks(nXBlocksIn),
+    nZoomLevel(nZoomLevelIn),
+    poColorTable(poColorTableIn),
+    pabyTranslationTable(nullptr)
 {
-    this->poDS = poDSIn;
-    this->nBand = 1;
+    poDS = poDSIn;
+    nBand = 1;
 
     eDataType = GDT_Byte;
 
     nBlockXSize = 64;
     nBlockYSize = 64;
 
-    this->nZoomLevel = nZoomLevelIn;
-    this->nRasterXSize = nRasterXSizeIn;
-    this->nRasterYSize = nRasterYSizeIn;
-    this->poColorTable = poColorTableIn;
-    this->nXBlocks = nXBlocksIn;
+    nRasterXSize = nRasterXSizeIn;
+    nRasterYSize = nRasterYSizeIn;
 }
 
 /************************************************************************/
@@ -189,7 +187,6 @@ OZIRasterBand::~OZIRasterBand()
     delete poColorTable;
     CPLFree(pabyTranslationTable);
 }
-
 
 /************************************************************************/
 /*                        GetColorInterpretation()                      */
@@ -269,9 +266,9 @@ CPLErr OZIRasterBand::IReadBlock( int nBlockXOff, int nBlockYOff,
     }
 
     z_stream      stream;
-    stream.zalloc = (alloc_func)NULL;
-    stream.zfree = (free_func)NULL;
-    stream.opaque = (voidpf)NULL;
+    stream.zalloc = (alloc_func)nullptr;
+    stream.zfree = (free_func)nullptr;
+    stream.opaque = (voidpf)nullptr;
     stream.next_in = pabyZlibBuffer + 2;
     stream.avail_in = nToRead - 2;
 
@@ -323,11 +320,11 @@ int OZIRasterBand::GetOverviewCount()
 GDALRasterBand* OZIRasterBand::GetOverview(int nLevel)
 {
     if (nZoomLevel != 0)
-        return NULL;
+        return nullptr;
 
     OZIDataset *poGDS = reinterpret_cast<OZIDataset *>( poDS );
     if (nLevel < 0 || nLevel >= poGDS->nZoomLevelCount - 1)
-        return NULL;
+        return nullptr;
 
     return poGDS->papoOvrBands[nLevel + 1];
 }
@@ -337,10 +334,10 @@ GDALRasterBand* OZIRasterBand::GetOverview(int nLevel)
 /************************************************************************/
 
 OZIDataset::OZIDataset() :
-    fp(NULL),
+    fp(nullptr),
     nZoomLevelCount(0),
-    panZoomLevelOffsets(NULL),
-    papoOvrBands(NULL),
+    panZoomLevelOffsets(nullptr),
+    papoOvrBands(nullptr),
     nFileSize(0),
     bOzi3(FALSE),
     nKeyInit(0)
@@ -354,7 +351,7 @@ OZIDataset::~OZIDataset()
 {
     if (fp)
         VSIFCloseL(fp);
-    if (papoOvrBands != NULL )
+    if (papoOvrBands != nullptr )
     {
         /* start at 1: do not destroy the base band ! */
         for(int i=1;i<nZoomLevelCount;i++)
@@ -397,7 +394,7 @@ GDALDataset *OZIDataset::Open( GDALOpenInfo * poOpenInfo )
 
 {
     if (!Identify(poOpenInfo))
-        return NULL;
+        return nullptr;
 
     GByte abyHeader[14];
     memcpy(abyHeader, poOpenInfo->pabyHeader, 14);
@@ -407,8 +404,8 @@ GDALDataset *OZIDataset::Open( GDALOpenInfo * poOpenInfo )
 
     const CPLString osImgFilename = poOpenInfo->pszFilename;
     VSILFILE* fp = VSIFOpenL(osImgFilename.c_str(), "rb");
-    if (fp == NULL)
-        return NULL;
+    if (fp == nullptr)
+        return nullptr;
 
     OZIDataset* poDS = new OZIDataset();
     poDS->fp = fp;
@@ -424,7 +421,7 @@ GDALDataset *OZIDataset::Open( GDALOpenInfo * poOpenInfo )
         if (nRandomNumber < 0x94)
         {
             delete poDS;
-            return NULL;
+            return nullptr;
         }
         VSIFSeekL(fp, 0x93, SEEK_CUR);
         VSIFReadL(&nKeyInit, 1, 1, fp);
@@ -442,7 +439,7 @@ GDALDataset *OZIDataset::Open( GDALOpenInfo * poOpenInfo )
            abyHeader[13] == 0x00))
         {
             delete poDS;
-            return NULL;
+            return nullptr;
         }
 
         VSIFSeekL(fp, 14 + 1 + nRandomNumber, SEEK_SET);
@@ -496,7 +493,7 @@ GDALDataset *OZIDataset::Open( GDALOpenInfo * poOpenInfo )
                 {
                   CPLDebug( "OZI", "Cannot decipher 2nd header. Sorry..." );
                     delete poDS;
-                    return NULL;
+                    return nullptr;
                 }
             }
             else
@@ -504,7 +501,7 @@ GDALDataset *OZIDataset::Open( GDALOpenInfo * poOpenInfo )
                 CPLDebug("OZI", "nHeaderSize = %d, nDepth = %d, nBPP = %d",
                         nHeaderSize, nDepth, nBPP);
                 delete poDS;
-                return NULL;
+                return nullptr;
             }
         }
         else
@@ -517,7 +514,7 @@ GDALDataset *OZIDataset::Open( GDALOpenInfo * poOpenInfo )
     {
         CPLDebug("OZI", "didn't get end of header2 marker");
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     poDS->nZoomLevelCount = ReadShort(fp);
@@ -530,7 +527,7 @@ GDALDataset *OZIDataset::Open( GDALOpenInfo * poOpenInfo )
     {
         CPLDebug("OZI", "nZoomLevelCount = %d", poDS->nZoomLevelCount);
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     /* Skip array of zoom level percentage. We don't need it for GDAL */
@@ -548,7 +545,7 @@ GDALDataset *OZIDataset::Open( GDALOpenInfo * poOpenInfo )
         {
             CPLDebug("OZI", "didn't get end of zoom levels marker");
             delete poDS;
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -563,7 +560,7 @@ GDALDataset *OZIDataset::Open( GDALOpenInfo * poOpenInfo )
         CPLDebug("OZI", "nZoomLevelTableOffset = %d",
                  nZoomLevelTableOffset);
         delete poDS;
-        return NULL;
+        return nullptr;
     }
 
     VSIFSeekL(fp, nZoomLevelTableOffset, SEEK_SET);
@@ -581,7 +578,7 @@ GDALDataset *OZIDataset::Open( GDALOpenInfo * poOpenInfo )
             CPLDebug("OZI", "panZoomLevelOffsets[%d] = %d",
                      i, poDS->panZoomLevelOffsets[i]);
             delete poDS;
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -604,7 +601,7 @@ GDALDataset *OZIDataset::Open( GDALOpenInfo * poOpenInfo )
                      i, nW, nH, nTileX, nTileY, poDS->nRasterXSize,
                      poDS->nRasterYSize);
             delete poDS;
-            return NULL;
+            return nullptr;
         }
         /* Note (#3895): some files such as world.ozf2 provided with OziExplorer */
         /* expose nTileY=33, but have nH=2048, so only require 32 tiles in vertical dimension. */
@@ -619,7 +616,7 @@ GDALDataset *OZIDataset::Open( GDALOpenInfo * poOpenInfo )
                      "nH=%d, nTileX=%d, nTileY=%d",
                      i, nW, nH, nTileX, nTileY);
             delete poDS;
-            return NULL;
+            return nullptr;
         }
 
         GDALColorTable* poColorTable = new GDALColorTable();
@@ -642,13 +639,12 @@ GDALDataset *OZIDataset::Open( GDALOpenInfo * poOpenInfo )
         if (i > 0)
         {
             GByte* pabyTranslationTable =
-                poDS->papoOvrBands[i]->GetIndexColorTranslationTo(poDS->papoOvrBands[0], NULL, NULL);
+                poDS->papoOvrBands[i]->GetIndexColorTranslationTo(poDS->papoOvrBands[0], nullptr, nullptr);
 
             delete poDS->papoOvrBands[i]->poColorTable;
             poDS->papoOvrBands[i]->poColorTable = poDS->papoOvrBands[0]->poColorTable->Clone();
             poDS->papoOvrBands[i]->pabyTranslationTable = pabyTranslationTable;
         }
-
     }
 
     poDS->SetBand(1, poDS->papoOvrBands[0]);
@@ -663,7 +659,7 @@ GDALDataset *OZIDataset::Open( GDALOpenInfo * poOpenInfo )
 /*      Support overviews.                                              */
 /* -------------------------------------------------------------------- */
     poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename );
-    return( poDS );
+    return poDS;
 }
 
 /************************************************************************/
@@ -676,7 +672,7 @@ void GDALRegister_OZI()
     if( !GDAL_CHECK_VERSION( "OZI driver" ) )
         return;
 
-    if( GDALGetDriverByName( "OZI" ) != NULL )
+    if( GDALGetDriverByName( "OZI" ) != nullptr )
         return;
 
     GDALDriver *poDriver = new GDALDriver();

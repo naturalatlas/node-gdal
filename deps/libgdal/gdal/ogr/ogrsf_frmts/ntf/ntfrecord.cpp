@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ntfrecord.cpp 33714 2016-03-13 05:42:13Z goatbar $
  *
  * Project:  NTF Translator
  * Purpose:  NTFRecord class implementation.
@@ -31,12 +30,12 @@
 #include "ntf.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ntfrecord.cpp 33714 2016-03-13 05:42:13Z goatbar $");
+CPL_CVSID("$Id: ntfrecord.cpp 1dcdb5c8f617002a6e034d4d98dfdf080f709325 2018-01-14 01:50:09Z Kurt Schwehr $")
 
 static int nFieldBufSize = 0;
-static char *pszFieldBuf = NULL;
+static char *pszFieldBuf = nullptr;
 
-#define MAX_RECORD_LEN  160
+constexpr int MAX_RECORD_LEN = 160;
 
 /************************************************************************/
 /*                             NTFRecord()                              */
@@ -45,21 +44,19 @@ static char *pszFieldBuf = NULL;
 /*      transparent merging of continuation lines.                      */
 /************************************************************************/
 
-NTFRecord::NTFRecord( FILE * fp )
-
+NTFRecord::NTFRecord( VSILFILE * fp ) :
+    nType(99),
+    nLength(0),
+    pszData(nullptr)
 {
-    nType = 99;
-    nLength = 0;
-    pszData = NULL;
-
-    if( fp == NULL )
+    if( fp == nullptr )
         return;
 
 /* ==================================================================== */
 /*      Read lines until we get to one without a continuation mark.     */
 /* ==================================================================== */
-    char      szLine[MAX_RECORD_LEN+3];
-    int       nNewLength;
+    char szLine[MAX_RECORD_LEN+3] = {};
+    int nNewLength = 0;
 
     do {
         nNewLength = ReadPhysicalLine( fp, szLine );
@@ -74,15 +71,15 @@ NTFRecord::NTFRecord( FILE * fp )
             CPLError( CE_Failure, CPLE_AppDefined,
                       "Corrupt NTF record, missing end '%%'." );
             CPLFree( pszData );
-            pszData = NULL;
+            pszData = nullptr;
             break;
         }
 
-        if( pszData == NULL )
+        if( pszData == nullptr )
         {
             nLength = nNewLength - 2;
-            pszData = (char *) VSI_MALLOC_VERBOSE(nLength+1);
-            if (pszData == NULL)
+            pszData = static_cast<char *>(VSI_MALLOC_VERBOSE(nLength+1));
+            if (pszData == nullptr)
             {
                 return;
             }
@@ -95,15 +92,16 @@ NTFRecord::NTFRecord( FILE * fp )
             {
                 CPLError( CE_Failure, CPLE_AppDefined, "Invalid line");
                 VSIFree(pszData);
-                pszData = NULL;
+                pszData = nullptr;
                 return;
             }
 
-            char* pszNewData = (char *) VSI_REALLOC_VERBOSE(pszData,nLength+(nNewLength-4)+1);
-            if (pszNewData == NULL)
+            char* pszNewData = static_cast<char *>(
+                VSI_REALLOC_VERBOSE(pszData, nLength + (nNewLength - 4) + 1));
+            if (pszNewData == nullptr)
             {
                 VSIFree(pszData);
-                pszData = NULL;
+                pszData = nullptr;
                 return;
             }
 
@@ -117,9 +115,9 @@ NTFRecord::NTFRecord( FILE * fp )
 /* -------------------------------------------------------------------- */
 /*      Figure out the record type.                                     */
 /* -------------------------------------------------------------------- */
-    if( pszData != NULL )
+    if( pszData != nullptr )
     {
-        char      szType[3];
+        char  szType[3];
 
         strncpy( szType, pszData, 2 );
         szType[2] = '\0';
@@ -137,10 +135,10 @@ NTFRecord::~NTFRecord()
 {
     CPLFree( pszData );
 
-    if( pszFieldBuf != NULL )
+    if( pszFieldBuf != nullptr )
     {
         CPLFree( pszFieldBuf );
-        pszFieldBuf = NULL;
+        pszFieldBuf = nullptr;
         nFieldBufSize = 0;
     }
 }
@@ -149,21 +147,19 @@ NTFRecord::~NTFRecord()
 /*                          ReadPhysicalLine()                          */
 /************************************************************************/
 
-int NTFRecord::ReadPhysicalLine( FILE *fp, char *pszLine )
+int NTFRecord::ReadPhysicalLine( VSILFILE *fp, char *pszLine )
 
 {
-    int         nBytesRead = 0;
-    int         nRecordStart, nRecordEnd, i, l_nLength = 0;
-
 /* -------------------------------------------------------------------- */
 /*      Read enough data that we are sure we have a whole record.       */
 /* -------------------------------------------------------------------- */
-    nRecordStart = static_cast<int>(VSIFTell( fp ));
-    nBytesRead = static_cast<int>(VSIFRead( pszLine, 1, MAX_RECORD_LEN+2, fp ));
+    int nRecordStart = static_cast<int>(VSIFTellL( fp ));
+    const int nBytesRead =
+        static_cast<int>(VSIFReadL( pszLine, 1, MAX_RECORD_LEN+2, fp ));
 
     if( nBytesRead == 0 )
     {
-        if( VSIFEof( fp ) )
+        if( VSIFEofL( fp ) )
             return -1;
         else
         {
@@ -176,7 +172,8 @@ int NTFRecord::ReadPhysicalLine( FILE *fp, char *pszLine )
 /* -------------------------------------------------------------------- */
 /*      Search for CR or LF.                                            */
 /* -------------------------------------------------------------------- */
-    for( i = 0; i < nBytesRead; i++ )
+    int i = 0;  // Used after for.
+    for( ; i < nBytesRead; i++ )
     {
         if( pszLine[i] == 10 || pszLine[i] == 13 )
             break;
@@ -189,8 +186,9 @@ int NTFRecord::ReadPhysicalLine( FILE *fp, char *pszLine )
     if( i == MAX_RECORD_LEN+2 )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
-                  "%d byte record too long for NTF format.\n"
-                  "No line may be longer than 80 characters though up to %d tolerated.\n",
+                  "%d byte record too long for NTF format.  "
+                  "No line may be longer than 80 characters though up "
+                  "to %d tolerated.",
                   nBytesRead, MAX_RECORD_LEN );
         return -2;
     }
@@ -198,18 +196,16 @@ int NTFRecord::ReadPhysicalLine( FILE *fp, char *pszLine )
 /* -------------------------------------------------------------------- */
 /*      Trim CR/LF.                                                     */
 /* -------------------------------------------------------------------- */
-    l_nLength = i;
-    if( pszLine[i+1] == 10 || pszLine[i+1] == 13 )
-        nRecordEnd = nRecordStart + i + 2;
-    else
-        nRecordEnd = nRecordStart + i + 1;
+    const int l_nLength = i;
+    const int nRecordEnd =
+        nRecordStart + i + ( pszLine[i+1] == 10 || pszLine[i+1] == 13 ? 2 : 1 );
 
     pszLine[l_nLength] = '\0';
 
 /* -------------------------------------------------------------------- */
 /*      Restore read pointer to beginning of next record.               */
 /* -------------------------------------------------------------------- */
-    if( VSIFSeek( fp, nRecordEnd, SEEK_SET ) != 0 )
+    if( VSIFSeekL( fp, nRecordEnd, SEEK_SET ) != 0 )
         return -1;
 
     return l_nLength;
@@ -226,7 +222,10 @@ int NTFRecord::ReadPhysicalLine( FILE *fp, char *pszLine )
 const char * NTFRecord::GetField( int nStart, int nEnd )
 
 {
-    int      nSize = nEnd - nStart + 1;
+    const int nSize = nEnd - nStart + 1;
+
+    if( pszData == nullptr )
+        return "";
 
 /* -------------------------------------------------------------------- */
 /*      Reallocate working buffer larger if needed.                     */
@@ -235,7 +234,7 @@ const char * NTFRecord::GetField( int nStart, int nEnd )
     {
         CPLFree( pszFieldBuf );
         nFieldBufSize = nSize + 1;
-        pszFieldBuf = (char *) CPLMalloc(nFieldBufSize);
+        pszFieldBuf = static_cast<char *>(CPLMalloc(nFieldBufSize));
     }
 
 /* -------------------------------------------------------------------- */

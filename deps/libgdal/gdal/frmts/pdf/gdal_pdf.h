@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id$
+ * $Id: gdal_pdf.h 081bf716653359d4a1d56443ca2612a95fc377f0 2019-12-12 22:58:55 +0100 Even Rouault $
  *
  * Project:  PDF Translator
  * Purpose:  Definition of classes for OGR .pdf driver.
@@ -37,6 +37,19 @@
 #ifndef GDAL_PDF_H_INCLUDED
 #define GDAL_PDF_H_INCLUDED
 
+/* hack for PDF driver and poppler >= 0.15.0 that defines incompatible "typedef bool GBool" */
+/* in include/poppler/goo/gtypes.h with the one defined in cpl_port.h */
+#define CPL_GBOOL_DEFINED
+#define OGR_FEATURESTYLE_INCLUDE
+#include "cpl_port.h"
+
+#include <map>
+#include <set>
+#include <stack>
+#include <utility>
+#include <bitset>   // For detecting usage of PDF library
+#include <algorithm>
+
 #include "pdfsdk_headers.h"
 
 #include "gdal_pam.h"
@@ -44,10 +57,6 @@
 
 #include "ogr_mem.h"
 #include "pdfobject.h"
-
-#include <map>
-#include <stack>
-#include <bitset>   // For detecting usage of PDF library
 
 #define     PDFLIB_POPPLER    0
 #define     PDFLIB_PODOFO     1
@@ -62,21 +71,21 @@
 
 class PDFDataset;
 
-class OGRPDFLayer : public OGRMemLayer
+class OGRPDFLayer final: public OGRMemLayer
 {
     PDFDataset       *poDS;
     int               bGeomTypeSet;
     int               bGeomTypeMixed;
 
 public:
-        OGRPDFLayer(PDFDataset* poDS,
-                    const char * pszName,
-                    OGRSpatialReference *poSRS,
-                    OGRwkbGeometryType eGeomType);
+        OGRPDFLayer( PDFDataset* poDS,
+                     const char * pszName,
+                     OGRSpatialReference *poSRS,
+                     OGRwkbGeometryType eGeomType );
 
     void                Fill( GDALPDFArray* poArray );
 
-    virtual int                 TestCapability( const char * );
+    virtual int                 TestCapability( const char * ) override;
 };
 
 #endif
@@ -87,7 +96,7 @@ public:
 
 class PDFWritableVectorDataset;
 
-class OGRPDFWritableLayer : public OGRMemLayer
+class OGRPDFWritableLayer final: public OGRMemLayer
 {
     PDFWritableVectorDataset       *poDS;
 
@@ -97,8 +106,8 @@ public:
                     OGRSpatialReference *poSRS,
                     OGRwkbGeometryType eGeomType);
 
-    virtual int                 TestCapability( const char * );
-    virtual OGRErr              ICreateFeature( OGRFeature *poFeature );
+    virtual int                 TestCapability( const char * ) override;
+    virtual OGRErr              ICreateFeature( OGRFeature *poFeature ) override;
 };
 
 /************************************************************************/
@@ -171,11 +180,12 @@ class ObjectAutoFree;
 
 #if defined(HAVE_POPPLER) || defined(HAVE_PODOFO) || defined(HAVE_PDFIUM)
 
-class PDFDataset : public GDALPamDataset
+class PDFDataset final: public GDALPamDataset
 {
     friend class PDFRasterBand;
     friend class PDFImageRasterBand;
 
+    VSILFILE    *m_fp = nullptr;
     PDFDataset*  poParentDS;
 
     CPLString    osFilename;
@@ -216,7 +226,7 @@ class PDFDataset : public GDALPamDataset
 
     double       dfMaxArea;
     int          ParseLGIDictObject(GDALPDFObject* poLGIDict);
-    int          ParseLGIDictDictFirstPass(GDALPDFDictionary* poLGIDict, int* pbIsBestCandidate = NULL);
+    int          ParseLGIDictDictFirstPass(GDALPDFDictionary* poLGIDict, int* pbIsBestCandidate = nullptr);
     int          ParseLGIDictDictSecondPass(GDALPDFDictionary* poLGIDict);
     int          ParseProjDict(GDALPDFDictionary* poProjDict);
     int          ParseVP(GDALPDFObject* poVP, double dfMediaBoxWidth, double dfMediaBoxHeight);
@@ -226,7 +236,8 @@ class PDFDataset : public GDALPamDataset
 
     int          bTried;
     GByte       *pabyCachedData;
-    int          nLastBlockXOff, nLastBlockYOff;
+    int          nLastBlockXOff;
+    int          nLastBlockYOff;
 
     OGRPolygon*  poNeatLine;
 
@@ -310,12 +321,15 @@ private:
 
     int                 bSetStyle;
 
-    void                ExploreTree(GDALPDFObject* poObj, int nRecLevel);
+    void                ExploreTree(GDALPDFObject* poObj,
+                                    std::set< std::pair<int,int> > aoSetAlreadyVisited,
+                                    int nRecLevel);
     void                ExploreContents(GDALPDFObject* poObj, GDALPDFObject* poResources);
 
     void                ExploreContentsNonStructuredInternal(GDALPDFObject* poContents,
                                                              GDALPDFObject* poResources,
-                                                             std::map<CPLString, OGRPDFLayer*>& oMapPropertyToLayer);
+                                                             std::map<CPLString, OGRPDFLayer*>& oMapPropertyToLayer,
+                                                             OGRPDFLayer* poSingleLayer);
     void                ExploreContentsNonStructured(GDALPDFObject* poObj, GDALPDFObject* poResources);
 
     int                 UnstackTokens(const char* pszToken,
@@ -340,37 +354,37 @@ private:
 #endif  // ~ HAVE_PDFIUM
 
   public:
-                 PDFDataset(PDFDataset* poParentDS = NULL, int nXSize = 0, int nYSize = 0);
+                 PDFDataset(PDFDataset* poParentDS = nullptr, int nXSize = 0, int nYSize = 0);
     virtual     ~PDFDataset();
 
-    virtual const char* GetProjectionRef();
-    virtual CPLErr GetGeoTransform( double * );
+    virtual const char* GetProjectionRef() override;
+    virtual CPLErr GetGeoTransform( double * ) override;
 
-    virtual CPLErr      SetProjection(const char* pszWKTIn);
-    virtual CPLErr      SetGeoTransform(double* padfGeoTransform);
+    virtual CPLErr      SetProjection(const char* pszWKTIn) override;
+    virtual CPLErr      SetGeoTransform(double* padfGeoTransform) override;
 
-    virtual char      **GetMetadataDomainList();
-    virtual char      **GetMetadata( const char * pszDomain = "" );
+    virtual char      **GetMetadataDomainList() override;
+    virtual char      **GetMetadata( const char * pszDomain = "" ) override;
     virtual CPLErr      SetMetadata( char ** papszMetadata,
-                                     const char * pszDomain = "" );
+                                     const char * pszDomain = "" ) override;
     virtual const char *GetMetadataItem( const char * pszName,
-                                         const char * pszDomain = "" );
+                                         const char * pszDomain = "" ) override;
     virtual CPLErr      SetMetadataItem( const char * pszName,
                                          const char * pszValue,
-                                         const char * pszDomain = "" );
+                                         const char * pszDomain = "" ) override;
 
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
                               int, int *,
                               GSpacing nPixelSpace, GSpacing nLineSpace,
                               GSpacing nBandSpace,
-                              GDALRasterIOExtraArg* psExtraArg);
+                              GDALRasterIOExtraArg* psExtraArg) override;
 
-    virtual int    GetGCPCount();
-    virtual const char *GetGCPProjection();
-    virtual const GDAL_GCP *GetGCPs();
+    virtual int    GetGCPCount() override;
+    virtual const char *GetGCPProjection() override;
+    virtual const GDAL_GCP *GetGCPs() override;
     virtual CPLErr SetGCPs( int nGCPCount, const GDAL_GCP *pasGCPList,
-                            const char *pszGCPProjection );
+                            const char *pszGCPProjection ) override;
 
     CPLErr ReadPixels( int nReqXOff, int nReqYOff,
                        int nReqXSize, int nReqYSize,
@@ -379,10 +393,10 @@ private:
                        GSpacing nBandSpace,
                        GByte* pabyData );
 
-    virtual int                 GetLayerCount();
-    virtual OGRLayer*           GetLayer( int );
+    virtual int                 GetLayerCount() override;
+    virtual OGRLayer*           GetLayer( int ) override;
 
-    virtual int                 TestCapability( const char * );
+    virtual int                 TestCapability( const char * ) override;
 
     OGRGeometry        *GetGeometryFromMCID(int nMCID);
 
@@ -391,7 +405,7 @@ private:
 
 #ifdef HAVE_PDFIUM
     virtual CPLErr IBuildOverviews( const char *, int, int *,
-                                    int, int *, GDALProgressFunc, void * );
+                                    int, int *, GDALProgressFunc, void * ) override;
 
     static int bPdfiumInit;
 #endif
@@ -403,7 +417,7 @@ private:
 /* ==================================================================== */
 /************************************************************************/
 
-class PDFRasterBand : public GDALPamRasterBand
+class PDFRasterBand: public GDALPamRasterBand
 {
     friend class PDFDataset;
 
@@ -414,21 +428,21 @@ class PDFRasterBand : public GDALPamRasterBand
   public:
 
                 PDFRasterBand( PDFDataset *, int, int );
-                ~PDFRasterBand();
+    virtual ~PDFRasterBand();
 
 #ifdef HAVE_PDFIUM
-    virtual int    GetOverviewCount();
-    virtual GDALRasterBand *GetOverview( int );
+    virtual int    GetOverviewCount() override;
+    virtual GDALRasterBand *GetOverview( int ) override;
 #endif  // ~ HAVE_PDFIUM
 
-    virtual CPLErr IReadBlock( int, int, void * );
-    virtual GDALColorInterp GetColorInterpretation();
+    virtual CPLErr IReadBlock( int, int, void * ) override;
+    virtual GDALColorInterp GetColorInterpretation() override;
 
 #ifdef notdef
     virtual CPLErr IRasterIO( GDALRWFlag, int, int, int, int,
                               void *, int, int, GDALDataType,
                               GSpacing nPixelSpace, GSpacing nLineSpace,
-                              GDALRasterIOExtraArg* psExtraArg);
+                              GDALRasterIOExtraArg* psExtraArg) override;
 #endif
 };
 
@@ -438,7 +452,7 @@ class PDFRasterBand : public GDALPamRasterBand
 /*                          PDFWritableDataset                          */
 /************************************************************************/
 
-class PDFWritableVectorDataset : public GDALDataset
+class PDFWritableVectorDataset final: public GDALDataset
 {
         char**              papszOptions;
 
@@ -449,19 +463,19 @@ class PDFWritableVectorDataset : public GDALDataset
 
     public:
                             PDFWritableVectorDataset();
-                           ~PDFWritableVectorDataset();
+        virtual ~PDFWritableVectorDataset();
 
         virtual OGRLayer*           ICreateLayer( const char * pszLayerName,
                                                 OGRSpatialReference *poSRS,
                                                 OGRwkbGeometryType eType,
-                                                char ** papszOptions );
+                                                char ** papszOptions ) override;
 
         virtual OGRErr              SyncToDisk();
 
-        virtual int                 GetLayerCount();
-        virtual OGRLayer*           GetLayer( int );
+        virtual int                 GetLayerCount() override;
+        virtual OGRLayer*           GetLayer( int ) override;
 
-        virtual int                 TestCapability( const char * );
+        virtual int                 TestCapability( const char * ) override;
 
         static GDALDataset* Create( const char * pszName,
                                  int nXSize, int nYSize, int nBands,

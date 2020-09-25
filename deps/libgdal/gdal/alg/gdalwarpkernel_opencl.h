@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalwarpkernel_opencl.h 33715 2016-03-13 08:52:06Z goatbar $
+ * $Id: gdalwarpkernel_opencl.h 678d89afcc4ec43e300b2f337b51349139543d01 2016-06-30 22:42:39Z Kurt Schwehr $
  *
  * Project:  OpenCL Image Reprojector
  * Purpose:  Implementation of the GDALWarpKernel reprojector in OpenCL.
@@ -127,7 +127,7 @@ struct oclWarper {
     cl_channel_order imgChOrder1;
     unsigned int imgChSize4;
     cl_channel_order imgChOrder4;
-	char    useVec;
+    char    useVec;
 
     cl_mem useBandSrcValidCL;
     char *useBandSrcValid;

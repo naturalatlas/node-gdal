@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: shp_vsi.h 27384 2014-05-24 12:28:12Z rouault $
+ * $Id: shp_vsi.h ac1d66108744d81e28ed13c888fbf17d9fd565a9 2014-05-24 12:28:12Z Even Rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  IO Redirection via VSI services for shp/dbf io.

@@ -1,8 +1,7 @@
 /******************************************************************************
- * $Id: cpl_vsil_simple.cpp 10645 2007-01-18 02:22:39Z warmerdam $
  *
  * Project:  VSI Virtual File System
- * Purpose:  Alternatve simplified implementation VSI*L File API that just
+ * Purpose:  Alternative simplified implementation VSI*L File API that just
  *           uses plain VSI API and/or posix calls.  This module isn't
  *           normally built into GDAL.  It is for simple packages like
  *           dgnlib.
@@ -32,7 +31,7 @@
 
 #include "cpl_vsi.h"
 
-CPL_CVSID("$Id: cpl_vsil_simple.cpp 10645 2007-01-18 02:22:39Z warmerdam $");
+CPL_CVSID("$Id: cpl_vsil_simple.cpp 6ef13199b493973da285decbfcd5e2a763954b97 2018-06-07 05:46:42 -0400 luzpaz $")
 
 #ifdef WIN32
 #  include <sys/stat.h>
@@ -128,7 +127,7 @@ int VSIFCloseL( FILE * fp )
 int VSIFSeekL( FILE * fp, vsi_l_offset nOffset, int nWhence )
 
 {
-    return VSIFSeek( fp, (int) nOffset, nWhence );
+    return VSIFSeek(fp, static_cast<int>(nOffset), nWhence);
 }
 
 /************************************************************************/
@@ -138,7 +137,7 @@ int VSIFSeekL( FILE * fp, vsi_l_offset nOffset, int nWhence )
 vsi_l_offset VSIFTellL( FILE * fp )
 
 {
-    return (vsi_l_offset) VSIFTell( fp );
+    return static_cast<vsi_l_offset>(VSIFTell(fp));
 }
 
 /************************************************************************/

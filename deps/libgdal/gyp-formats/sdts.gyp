@@ -7,7 +7,6 @@
 			"target_name": "libgdal_sdts_frmt",
 			"type": "static_library",
 			"sources": [
-				"../gdal/frmts/sdts/sdts2shp.cpp",
 				"../gdal/frmts/sdts/sdtsattrreader.cpp",
 				"../gdal/frmts/sdts/sdtscatd.cpp",
 				"../gdal/frmts/sdts/sdtsdataset.cpp",

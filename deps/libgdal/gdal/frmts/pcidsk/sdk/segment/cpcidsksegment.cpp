@@ -173,6 +173,25 @@ void CPCIDSKSegment::ReadFromFile( void *buffer, uint64 offset, uint64 size )
 }
 
 /************************************************************************/
+/*                        CheckFileBigEnough()                          */
+/************************************************************************/
+
+void CPCIDSKSegment::CheckFileBigEnough( uint64 bytes_to_read )
+
+{
+    file->CheckFileBigEnough( bytes_to_read );
+}
+
+/************************************************************************/
+/*                           GetUpdatable()                             */
+/************************************************************************/
+
+bool CPCIDSKSegment::GetUpdatable() const
+{
+    return file->GetUpdatable();
+}
+
+/************************************************************************/
 /*                            WriteToFile()                             */
 /************************************************************************/
 
@@ -182,7 +201,7 @@ void CPCIDSKSegment::WriteToFile( const void *buffer, uint64 offset, uint64 size
     {
         CPCIDSKFile *poFile = dynamic_cast<CPCIDSKFile *>(file);
         
-        if (poFile == NULL) {
+        if (poFile == nullptr) {
             return ThrowPCIDSKException("Attempt to dynamic_cast the file interface "
                 "to a CPCIDSKFile failed. This is a programmer error, and should "
                 "be reported to your software provider.");

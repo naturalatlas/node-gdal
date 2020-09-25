@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrsqlitevfs.cpp 33884 2016-04-03 18:50:15Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements SQLite VFS
@@ -27,10 +26,21 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#include "cpl_atomic_ops.h"
+#include "cpl_port.h"
 #include "ogr_sqlite.h"
 
-CPL_CVSID("$Id: ogrsqlitevfs.cpp 33884 2016-04-03 18:50:15Z rouault $");
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
+#include "cpl_atomic_ops.h"
+#include "cpl_conv.h"
+#include "cpl_error.h"
+#include "cpl_string.h"
+#include "cpl_vsi.h"
+#include "sqlite3.h"
+
+CPL_CVSID("$Id: ogrsqlitevfs.cpp 722bc4c4c4f6ec3494bb2e4ee96b8742d72ac4c5 2018-02-14 22:51:15Z Kurt Schwehr $")
 
 #ifdef DEBUG_IO
 # define DEBUG_ONLY
@@ -39,8 +49,6 @@ CPL_CVSID("$Id: ogrsqlitevfs.cpp 33884 2016-04-03 18:50:15Z rouault $");
 #endif
 
 //#define DEBUG_IO 1
-
-#ifdef HAVE_SQLITE_VFS
 
 typedef struct
 {
@@ -211,13 +219,13 @@ static const sqlite3_io_methods OGRSQLiteIOMethods =
     OGRSQLiteIOSectorSize,
     OGRSQLiteIODeviceCharacteristics,
 #if SQLITE_VERSION_NUMBER >= 3007004L /* perhaps older too ? */
-    NULL,  // xShmMap
-    NULL,  // xShmLock
-    NULL,  // xShmBarrier
-    NULL,  // xShmUnmap
-#if SQLITE_VERSION_NUMBER >= 3008002L /* perhaps older too ? */
-    NULL,  // xFetch
-    NULL,  // xUnfetch
+    nullptr,  // xShmMap
+    nullptr,  // xShmLock
+    nullptr,  // xShmBarrier
+    nullptr,  // xShmUnmap
+#if SQLITE_VERSION_NUMBER >= 3007017L /* perhaps older too ? */
+    nullptr,  // xFetch
+    nullptr,  // xUnfetch
 #endif
 #endif
 };
@@ -234,16 +242,16 @@ static int OGRSQLiteVFSOpen(sqlite3_vfs* pVFS,
 
     OGRSQLiteVFSAppDataStruct* pAppData = (OGRSQLiteVFSAppDataStruct* )pVFS->pAppData;
 
-    if (zName == NULL)
+    if (zName == nullptr)
     {
         zName = CPLSPrintf("/vsimem/sqlite/%p_%d",
                            pVFS, CPLAtomicInc(&(pAppData->nCounter)));
     }
 
     OGRSQLiteFileStruct* pMyFile = (OGRSQLiteFileStruct*) pFile;
-    pMyFile->pMethods = NULL;
+    pMyFile->pMethods = nullptr;
     pMyFile->bDeleteOnClose = FALSE;
-    pMyFile->pszFilename = NULL;
+    pMyFile->pszFilename = nullptr;
     if ( flags & SQLITE_OPEN_READONLY )
         pMyFile->fp = VSIFOpenL(zName, "rb");
     else if ( flags & SQLITE_OPEN_CREATE )
@@ -251,9 +259,9 @@ static int OGRSQLiteVFSOpen(sqlite3_vfs* pVFS,
     else if ( flags & SQLITE_OPEN_READWRITE )
         pMyFile->fp = VSIFOpenL(zName, "rb+");
     else
-        pMyFile->fp = NULL;
+        pMyFile->fp = nullptr;
 
-    if (pMyFile->fp == NULL)
+    if (pMyFile->fp == nullptr)
         return SQLITE_CANTOPEN;
 
 #ifdef DEBUG_IO
@@ -270,7 +278,7 @@ static int OGRSQLiteVFSOpen(sqlite3_vfs* pVFS,
     pMyFile->bDeleteOnClose = ( flags & SQLITE_OPEN_DELETEONCLOSE );
     pMyFile->pszFilename = CPLStrdup(zName);
 
-    if (pOutFlags != NULL)
+    if (pOutFlags != nullptr)
         *pOutFlags = flags;
 
     return SQLITE_OK;
@@ -295,11 +303,13 @@ static int OGRSQLiteVFSAccess (DEBUG_ONLY sqlite3_vfs* pVFS,
     CPLDebug("SQLITE", "OGRSQLiteVFSAccess(%s, %d)", zName, flags);
 #endif
     VSIStatBufL sStatBufL;
-    int nRet;
+    int nRet;  // TODO(schwehr): Cleanup nRet and pResOut.  bools?
     if (flags == SQLITE_ACCESS_EXISTS)
     {
         /* Do not try to check the presence of a journal or a wal on /vsicurl ! */
-        if ( STARTS_WITH(zName, "/vsicurl/") &&
+        if ( (STARTS_WITH(zName, "/vsicurl/") ||
+              STARTS_WITH(zName, "/vsitar/") ||
+              STARTS_WITH(zName, "/vsizip/")) &&
              ((strlen(zName) > strlen("-journal") &&
                strcmp(zName + strlen(zName) - strlen("-journal"), "-journal") == 0) ||
               (strlen(zName) > strlen("-wal") &&
@@ -308,7 +318,9 @@ static int OGRSQLiteVFSAccess (DEBUG_ONLY sqlite3_vfs* pVFS,
             nRet = -1;
         }
         else
+        {
             nRet = VSIStatExL(zName, &sStatBufL, VSI_STAT_EXISTS_FLAG);
+        }
     }
     else if (flags == SQLITE_ACCESS_READ)
     {
@@ -325,7 +337,9 @@ static int OGRSQLiteVFSAccess (DEBUG_ONLY sqlite3_vfs* pVFS,
             VSIFCloseL(fp);
     }
     else
+    {
         nRet = -1;
+    }
     *pResOut = (nRet == 0);
     return SQLITE_OK;
 }
@@ -410,8 +424,8 @@ static int OGRSQLiteVFSSleep (sqlite3_vfs* pVFS, int microseconds)
 static int OGRSQLiteVFSCurrentTimeInt64 (sqlite3_vfs* /*pVFS*/, sqlite3_int64 *piNow)
 {
     FILETIME ft;
-    static const sqlite3_int64 winFiletimeEpoch = 23058135*(sqlite3_int64)8640000;
-    static const sqlite3_int64 max32BitValue =
+    constexpr sqlite3_int64 winFiletimeEpoch = 23058135*(sqlite3_int64)8640000;
+    constexpr sqlite3_int64 max32BitValue =
       (sqlite3_int64)2000000000 + (sqlite3_int64)2000000000 +
       (sqlite3_int64)294967296;
 
@@ -435,8 +449,8 @@ static int OGRSQLiteVFSCurrentTimeInt64 (sqlite3_vfs* /*pVFS*/, sqlite3_int64 *p
 static int OGRSQLiteVFSCurrentTimeInt64 (sqlite3_vfs* /*pVFS*/, sqlite3_int64 *piNow)
 {
     struct timeval sNow;
-    static const sqlite3_int64 unixEpoch = 24405875*(sqlite3_int64)8640000;
-    (void)gettimeofday(&sNow, NULL);  /* Cannot fail given valid arguments */
+    constexpr sqlite3_int64 unixEpoch = 24405875*(sqlite3_int64)8640000;
+    (void)gettimeofday(&sNow, nullptr);  /* Cannot fail given valid arguments */
     *piNow = unixEpoch + 1000*(sqlite3_int64)sNow.tv_sec + sNow.tv_usec/1000;
 
     return SQLITE_OK;
@@ -446,7 +460,7 @@ static int OGRSQLiteVFSCurrentTimeInt64 (sqlite3_vfs* /*pVFS*/, sqlite3_int64 *p
 static int OGRSQLiteVFSCurrentTime (sqlite3_vfs* /*pVFS*/, double* p1)
 {
     sqlite3_int64 i = 0;
-    int rc = OGRSQLiteVFSCurrentTimeInt64(NULL, &i);
+    int rc = OGRSQLiteVFSCurrentTimeInt64(nullptr, &i);
     *p1 = i/86400000.0;
     return rc;
 }
@@ -460,7 +474,7 @@ static int OGRSQLiteVFSGetLastError (sqlite3_vfs* pVFS, int p1, char *p2)
 
 sqlite3_vfs* OGRSQLiteCreateVFS(pfnNotifyFileOpenedType pfn, void* pfnUserData)
 {
-    sqlite3_vfs* pDefaultVFS = sqlite3_vfs_find(NULL);
+    sqlite3_vfs* pDefaultVFS = sqlite3_vfs_find(nullptr);
     sqlite3_vfs* pMyVFS = (sqlite3_vfs*) CPLCalloc(1, sizeof(sqlite3_vfs));
 
     OGRSQLiteVFSAppDataStruct* pVFSAppData =
@@ -500,5 +514,3 @@ sqlite3_vfs* OGRSQLiteCreateVFS(pfnNotifyFileOpenedType pfn, void* pfnUserData)
 
     return pMyVFS;
 }
-
-#endif // HAVE_SQLITE_VFS

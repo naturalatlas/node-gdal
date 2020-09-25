@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrmysqllayer.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRMySQLLayer class.
@@ -32,35 +31,27 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-CPL_CVSID("$Id: ogrmysqllayer.cpp 33713 2016-03-12 17:41:57Z goatbar $");
+CPL_CVSID("$Id: ogrmysqllayer.cpp 06803487d7e0d67089b5fc6e58a0dd7ecc831b23 2018-09-08 11:50:50 +0200 Even Rouault $")
 
 /************************************************************************/
 /*                           OGRMySQLLayer()                            */
 /************************************************************************/
 
 OGRMySQLLayer::OGRMySQLLayer() :
-    nGeomType(0)
-{
-    poDS = NULL;
-
-    pszGeomColumn = NULL;
-    pszGeomColumnTable = NULL;
-    pszFIDColumn = NULL;
-    pszQueryStatement = NULL;
-
-    bHasFid = FALSE;
-    pszFIDColumn = NULL;
-
-    iNextShapeId = 0;
-    nResultOffset = 0;
-
-    poSRS = NULL;
-    nSRSId = -2; // we haven't even queried the database for it yet.
-
-    poFeatureDefn = NULL;
-
-    hResultSet = NULL;
-}
+    poFeatureDefn(nullptr),
+    poSRS(nullptr),
+    nSRSId(-2), // we haven't even queried the database for it yet.
+    iNextShapeId(0),
+    poDS(nullptr),
+    pszQueryStatement(nullptr),
+    nResultOffset(0),
+    pszGeomColumn(nullptr),
+    pszGeomColumnTable(nullptr),
+    nGeomType(0),
+    bHasFid(FALSE),
+    pszFIDColumn(nullptr),
+    hResultSet(nullptr)
+{}
 
 /************************************************************************/
 /*                           ~OGRMySQLLayer()                           */
@@ -69,21 +60,21 @@ OGRMySQLLayer::OGRMySQLLayer() :
 OGRMySQLLayer::~OGRMySQLLayer()
 
 {
-    if( m_nFeaturesRead > 0 && poFeatureDefn != NULL )
+    if( m_nFeaturesRead > 0 && poFeatureDefn != nullptr )
     {
         CPLDebug( "MySQL", "%d features read on layer '%s'.",
                   (int) m_nFeaturesRead,
                   poFeatureDefn->GetName() );
     }
 
-    ResetReading();
+    OGRMySQLLayer::ResetReading();
 
     CPLFree( pszGeomColumn );
     CPLFree( pszGeomColumnTable );
     CPLFree( pszFIDColumn );
     CPLFree( pszQueryStatement );
 
-    if( poSRS != NULL )
+    if( poSRS != nullptr )
         poSRS->Release();
 
     if( poFeatureDefn )
@@ -99,10 +90,10 @@ void OGRMySQLLayer::ResetReading()
 {
     iNextShapeId = 0;
 
-    if( hResultSet != NULL )
+    if( hResultSet != nullptr )
     {
         mysql_free_result( hResultSet );
-        hResultSet = NULL;
+        hResultSet = nullptr;
 
         poDS->InterruptLongResult();
     }
@@ -121,12 +112,12 @@ OGRFeature *OGRMySQLLayer::GetNextFeature()
         OGRFeature      *poFeature;
 
         poFeature = GetNextRawFeature();
-        if( poFeature == NULL )
-            return NULL;
+        if( poFeature == nullptr )
+            return nullptr;
 
-        if( (m_poFilterGeom == NULL
+        if( (m_poFilterGeom == nullptr
             || FilterGeometry( poFeature->GetGeometryRef() ) )
-            && (m_poAttrQuery == NULL
+            && (m_poAttrQuery == nullptr
                 || m_poAttrQuery->Evaluate( poFeature )) )
             return poFeature;
 
@@ -149,7 +140,6 @@ OGRFeature *OGRMySQLLayer::RecordToFeature( char **papszRow,
 /* -------------------------------------------------------------------- */
 /*      Create a feature from the current result.                       */
 /* -------------------------------------------------------------------- */
-    int         iField;
     OGRFeature *poFeature = new OGRFeature( poFeatureDefn );
 
     poFeature->SetFID( iNextShapeId );
@@ -158,11 +148,10 @@ OGRFeature *OGRMySQLLayer::RecordToFeature( char **papszRow,
 /* ==================================================================== */
 /*      Transfer all result fields we can.                              */
 /* ==================================================================== */
-    for( iField = 0;
+    for( int iField = 0;
          iField < (int) mysql_num_fields(hResultSet);
          iField++ )
     {
-        int     iOGRField;
         MYSQL_FIELD *psMSField = mysql_fetch_field(hResultSet);
 
 /* -------------------------------------------------------------------- */
@@ -170,20 +159,22 @@ OGRFeature *OGRMySQLLayer::RecordToFeature( char **papszRow,
 /* -------------------------------------------------------------------- */
         if( bHasFid && EQUAL(psMSField->name,pszFIDColumn) )
         {
-            if( papszRow[iField] == NULL )
+            if( papszRow[iField] == nullptr )
             {
                 CPLError( CE_Failure, CPLE_AppDefined,
                           "NULL primary key in RecordToFeature()" );
-                return NULL;
+                return nullptr;
             }
 
             poFeature->SetFID( CPLAtoGIntBig(papszRow[iField]) );
         }
 
-        if( papszRow[iField] == NULL )
+        if( papszRow[iField] == nullptr )
         {
-//            CPLDebug("MYSQL", "%s was null for %d", psMSField->name,
-//                     iNextShapeId);
+            const int iOGRField = poFeatureDefn->GetFieldIndex(psMSField->name);
+            if( iOGRField >= 0 )
+                poFeature->SetFieldNull( iOGRField );
+
             continue;
         }
 
@@ -192,16 +183,16 @@ OGRFeature *OGRMySQLLayer::RecordToFeature( char **papszRow,
 /* -------------------------------------------------------------------- */
         if( pszGeomColumn && EQUAL(psMSField->name,pszGeomColumn))
         {
-            OGRGeometry *poGeometry = NULL;
+            OGRGeometry *poGeometry = nullptr;
 
             // Geometry columns will have the first 4 bytes contain the SRID.
             OGRGeometryFactory::createFromWkb(
-                ((GByte *)papszRow[iField]) + 4,
-                NULL,
+                papszRow[iField] + 4,
+                nullptr,
                 &poGeometry,
                 static_cast<int>(panLengths[iField] - 4) );
 
-            if( poGeometry != NULL )
+            if( poGeometry != nullptr )
             {
                 poGeometry->assignSpatialReference( GetSpatialRef() );
                 poFeature->SetGeometryDirectly( poGeometry );
@@ -209,11 +200,10 @@ OGRFeature *OGRMySQLLayer::RecordToFeature( char **papszRow,
             continue;
         }
 
-
 /* -------------------------------------------------------------------- */
 /*      Transfer regular data fields.                                   */
 /* -------------------------------------------------------------------- */
-        iOGRField = poFeatureDefn->GetFieldIndex(psMSField->name);
+        const int iOGRField = poFeatureDefn->GetFieldIndex(psMSField->name);
         if( iOGRField < 0 )
             continue;
 
@@ -243,23 +233,23 @@ OGRFeature *OGRMySQLLayer::GetNextRawFeature()
 /* -------------------------------------------------------------------- */
 /*      Do we need to establish an initial query?                       */
 /* -------------------------------------------------------------------- */
-    if( iNextShapeId == 0 && hResultSet == NULL )
+    if( iNextShapeId == 0 && hResultSet == nullptr )
     {
-        CPLAssert( pszQueryStatement != NULL );
+        CPLAssert( pszQueryStatement != nullptr );
 
         poDS->RequestLongResult( this );
 
         if( mysql_query( poDS->GetConn(), pszQueryStatement ) )
         {
             poDS->ReportError( pszQueryStatement );
-            return NULL;
+            return nullptr;
         }
 
         hResultSet = mysql_use_result( poDS->GetConn() );
-        if( hResultSet == NULL )
+        if( hResultSet == nullptr )
         {
             poDS->ReportError( "mysql_use_result() failed on query." );
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -270,10 +260,10 @@ OGRFeature *OGRMySQLLayer::GetNextRawFeature()
     unsigned long *panLengths;
 
     papszRow = mysql_fetch_row( hResultSet );
-    if( papszRow == NULL )
+    if( papszRow == nullptr )
     {
         ResetReading();
-        return NULL;
+        return nullptr;
     }
 
     panLengths = mysql_fetch_lengths( hResultSet );
@@ -307,25 +297,11 @@ OGRFeature *OGRMySQLLayer::GetFeature( GIntBig nFeatureId )
 const char *OGRMySQLLayer::GetFIDColumn()
 
 {
-    if( pszFIDColumn != NULL )
+    if( pszFIDColumn != nullptr )
         return pszFIDColumn;
     else
         return "";
 }
-
-/************************************************************************/
-/*                         GetGeometryColumn()                          */
-/************************************************************************/
-
-const char *OGRMySQLLayer::GetGeometryColumn()
-
-{
-    if( pszGeomColumn != NULL )
-        return pszGeomColumn;
-    else
-        return "";
-}
-
 
 /************************************************************************/
 /*                         FetchSRSId()                                 */
@@ -333,12 +309,12 @@ const char *OGRMySQLLayer::GetGeometryColumn()
 
 int OGRMySQLLayer::FetchSRSId()
 {
-	CPLString        osCommand;
+    CPLString        osCommand;
     char           **papszRow;
 
-    if( hResultSet != NULL )
+    if( hResultSet != nullptr )
         mysql_free_result( hResultSet );
-		hResultSet = NULL;
+    hResultSet = nullptr;
 
     osCommand.Printf(
              "SELECT srid FROM geometry_columns "
@@ -348,21 +324,21 @@ int OGRMySQLLayer::FetchSRSId()
     if( !mysql_query( poDS->GetConn(), osCommand ) )
         hResultSet = mysql_store_result( poDS->GetConn() );
 
-    papszRow = NULL;
-    if( hResultSet != NULL )
+    papszRow = nullptr;
+    if( hResultSet != nullptr )
         papszRow = mysql_fetch_row( hResultSet );
 
-    if( papszRow != NULL && papszRow[0] != NULL )
+    if( papszRow != nullptr && papszRow[0] != nullptr )
     {
         nSRSId = atoi(papszRow[0]);
     }
 
     // make sure to free our results
-    if( hResultSet != NULL )
+    if( hResultSet != nullptr )
         mysql_free_result( hResultSet );
-		hResultSet = NULL;
+    hResultSet = nullptr;
 
-	return nSRSId;
+    return nSRSId;
 }
 
 /************************************************************************/
@@ -372,17 +348,14 @@ int OGRMySQLLayer::FetchSRSId()
 OGRSpatialReference *OGRMySQLLayer::GetSpatialRef()
 
 {
-
-
-    if( poSRS == NULL && nSRSId > -1 )
+    if( poSRS == nullptr && nSRSId > -1 )
     {
         poSRS = poDS->FetchSRS( nSRSId );
-        if( poSRS != NULL )
+        if( poSRS != nullptr )
             poSRS->Reference();
         else
-            nSRSId = -1;
+            nSRSId = poDS->GetUnknownSRID();
     }
 
     return poSRS;
-
 }

@@ -28,11 +28,19 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#include "cpl_conv.h"
+#include "cpl_port.h"
 #include "swq.h"
 
-static swq_field_type SWQColumnFuncChecker( swq_expr_node *poNode,
-                                            int bAllowMismatchTypeOnFieldComparison );
+#include <cstddef>
+
+#include "cpl_conv.h"
+#include "cpl_error.h"
+
+CPL_CVSID("$Id: swq_op_registrar.cpp ba2ef4045f82fd2260f1732e9e46a927277ac93d 2018-05-06 19:07:03 +0200 Even Rouault $")
+
+//! @cond Doxygen_Suppress
+static swq_field_type SWQColumnFuncChecker(
+    swq_expr_node *poNode, int bAllowMismatchTypeOnFieldComparison );
 
 static const swq_operation swq_apsOperations[] =
 {
@@ -56,7 +64,8 @@ static const swq_operation swq_apsOperations[] =
     { "%", SWQ_MODULUS , SWQGeneralEvaluator, SWQGeneralChecker },
     { "CONCAT", SWQ_CONCAT , SWQGeneralEvaluator, SWQGeneralChecker },
     { "SUBSTR", SWQ_SUBSTR , SWQGeneralEvaluator, SWQGeneralChecker },
-    { "HSTORE_GET_VALUE", SWQ_HSTORE_GET_VALUE , SWQGeneralEvaluator, SWQGeneralChecker },
+    { "HSTORE_GET_VALUE", SWQ_HSTORE_GET_VALUE , SWQGeneralEvaluator,
+        SWQGeneralChecker },
 
     { "AVG", SWQ_AVG, SWQGeneralEvaluator, SWQColumnFuncChecker },
     { "MIN", SWQ_MIN, SWQGeneralEvaluator, SWQColumnFuncChecker },
@@ -67,8 +76,6 @@ static const swq_operation swq_apsOperations[] =
     { "CAST", SWQ_CAST, SWQCastEvaluator, SWQCastChecker }
 };
 
-#define N_OPERATIONS (sizeof(swq_apsOperations) / sizeof(swq_apsOperations[0]))
-
 /************************************************************************/
 /*                            GetOperator()                             */
 /************************************************************************/
@@ -76,14 +83,13 @@ static const swq_operation swq_apsOperations[] =
 const swq_operation *swq_op_registrar::GetOperator( const char *pszName )
 
 {
-    unsigned int i;
-    for( i = 0; i < N_OPERATIONS; i++ )
+    for( const auto& op: swq_apsOperations )
     {
-        if( EQUAL(pszName,swq_apsOperations[i].pszName) )
-            return &(swq_apsOperations[i]);
+        if( EQUAL(pszName, op.pszName) )
+            return &op;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
@@ -93,15 +99,13 @@ const swq_operation *swq_op_registrar::GetOperator( const char *pszName )
 const swq_operation *swq_op_registrar::GetOperator( swq_op eOperator )
 
 {
-    unsigned int i;
-
-    for( i = 0; i < N_OPERATIONS; i++ )
+    for( const auto& op: swq_apsOperations )
     {
-        if( eOperator == swq_apsOperations[i].eOperation )
-            return &(swq_apsOperations[i]);
+        if( eOperator == op.eOperation )
+            return &op;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
@@ -113,13 +117,14 @@ const swq_operation *swq_op_registrar::GetOperator( swq_op eOperator )
 /*      error if they are used in any other context.                    */
 /************************************************************************/
 
-static swq_field_type SWQColumnFuncChecker( swq_expr_node *poNode,
-                                            CPL_UNUSED int bAllowMismatchTypeOnFieldComparison )
+static swq_field_type SWQColumnFuncChecker(
+    swq_expr_node *poNode, int /* bAllowMismatchTypeOnFieldComparison */ )
 {
     const swq_operation *poOp =
-            swq_op_registrar::GetOperator((swq_op)poNode->nOperation);
+        swq_op_registrar::GetOperator(static_cast<swq_op>(poNode->nOperation));
     CPLError( CE_Failure, CPLE_AppDefined,
               "Column Summary Function '%s' found in an inappropriate context.",
-              (poOp) ? poOp->pszName : "" );
+              poOp != nullptr ? poOp->pszName : "" );
     return SWQ_ERROR;
 }
+//! @endcond

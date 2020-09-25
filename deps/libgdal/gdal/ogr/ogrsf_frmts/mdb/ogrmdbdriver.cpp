@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrmdbdriver.cpp 32110 2015-12-10 17:19:40Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements Personal Geodatabase driver.
@@ -30,7 +29,7 @@
 #include "ogr_mdb.h"
 #include "cpl_conv.h"
 
-CPL_CVSID("$Id: ogrmdbdriver.cpp 32110 2015-12-10 17:19:40Z goatbar $");
+CPL_CVSID("$Id: ogrmdbdriver.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 // g++ -fPIC -g -Wall ogr/ogrsf_frmts/mdb/*.cpp -shared -o ogr_MDB.so -Iport -Igcore -Iogr -Iogr/ogrsf_frmts -Iogr/ogrsf_frmts/mdb -L. -lgdal -I/usr/lib/jvm/java-6-openjdk/include -I/usr/lib/jvm/java-6-openjdk/include/linux  -L/usr/lib/jvm/java-6-openjdk/jre/lib/amd64/server -ljvm
 
@@ -43,6 +42,7 @@ extern "C" void RegisterOGRMDB();
 OGRMDBDriver::~OGRMDBDriver()
 
 {
+    OGRMDBJavaEnv::CleanupMutex();
 }
 
 /************************************************************************/
@@ -66,23 +66,23 @@ OGRDataSource *OGRMDBDriver::Open( const char * pszFilename,
     OGRMDBDataSource     *poDS;
 
     if( bUpdate )
-        return NULL;
+        return nullptr;
 
     if( STARTS_WITH_CI(pszFilename, "PGEO:") )
-        return NULL;
+        return nullptr;
 
     if( STARTS_WITH_CI(pszFilename, "GEOMEDIA:") )
-        return NULL;
+        return nullptr;
 
     if( STARTS_WITH_CI(pszFilename, "WALK:") )
-        return NULL;
+        return nullptr;
 
     if( !EQUAL(CPLGetExtension(pszFilename),"mdb") )
-        return NULL;
+        return nullptr;
 
     VSIStatBuf sStat;
     if (VSIStat(pszFilename, &sStat) != 0)
-        return NULL;
+        return nullptr;
 
     // Open data source
     poDS = new OGRMDBDataSource();
@@ -90,7 +90,7 @@ OGRDataSource *OGRMDBDriver::Open( const char * pszFilename,
     if( !poDS->Open( pszFilename ) )
     {
         delete poDS;
-        return NULL;
+        return nullptr;
     }
     else
         return poDS;
@@ -106,7 +106,6 @@ int OGRMDBDriver::TestCapability( CPL_UNUSED const char * pszCap )
     return FALSE;
 }
 
-
 /************************************************************************/
 /*                           RegisterOGRMDB()                           */
 /************************************************************************/
@@ -121,4 +120,3 @@ void RegisterOGRMDB()
     poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, "drv_mdb.html" );
     OGRSFDriverRegistrar::GetRegistrar()->RegisterDriver( poDriver );
 }
-

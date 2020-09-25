@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrpgeoselectlayer.cpp 32177 2015-12-14 07:25:30Z goatbar $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRPGeoSelectLayer class, layer access to the results
@@ -32,36 +31,35 @@
 #include "cpl_conv.h"
 #include "ogr_pgeo.h"
 
-CPL_CVSID("$Id: ogrpgeoselectlayer.cpp 32177 2015-12-14 07:25:30Z goatbar $");
+CPL_CVSID("$Id: ogrpgeoselectlayer.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 /************************************************************************/
 /*                          OGRPGeoSelectLayer()                        */
 /************************************************************************/
 
 OGRPGeoSelectLayer::OGRPGeoSelectLayer( OGRPGeoDataSource *poDSIn,
-                                        CPLODBCStatement * poStmtIn )
-
+                                        CPLODBCStatement * poStmtIn ) :
+    pszBaseStatement(CPLStrdup(poStmtIn->GetCommand()))
 {
     poDS = poDSIn;
 
     iNextShapeId = 0;
     nSRSId = -1;
-    poFeatureDefn = NULL;
+    poFeatureDefn = nullptr;
 
     poStmt = poStmtIn;
-    pszBaseStatement = CPLStrdup( poStmtIn->GetCommand() );
 
-    /* Just to make test_ogrsf happy, but would/could need be extended to */
-    /* other cases */
+    // Just to make test_ogrsf happy, but would/could need be extended to
+    // other cases.
     if( STARTS_WITH_CI(pszBaseStatement, "SELECT * FROM ") )
     {
 
         OGRLayer* poBaseLayer =
             poDSIn->GetLayerByName(pszBaseStatement + strlen("SELECT * FROM "));
-        if( poBaseLayer != NULL )
+        if( poBaseLayer != nullptr )
         {
             poSRS = poBaseLayer->GetSpatialRef();
-            if( poSRS != NULL )
+            if( poSRS != nullptr )
                 poSRS->Reference();
         }
     }
@@ -87,10 +85,10 @@ OGRPGeoSelectLayer::~OGRPGeoSelectLayer()
 void OGRPGeoSelectLayer::ClearStatement()
 
 {
-    if( poStmt != NULL )
+    if( poStmt != nullptr )
     {
         delete poStmt;
-        poStmt = NULL;
+        poStmt = nullptr;
     }
 }
 
@@ -101,7 +99,7 @@ void OGRPGeoSelectLayer::ClearStatement()
 CPLODBCStatement *OGRPGeoSelectLayer::GetStatement()
 
 {
-    if( poStmt == NULL )
+    if( poStmt == nullptr )
         ResetStatement();
 
     return poStmt;
@@ -127,7 +125,7 @@ OGRErr OGRPGeoSelectLayer::ResetStatement()
     else
     {
         delete poStmt;
-        poStmt = NULL;
+        poStmt = nullptr;
         return OGRERR_FAILURE;
     }
 }

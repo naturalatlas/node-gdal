@@ -10,7 +10,6 @@
 				"../gdal/ogr/ogrsf_frmts/xplane/ogr_xplane_apt_reader.cpp",
 				"../gdal/ogr/ogrsf_frmts/xplane/ogr_xplane_awy_reader.cpp",
 				"../gdal/ogr/ogrsf_frmts/xplane/ogr_xplane_fix_reader.cpp",
-				"../gdal/ogr/ogrsf_frmts/xplane/ogr_xplane_geo_utils.cpp",
 				"../gdal/ogr/ogrsf_frmts/xplane/ogr_xplane_nav_reader.cpp",
 				"../gdal/ogr/ogrsf_frmts/xplane/ogr_xplane_reader.cpp",
 				"../gdal/ogr/ogrsf_frmts/xplane/ogrxplanedatasource.cpp",

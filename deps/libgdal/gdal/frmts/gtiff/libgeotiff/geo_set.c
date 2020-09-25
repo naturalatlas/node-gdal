@@ -26,23 +26,13 @@ This function writes a geokey_t value to a GeoTIFF file.
 This must come from the list of legal geokey_t values
 (an enumeration) listed below.
 
-@param val The <b>val</b> argument is a pointer to the
-variable into which the value should be read.  The type of the variable
-varies depending on the geokey_t given.  While there is no ready mapping
-of geokey_t values onto types, in general code values are of type <i>short</i>,
-citations are strings, and everything else is of type <i>double</i>.  Note
-that pointer's to <i>int</i> should never be passed to GTIFKeyGet() for
-integer values as they will be shorts, and the int's may not be properly
-initialized (and will be grossly wrong on MSB systems).
-
-@param index Indicates how far into the list of values
-for this geokey to offset. Should normally be zero.
+@param type Type of the key.
 
 @param count Indicates how many values
 to read.  At this time all keys except for strings have only one value,
 so <b>index</b> should be zero, and <b>count</b> should be one.<p>
 
-The <b>key</b> indicates the key name to be written to the
+The <b>keyID</b> indicates the key name to be written to the
 file and should from the geokey_t enumeration
 (eg. <tt>ProjectedCSTypeGeoKey</tt>).  The full list of possible geokey_t
 values can be found in geokeys.inc, or in the online documentation for
@@ -79,7 +69,6 @@ int GTIFKeySet(GTIF *gtif, geokey_t keyID, tagtype_t type, int count,...)
 {
     va_list ap;
     int nIndex = gtif->gt_keyindex[ keyID ];
-    int newvalues = 0;
     GeoKey *key;
     char *data = NULL;
     char *val = NULL;
@@ -123,8 +112,16 @@ int GTIFKeySet(GTIF *gtif, geokey_t keyID, tagtype_t type, int count,...)
     }
     else switch (type)
     {
-      case TYPE_SHORT:  sval=(pinfo_t) va_arg(ap, int); val=(char *)&sval;     break;
-      case TYPE_DOUBLE: dval=va_arg(ap, dblparam_t); val=(char *)&dval;  break;
+      case TYPE_SHORT:
+        /* cppcheck-suppress unreadVariable */
+        sval=(pinfo_t) va_arg(ap, int);
+        val=(char *)&sval;
+        break;
+      case TYPE_DOUBLE:
+        /* cppcheck-suppress unreadVariable */
+        dval=va_arg(ap, dblparam_t);
+        val=(char *)&dval;
+        break;
       case TYPE_ASCII:
         val=va_arg(ap, char*);
         count = (int)strlen(val) + 1; /* force = string length */
@@ -146,7 +143,12 @@ int GTIFKeySet(GTIF *gtif, geokey_t keyID, tagtype_t type, int count,...)
             key->gk_type = type;
             key->gk_count = count;
             key->gk_size = _gtiff_size[ type ];
-            newvalues = 1;
+
+            if( type == TYPE_DOUBLE )
+            {
+                key->gk_data = (char *)(gtif->gt_double + gtif->gt_ndoubles);
+                gtif->gt_ndoubles += count;
+            }
         }
     }
     else
@@ -162,67 +164,35 @@ int GTIFKeySet(GTIF *gtif, geokey_t keyID, tagtype_t type, int count,...)
         key->gk_size = _gtiff_size[ type ];
         if ((geokey_t)gtif->gt_keymin > keyID)  gtif->gt_keymin=keyID;
         if ((geokey_t)gtif->gt_keymax < keyID)  gtif->gt_keymax=keyID;
-        newvalues = 1;
-    }
-
-    if (newvalues)
-    {
-        switch (type)
-        {
-          case TYPE_SHORT:
-            if (count > 1) return 0;
-            data = (char *)&key->gk_data; /* store value *in* data */
-            break;
-          case TYPE_DOUBLE:
-            key->gk_data = (char *)(gtif->gt_double + gtif->gt_ndoubles);
-            data = key->gk_data;
-            gtif->gt_ndoubles += count;
-            break;
-          case TYPE_ASCII:
-            break;
-          default:
-            va_end(ap);
-            return 0;
-        }
         gtif->gt_nshorts += sizeof(KeyEntry)/sizeof(pinfo_t);
-    }
-
-    /* this fixes a bug where if a request is made to write a duplicate
-       key, we must initialize the data to a valid value.
-       Bryan Wells (bryan@athena.bangor.autometric.com) */
-
-    else /* no new values, but still have something to write */
-    {
-        switch (type)
+        if( type == TYPE_DOUBLE )
         {
-          case TYPE_SHORT:
-            if (count > 1) return 0;
-            data = (char *)&key->gk_data; /* store value *in* data */
-            break;
-          case TYPE_DOUBLE:
-            data = key->gk_data;
-            break;
-          case TYPE_ASCII:
-            break;
-          default:
-            return 0;
+            key->gk_data = (char *)(gtif->gt_double + gtif->gt_ndoubles);
+            gtif->gt_ndoubles += count;
         }
     }
 
     switch (type)
     {
-      case TYPE_ASCII:
-        /* throw away existing data and allocate room for new data */
-        if (key->gk_data != 0)
-        {
-            _GTIFFree(key->gk_data);
-        }
-        key->gk_data = (char *)_GTIFcalloc(count);
-        key->gk_count = count;
-        data = key->gk_data;
-        break;
-      default:
-        break;
+        case TYPE_SHORT:
+            if (count > 1) return 0;
+            data = (char *)&key->gk_data; /* store value *in* data */
+            break;
+        case TYPE_DOUBLE:
+            data = key->gk_data;
+            break;
+        case TYPE_ASCII:
+            /* throw away existing data and allocate room for new data */
+            if (key->gk_data != 0)
+            {
+                _GTIFFree(key->gk_data);
+            }
+            key->gk_data = (char *)_GTIFcalloc(count);
+            key->gk_count = count;
+            data = key->gk_data;
+            break;
+        default:
+            return 0;
     }
 
     _GTIFmemcpy(data, val, count*key->gk_size);

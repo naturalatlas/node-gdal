@@ -59,9 +59,9 @@ public:
     std::vector<uint32>  sizes;
 
     // binary search for the offset closes to our target or earlier.
-    uint32  FindPreceding( uint32 offset )
+    uint32  FindPreceding( uint32 offset ) const
         {
-            if( offsets.size() == 0 )
+            if( offsets.empty() )
                 return 0;
 
             uint32 start=0, end=static_cast<uint32>(offsets.size())-1;
@@ -85,7 +85,7 @@ public:
             uint32 preceding = FindPreceding( offset );
 
             // special case for empty
-            if( offsets.size() == 0 )
+            if( offsets.empty() )
             {
                 offsets.push_back( offset );
                 sizes.push_back( size );
@@ -93,7 +93,7 @@ public:
             }
                     
             // special case for before first.
-            if( offsets.size() > 0 && offset < offsets[0] )
+            if( !offsets.empty() && offset < offsets[0] )
             {
                 if( offset+size > offsets[0] )
                     return true;
@@ -166,7 +166,7 @@ std::string CPCIDSKVectorSegment::ConsistencyCheck()
     report += ConsistencyCheck_ShapeIndices();
 
     if( report != "" )
-        fprintf( stderr, "ConsistencyCheck() Report:\n%s", report.c_str() );
+        fprintf( stderr, "ConsistencyCheck() Report:\n%s", report.c_str() );/*ok*/
 
     return report;
 }
@@ -218,13 +218,12 @@ std::string CPCIDSKVectorSegment::ConsistencyCheck_DataIndices()
 
 {
     std::string report;
-    unsigned int section;
 
     SpaceMap smap;
 
     CPL_IGNORE_RET_VAL(smap.AddChunk( 0, vh.header_blocks ));
 
-    for( section = 0; section < 2; section++ )
+    for( int section = 0; section < 2; section++ )
     {
         const std::vector<uint32> *map = di[section].GetIndex();
         unsigned int i;
@@ -275,7 +274,7 @@ std::string CPCIDSKVectorSegment::ConsistencyCheck_ShapeIndices()
             char msg[100];
 
             snprintf( msg, sizeof(msg),
-                      "ShapeID %d is used for shape %d and %d!\n", 
+                      "ShapeID %d is used for shape %u and %u!\n", 
                      shape_index_ids[toff], 
                      toff, id_map[shape_index_ids[toff]]);
             report += msg;
@@ -290,8 +289,8 @@ std::string CPCIDSKVectorSegment::ConsistencyCheck_ShapeIndices()
             uint32 vertex_size;
             uint32 vert_off = shape_index_vertex_off[toff];
 
-            memcpy( &vertex_size, GetData( sec_vert, vert_off, NULL, 4 ), 4 );
-            memcpy( &vertex_count, GetData( sec_vert, vert_off+4, NULL, 4 ), 4 );
+            memcpy( &vertex_size, GetData( sec_vert, vert_off, nullptr, 4 ), 4 );
+            memcpy( &vertex_count, GetData( sec_vert, vert_off+4, nullptr, 4 ), 4 );
             if( needs_swap )
             {
                 SwapData( &vertex_count, 4, 1 );
@@ -321,7 +320,7 @@ std::string CPCIDSKVectorSegment::ConsistencyCheck_ShapeIndices()
             uint32 record_size, i;
             ShapeField wfld;
 
-            memcpy( &record_size, GetData( sec_record, rec_off, NULL, 4 ), 4 );
+            memcpy( &record_size, GetData( sec_record, rec_off, nullptr, 4 ), 4 );
             if( needs_swap )
                 SwapData( &record_size, 4, 1 );
 

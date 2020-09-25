@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gtiff.h 33806 2016-03-28 22:26:19Z goatbar $
+ * $Id: gtiff.h c4b4dfe1b5b03622575bd88104977ea52d08ddb7 2018-11-10 16:21:34 +0100 Even Rouault $
  *
  * Project:  GeoTIFF Driver
  * Purpose:  GDAL GeoTIFF support.
@@ -32,6 +32,7 @@
 #define GTIFF_H_INCLUDED
 
 #include "cpl_port.h"
+#include "cpl_string.h"
 
 #include "gdal.h"
 #include "tiffio.h"
@@ -39,20 +40,40 @@
 CPL_C_START
 int    GTiffOneTimeInit();
 void CPL_DLL LibgeotiffOneTimeInit();
-void   LibgeotiffOneTimeCleanupMutex();
 CPL_C_END
 
-void    GTIFFSetInExternalOvr(bool b);
-void    GTIFFGetOverviewBlockSize(int* pnBlockXSize, int* pnBlockYSize);
-void    GTIFFSetJpegQuality(GDALDatasetH hGTIFFDS, int nJpegQuality);
-int     GTIFFGetCompressionMethod(const char* pszValue, const char* pszVariableName);
+void    GTIFFSetInExternalOvr( bool b );
+void    GTIFFGetOverviewBlockSize( int* pnBlockXSize, int* pnBlockYSize );
+void    GTIFFSetJpegQuality( GDALDatasetH hGTIFFDS, int nJpegQuality );
+void    GTIFFSetJpegTablesMode( GDALDatasetH hGTIFFDS, int nJpegTablesMode );
+int     GTIFFGetCompressionMethod( const char* pszValue,
+                                   const char* pszVariableName );
 
 void GTiffDatasetWriteRPCTag( TIFF *hTIFF, char **papszRPCMD );
 char** GTiffDatasetReadRPCTag( TIFF *hTIFF );
 
+void GTiffWriteJPEGTables( TIFF* hTIFF,
+                           const char* pszPhotometric,
+                           const char* pszJPEGQuality,
+                           const char* pszJPEGTablesMode );
+CPLString GTiffFormatGDALNoDataTagValue( double dfNoData );
+
+const int knGTIFFJpegTablesModeDefault = 1; /* JPEGTABLESMODE_QUANT */
+
+// Note: Was EXTRASAMPLE_ASSOCALPHA in GDAL < 1.10.
+constexpr uint16 DEFAULT_ALPHA_TYPE = EXTRASAMPLE_UNASSALPHA;
+
+uint16 GTiffGetAlphaValue(const char* pszValue, uint16 nDefault);
+
 #define TIFFTAG_GDAL_METADATA  42112
 #define TIFFTAG_GDAL_NODATA    42113
 #define TIFFTAG_RPCCOEFFICIENT 50844
+
+/* GeoTIFF DGIWG */
+/* https://www.awaresystems.be/imaging/tiff/tifftags/tiff_rsid.html */
+#define TIFFTAG_TIFF_RSID      50908
+/* https://www.awaresystems.be/imaging/tiff/tifftags/geo_metadata.html */
+#define TIFFTAG_GEO_METADATA   50909
 
 #if defined(TIFFLIB_VERSION) && TIFFLIB_VERSION >= 20081217 && defined(BIGTIFF_SUPPORT)
 #  define HAVE_UNSETFIELD
@@ -73,6 +94,30 @@ char** GTiffDatasetReadRPCTag( TIFF *hTIFF );
 
 #if !defined(TIFFTAG_LZMAPRESET)
 #define TIFFTAG_LZMAPRESET      65562   /* LZMA2 preset (compression level) */
+#endif
+
+#if !defined(COMPRESSION_ZSTD)
+#define     COMPRESSION_ZSTD        50000   /* ZSTD */
+#endif
+
+#if !defined(TIFFTAG_ZSTD_LEVEL)
+#define TIFFTAG_ZSTD_LEVEL      65564    /* ZSTD compression level */
+#endif
+ 
+#if !defined(COMPRESSION_LERC)
+#define     COMPRESSION_LERC        34887   /* LERC */
+#endif
+
+#if !defined(COMPRESSION_WEBP)
+#define     COMPRESSION_WEBP        50001   /* WebP */
+#endif
+
+#if !defined(TIFFTAG_WEBP_LEVEL)
+#define     TIFFTAG_WEBP_LEVEL        65568   /* WebP compression level */
+#endif
+
+#if !defined(TIFFTAG_WEBP_LOSSLESS)
+#define     TIFFTAG_WEBP_LOSSLESS     65569 /* WebP lossless/lossy */
 #endif
 
 #endif // GTIFF_H_INCLUDED

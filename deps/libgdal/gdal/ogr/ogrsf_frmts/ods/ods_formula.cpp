@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ods_formula.cpp 32967 2016-01-13 14:40:01Z goatbar $
  *
  * Component: ODS formula Engine
  * Purpose:
@@ -33,6 +32,8 @@
 
 #include "cpl_conv.h"
 #include "ods_formula.h"
+
+CPL_CVSID("$Id: ods_formula.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
 namespace {
 #include "ods_formula_parser.hpp"
@@ -68,7 +69,7 @@ const SingleOpStruct* ODSGetSingleOpEntry(const char* pszName)
         if (EQUAL(pszName, apsSingleOp[i].pszName))
             return &apsSingleOp[i];
     }
-    return NULL;
+    return nullptr;
 }
 
 const SingleOpStruct* ODSGetSingleOpEntry(ods_formula_op eOp)
@@ -78,7 +79,7 @@ const SingleOpStruct* ODSGetSingleOpEntry(ods_formula_op eOp)
         if (eOp == apsSingleOp[i].eOp)
             return &apsSingleOp[i];
     }
-    return NULL;
+    return nullptr;
 }
 
 /************************************************************************/
@@ -91,7 +92,7 @@ int ods_formulalex( YYSTYPE *ppNode, ods_formula_parse_context *context )
 {
     const char *pszInput = context->pszNext;
 
-    *ppNode = NULL;
+    *ppNode = nullptr;
 
 /* -------------------------------------------------------------------- */
 /*      Do we have a start symbol to return?                            */
@@ -199,7 +200,11 @@ int ods_formulalex( YYSTYPE *ppNode, ods_formula_parse_context *context )
         }
         else
         {
-            *ppNode = new ods_formula_node( atoi(osToken) );
+            GIntBig nVal = CPLAtoGIntBig(osToken);
+            if( osToken.size() >= 12 || nVal < INT_MIN || nVal > INT_MAX  )
+                *ppNode = new ods_formula_node( CPLAtof(osToken) );
+            else
+                *ppNode = new ods_formula_node( static_cast<int>(nVal) );
         }
 
         return ODST_NUMBER;
@@ -323,7 +328,7 @@ int ods_formulalex( YYSTYPE *ppNode, ods_formula_parse_context *context )
         else
         {
             const SingleOpStruct* psSingleOp = ODSGetSingleOpEntry(osToken);
-            if (psSingleOp != NULL)
+            if (psSingleOp != nullptr)
             {
                 *ppNode = new ods_formula_node( psSingleOp->eOp );
                 nReturn = ODST_FUNCTION_SINGLE_ARG;
@@ -368,5 +373,5 @@ ods_formula_node* ods_formula_compile( const char *expr )
     }
 
     delete context.poRoot;
-    return NULL;
+    return nullptr;
 }

@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id$
  *
  * Project:  GDAL/OGR Geography Network support (Geographic Network Model)
  * Purpose:  GNM network class.
@@ -32,15 +31,11 @@
 #include "gnm_api.h"
 #include "ogrsf_frmts.h"
 
-GNMNetwork::GNMNetwork() : GDALDataset()
-{
+CPL_CVSID("$Id: gnmnetwork.cpp 7e07230bbff24eb333608de4dbd460b7312839d0 2017-12-11 19:08:47Z Even Rouault $")
 
-}
+GNMNetwork::GNMNetwork() : GDALDataset() {}
 
-GNMNetwork::~GNMNetwork()
-{
-
-}
+GNMNetwork::~GNMNetwork() {}
 
 const char *GNMNetwork::GetName() const
 {
@@ -54,14 +49,14 @@ const char *GNMNetwork::GetProjectionRef()
 
 char **GNMNetwork::GetFileList()
 {
-    return NULL;
+    return nullptr;
 }
 
 //--- C API --------------------------------------------------------------------
 
 const char* CPL_STDCALL GNMGetName (GNMNetworkH hNet)
 {
-    VALIDATE_POINTER1( hNet, "GNMGetVersion", NULL );
+    VALIDATE_POINTER1( hNet, "GNMGetVersion", nullptr );
 
     return ((GNMNetwork*)hNet)->GetName();
 }
@@ -78,12 +73,11 @@ CPLErr CPL_STDCALL GNMDisconnectAll (GNMNetworkH hNet)
     VALIDATE_POINTER1( hNet, "GNMDisconnectAll", CE_Failure );
 
     return ((GNMNetwork*)hNet)->DisconnectAll();
-
 }
 
 OGRFeatureH CPL_STDCALL GNMGetFeatureByGlobalFID (GNMNetworkH hNet, GNMGFID nGFID)
 {
-    VALIDATE_POINTER1( hNet, "GNMGetFeatureByGlobalFID", NULL );
+    VALIDATE_POINTER1( hNet, "GNMGetFeatureByGlobalFID", nullptr );
 
     return (OGRFeatureH) ((GNMNetwork*)hNet)->GetFeatureByGlobalFID(nGFID);
 }
@@ -92,8 +86,20 @@ OGRLayerH CPL_STDCALL GNMGetPath (GNMNetworkH hNet, GNMGFID nStartFID,
                               GNMGFID nEndFID, GNMGraphAlgorithmType eAlgorithm,
                               char** papszOptions)
 {
-    VALIDATE_POINTER1( hNet, "GNMGetPath", NULL );
+    VALIDATE_POINTER1( hNet, "GNMGetPath", nullptr );
 
     return (OGRLayerH) ((GNMNetwork*)hNet)->GetPath(nStartFID, nEndFID,
                                                     eAlgorithm, papszOptions);
+}
+
+GNMNetworkH CPL_STDCALL GNMCastToNetwork(GDALMajorObjectH hBase)
+{
+    return reinterpret_cast<GNMNetworkH>(
+        dynamic_cast<GNMNetwork*>(reinterpret_cast<GDALMajorObject*>(hBase)));
+}
+
+GNMGenericNetworkH CPL_STDCALL GNMCastToGenericNetwork(GDALMajorObjectH hBase)
+{
+    return reinterpret_cast<GNMGenericNetworkH>(
+        dynamic_cast<GNMNetwork*>(reinterpret_cast<GDALMajorObject*>(hBase)));
 }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: cplkeywordparser.h 33666 2016-03-07 05:21:07Z goatbar $
+ * $Id: cplkeywordparser.h c39d156816d937c3139360b11786c769aeabd21e 2018-05-05 19:48:08 +0200 Even Rouault $
  *
  * Project:  Common Portability Library
  * Purpose:  Implementation of CPLKeywordParser - a class for parsing
@@ -41,17 +41,21 @@
 /* ==================================================================== */
 /************************************************************************/
 
+/*! @cond Doxygen_Suppress */
+
 class CPLKeywordParser
 {
-    char     **papszKeywordList;
+    char     **papszKeywordList = nullptr;
 
-    CPLString osHeaderText;
-    const char *pszHeaderNext;
+    CPLString osHeaderText{};
+    const char *pszHeaderNext = nullptr;
 
     void    SkipWhite();
-    int     ReadWord( CPLString &osWord );
-    int     ReadPair( CPLString &osName, CPLString &osValue );
-    int     ReadGroup( const char *pszPathPrefix );
+    bool    ReadWord( CPLString &osWord );
+    bool    ReadPair( CPLString &osName, CPLString &osValue );
+    bool    ReadGroup( const char *pszPathPrefix, int nRecLevel );
+
+    CPL_DISALLOW_COPY_ASSIGN(CPLKeywordParser)
 
 public:
     CPLKeywordParser();
@@ -59,8 +63,10 @@ public:
 
     int     Ingest( VSILFILE *fp );
 
-    const char *GetKeyword( const char *pszPath, const char *pszDefault=NULL );
+    const char *GetKeyword( const char *pszPath, const char *pszDefault=nullptr );
     char  **GetAllKeywords() { return papszKeywordList; }
 };
+
+/*! @endcond */
 
 #endif /* def CPL_KEYWORD_PARSER */

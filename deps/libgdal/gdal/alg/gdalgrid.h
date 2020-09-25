@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalgrid.h 29541 2015-07-20 14:03:42Z rouault $
+ * $Id: gdalgrid.h fcf615cbf6b2e03db17171af0ebba6da4b4a562d 2016-08-05 17:13:05Z Even Rouault $
  *
  * Project:  GDAL Gridding API.
  * Purpose:  Prototypes, and definitions for of GDAL scattered data gridder.
@@ -57,11 +57,14 @@ static const char szAlgNameLinear[] = "linear";
 
 CPL_C_START
 
+/*! @cond Doxygen_Suppress */
 typedef CPLErr (*GDALGridFunction)( const void *, GUInt32,
                                     const double *, const double *,
                                     const double *,
                                     double, double, double *,
                                     void* );
+/*! @endcond */
+
 CPLErr
 GDALGridInverseDistanceToAPower( const void *, GUInt32,
                                  const double *, const double *,

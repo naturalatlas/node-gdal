@@ -1,5 +1,4 @@
 /******************************************************************************
- * $Id: ogrdwg_hatch.cpp 33713 2016-03-12 17:41:57Z goatbar $
  *
  * Project:  DWG Translator
  * Purpose:  Implements translation support for HATCH elements as part
@@ -32,17 +31,9 @@
 #include "cpl_conv.h"
 #include "ogr_api.h"
 
-#include "DbHatch.h"
-
 #include "ogrdxf_polyline_smooth.h"
 
-#include "Ge/GePoint2dArray.h"
-#include "Ge/GeCurve2d.h"
-#include "Ge/GeCircArc2d.h"
-#include "Ge/GeEllipArc2d.h"
-
-CPL_CVSID("$Id: ogrdwg_hatch.cpp 33713 2016-03-12 17:41:57Z goatbar $");
-
+CPL_CVSID("$Id: ogrdwg_hatch.cpp 98dfb4b4012c5ae4621e246e8eb393b3c05a3f48 2018-04-02 22:09:55 +0200 Even Rouault $")
 
 static OGRErr DWGCollectBoundaryLoop( OdDbHatchPtr poHatch, int iLoop,
                                       OGRGeometryCollection *poGC );
@@ -102,7 +93,7 @@ OGRFeature *OGRDWGLayer::TranslateHATCH( OdDbEntityPtr poEntity )
     if( nColor < 1 || nColor > 255 )
     {
         const char *pszValue = poDS->LookupLayerProperty( osLayer, "Color" );
-        if( pszValue != NULL )
+        if( pszValue != nullptr )
             nColor = atoi(pszValue);
     }
 
@@ -158,7 +149,7 @@ static OGRErr DWGCollectBoundaryLoop( OdDbHatchPtr poHatch, int iLoop,
 
         oSmoothPolyline.Close();
 
-        OGRLineString *poLS = (OGRLineString *) oSmoothPolyline.Tesselate();
+        OGRLineString *poLS = oSmoothPolyline.Tesselate()->toLineString();
         poGC->addGeometryDirectly( poLS );
 
         return OGRERR_NONE;
@@ -201,11 +192,11 @@ static OGRErr DWGCollectBoundaryLoop( OdDbHatchPtr poHatch, int iLoop,
                 dfEndAngle += 360.0;
             }
 
-            OGRLineString *poLS = (OGRLineString *)
+            OGRLineString *poLS =
                 OGRGeometryFactory::approximateArcAngles(
                     oCenter.x, oCenter.y, 0.0,
                     poCircArc->radius(), poCircArc->radius(), 0.0,
-                    dfStartAngle, dfEndAngle, 0.0 );
+                    dfStartAngle, dfEndAngle, 0.0 )->toLineString();
 
             poGC->addGeometryDirectly( poLS );
         }
@@ -233,13 +224,13 @@ static OGRErr DWGCollectBoundaryLoop( OdDbHatchPtr poHatch, int iLoop,
                 dfEndAng += 360.0;
             }
 
-            OGRLineString *poLS = (OGRLineString *)
+            OGRLineString *poLS =
                 OGRGeometryFactory::approximateArcAngles(
                     oCenter.x, oCenter.y, 0.0,
                     poArc->majorRadius(), poArc->minorRadius(), dfRotation,
                     OGRDWGLayer::AngleCorrect(dfStartAng,dfRatio),
                     OGRDWGLayer::AngleCorrect(dfEndAng,dfRatio),
-                    0.0 );
+                    0.0 )->toLineString();
             poGC->addGeometryDirectly( poLS );
         }
         else

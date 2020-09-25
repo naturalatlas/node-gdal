@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_mem.h 32896 2016-01-10 13:37:26Z goatbar $
+ * $Id: ogr_mem.h a8d30b37682544123e5e24d69cb33041d544c465 2018-05-06 01:37:21 +0200 Even Rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Private definitions within the OGR Memory driver.
@@ -44,6 +44,8 @@ class IOGRMemLayerFeatureIterator;
 
 class OGRMemLayer : public OGRLayer
 {
+    CPL_DISALLOW_COPY_ASSIGN(OGRMemLayer)
+
     typedef std::map<GIntBig, OGRFeature*>           FeatureMap;
     typedef std::map<GIntBig, OGRFeature*>::iterator FeatureIterator;
 
@@ -52,7 +54,7 @@ class OGRMemLayer : public OGRLayer
     GIntBig             m_nFeatureCount;
 
     GIntBig             m_iNextReadFID;
-    GIntBig             m_nMaxFeatureCount; // max size of papoFeatures
+    GIntBig             m_nMaxFeatureCount;  // Max size of papoFeatures.
     OGRFeature        **m_papoFeatures;
     bool                m_bHasHoles;
 
@@ -66,40 +68,46 @@ class OGRMemLayer : public OGRLayer
 
     bool                m_bUpdated;
 
-    // only use it in the lifetime of a function where the list of features doesn't change
+    // Only use it in the lifetime of a function where the list of features
+    // doesn't change.
     IOGRMemLayerFeatureIterator* GetIterator();
 
   public:
                         OGRMemLayer( const char * pszName,
                                      OGRSpatialReference *poSRS,
                                      OGRwkbGeometryType eGeomType );
-                        ~OGRMemLayer();
+    virtual            ~OGRMemLayer();
 
-    void                ResetReading();
-    OGRFeature *        GetNextFeature();
-    virtual OGRErr      SetNextByIndex( GIntBig nIndex );
+    void                ResetReading() override;
+    OGRFeature *        GetNextFeature() override;
+    virtual OGRErr      SetNextByIndex( GIntBig nIndex ) override;
 
-    OGRFeature         *GetFeature( GIntBig nFeatureId );
-    OGRErr              ISetFeature( OGRFeature *poFeature );
-    OGRErr              ICreateFeature( OGRFeature *poFeature );
-    virtual OGRErr      DeleteFeature( GIntBig nFID );
+    OGRFeature         *GetFeature( GIntBig nFeatureId ) override;
+    OGRErr              ISetFeature( OGRFeature *poFeature ) override;
+    OGRErr              ICreateFeature( OGRFeature *poFeature ) override;
+    virtual OGRErr      DeleteFeature( GIntBig nFID ) override;
 
-    OGRFeatureDefn *    GetLayerDefn() { return m_poFeatureDefn; }
+    OGRFeatureDefn *    GetLayerDefn() override { return m_poFeatureDefn; }
 
-    GIntBig             GetFeatureCount( int );
+    GIntBig             GetFeatureCount( int ) override;
 
     virtual OGRErr      CreateField( OGRFieldDefn *poField,
-                                     int bApproxOK = TRUE );
-    virtual OGRErr      DeleteField( int iField );
-    virtual OGRErr      ReorderFields( int* panMap );
-    virtual OGRErr      AlterFieldDefn( int iField, OGRFieldDefn* poNewFieldDefn, int nFlags );
+                                     int bApproxOK = TRUE ) override;
+    virtual OGRErr      DeleteField( int iField ) override;
+    virtual OGRErr      ReorderFields( int* panMap ) override;
+    virtual OGRErr      AlterFieldDefn( int iField,
+                                        OGRFieldDefn* poNewFieldDefn,
+                                        int nFlags ) override;
     virtual OGRErr      CreateGeomField( OGRGeomFieldDefn *poGeomField,
-                                         int bApproxOK = TRUE );
+                                         int bApproxOK = TRUE ) override;
 
-    int                 TestCapability( const char * );
+    int                 TestCapability( const char * ) override;
 
-    void                SetUpdatable( bool bUpdatableIn ) { m_bUpdatable = bUpdatableIn; }
-    void                SetAdvertizeUTF8( bool bAdvertizeUTF8In ) { m_bAdvertizeUTF8 = bAdvertizeUTF8In; }
+    bool                IsUpdatable() const { return m_bUpdatable; }
+    void                SetUpdatable( bool bUpdatableIn )
+        { m_bUpdatable = bUpdatableIn; }
+    void                SetAdvertizeUTF8( bool bAdvertizeUTF8In )
+        { m_bAdvertizeUTF8 = bAdvertizeUTF8In; }
 
     bool                HasBeenUpdated() const { return m_bUpdated; }
     void                SetUpdated(bool bUpdated) { m_bUpdated = bUpdated; }
@@ -113,6 +121,8 @@ class OGRMemLayer : public OGRLayer
 
 class OGRMemDataSource : public OGRDataSource
 {
+    CPL_DISALLOW_COPY_ASSIGN(OGRMemDataSource)
+
     OGRMemLayer       **papoLayers;
     int                 nLayers;
 
@@ -120,19 +130,19 @@ class OGRMemDataSource : public OGRDataSource
 
   public:
                         OGRMemDataSource( const char *, char ** );
-                        ~OGRMemDataSource();
+                        virtual ~OGRMemDataSource();
 
-    const char          *GetName() { return pszName; }
-    int                 GetLayerCount() { return nLayers; }
-    OGRLayer            *GetLayer( int );
+    const char          *GetName() override { return pszName; }
+    int                 GetLayerCount() override { return nLayers; }
+    OGRLayer            *GetLayer( int ) override;
 
     virtual OGRLayer    *ICreateLayer( const char *,
-                                      OGRSpatialReference * = NULL,
-                                      OGRwkbGeometryType = wkbUnknown,
-                                      char ** = NULL );
-    OGRErr              DeleteLayer( int iLayer );
+                                       OGRSpatialReference * = nullptr,
+                                       OGRwkbGeometryType = wkbUnknown,
+                                       char ** = nullptr ) override;
+    OGRErr              DeleteLayer( int iLayer ) override;
 
-    int                 TestCapability( const char * );
+    int                 TestCapability( const char * ) override;
 };
 
 /************************************************************************/
@@ -142,16 +152,15 @@ class OGRMemDataSource : public OGRDataSource
 class OGRMemDriver : public OGRSFDriver
 {
   public:
-                ~OGRMemDriver();
+    virtual ~OGRMemDriver();
 
-    const char *GetName();
-    OGRDataSource *Open( const char *, int );
+    const char *GetName() override;
+    OGRDataSource *Open( const char *, int ) override;
 
     virtual OGRDataSource *CreateDataSource( const char *pszName,
-                                             char ** = NULL );
+                                             char ** = nullptr ) override;
 
-    int                 TestCapability( const char * );
+    int TestCapability( const char * ) override;
 };
 
-
-#endif /* ndef OGRMEM_H_INCLUDED */
+#endif  // ndef OGRMEM_H_INCLUDED

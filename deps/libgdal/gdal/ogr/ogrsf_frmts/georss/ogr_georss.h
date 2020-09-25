@@ -58,29 +58,30 @@ typedef enum
 /*                             OGRGeoRSSLayer                              */
 /************************************************************************/
 
-class OGRGeoRSSLayer : public OGRLayer
+class OGRGeoRSSLayer final: public OGRLayer
 {
     OGRFeatureDefn*    poFeatureDefn;
     OGRSpatialReference *poSRS;
     OGRGeoRSSDataSource*  poDS;
     OGRGeoRSSFormat     eFormat;
 
-    int                bWriteMode;
+    bool               bWriteMode;
     int                nTotalFeatureCount;
 
-    int                eof;
+    // TODO(schwehr): Remove eof?
+    bool               eof;
     int                nNextFID;
     VSILFILE*          fpGeoRSS; /* Large file API */
-    int                bHasReadSchema;
+    bool               bHasReadSchema;
 #ifdef HAVE_EXPAT
     XML_Parser         oParser;
     XML_Parser         oSchemaParser;
 #endif
     OGRGeometry*       poGlobalGeom;
-    int                bStopParsing;
-    int                bInFeature;
-    int                hasFoundLat;
-    int                hasFoundLon;
+    bool               bStopParsing;
+    bool               bInFeature;
+    bool               hasFoundLat;
+    bool               hasFoundLon;
 #ifdef HAVE_EXPAT
     double             latVal;
     double             lonVal;
@@ -91,17 +92,17 @@ class OGRGeoRSSLayer : public OGRLayer
 #ifdef HAVE_EXPAT
     int                iCurrentField;
 #endif
-    int                bInSimpleGeometry;
-    int                bInGMLGeometry;
-    int                bInGeoLat;
-    int                bInGeoLong;
+    bool               bInSimpleGeometry;
+    bool               bInGMLGeometry;
+    bool               bInGeoLat;
+    bool               bInGeoLong;
 #ifdef HAVE_EXPAT
-    int                bFoundGeom;
-    int                bSameSRS;
+    bool               bFoundGeom;
+    bool               bSameSRS;
 #endif
     OGRwkbGeometryType eGeomType;
     char*              pszGMLSRSName;
-    int                bInTagWithSubTag;
+    bool               bInTagWithSubTag;
     char*              pszTagWithSubTag;
     int                currentDepth;
     int                featureDepth;
@@ -120,40 +121,40 @@ class OGRGeoRSSLayer : public OGRLayer
 
   private:
 #ifdef HAVE_EXPAT
-    void               AddStrToSubElementValue(const char* pszStr);
+    void               AddStrToSubElementValue( const char* pszStr );
 #endif
-    int                IsStandardField(const char* pszName);
+    bool               IsStandardField( const char* pszName );
 
   public:
-                        OGRGeoRSSLayer(const char *pszFilename,
-                                    const char* layerName,
-                                    OGRGeoRSSDataSource* poDS,
-                                    OGRSpatialReference *poSRSIn,
-                                    int bWriteMode = FALSE);
-                        ~OGRGeoRSSLayer();
+                        OGRGeoRSSLayer( const char *pszFilename,
+                                        const char* layerName,
+                                        OGRGeoRSSDataSource* poDS,
+                                        OGRSpatialReference *poSRSIn,
+                                        bool bWriteMode = false );
+                        ~OGRGeoRSSLayer() override;
 
-    void                ResetReading();
-    OGRFeature *        GetNextFeature();
+    void                ResetReading() override;
+    OGRFeature *        GetNextFeature() override;
 
-    OGRErr              ICreateFeature( OGRFeature *poFeature );
-    OGRErr              CreateField( OGRFieldDefn *poField, int bApproxOK );
+    OGRErr              ICreateFeature( OGRFeature *poFeature ) override;
+    OGRErr              CreateField( OGRFieldDefn *poField, int bApproxOK ) override;
 
-    OGRFeatureDefn *    GetLayerDefn();
+    OGRFeatureDefn *    GetLayerDefn() override;
 
-    int                 TestCapability( const char * );
+    int                 TestCapability( const char * ) override;
 
-    GIntBig             GetFeatureCount( int bForce );
+    GIntBig             GetFeatureCount( int bForce ) override;
 
     void                LoadSchema();
 
 #ifdef HAVE_EXPAT
-    void                startElementCbk(const char *pszName, const char **ppszAttr);
-    void                endElementCbk(const char *pszName);
-    void                dataHandlerCbk(const char *data, int nLen);
+    void                startElementCbk( const char *pszName, const char **ppszAttr );
+    void                endElementCbk( const char *pszName );
+    void                dataHandlerCbk( const char *data, int nLen );
 
-    void                startElementLoadSchemaCbk(const char *pszName, const char **ppszAttr);
-    void                endElementLoadSchemaCbk(const char *pszName);
-    void                dataHandlerLoadSchemaCbk(const char *data, int nLen);
+    void                startElementLoadSchemaCbk( const char *pszName, const char **ppszAttr );
+    void                endElementLoadSchemaCbk( const char *pszName );
+    void                dataHandlerLoadSchemaCbk( const char *data, int nLen );
 #endif
 };
 
@@ -168,7 +169,7 @@ typedef enum
     GEORSS_VALIDITY_VALID
 } OGRGeoRSSValidity;
 
-class OGRGeoRSSDataSource : public OGRDataSource
+class OGRGeoRSSDataSource final: public OGRDataSource
 {
     char*               pszName;
 
@@ -183,8 +184,8 @@ class OGRGeoRSSDataSource : public OGRDataSource
 #endif
     OGRGeoRSSFormat     eFormat;
     OGRGeoRSSGeomDialect eGeomDialect;
-    int                 bUseExtensions;
-    int                 bWriteHeaderAndFooter;
+    bool                bUseExtensions;
+    bool                bWriteHeaderAndFooter;
 #ifdef HAVE_EXPAT
     XML_Parser          oCurrentParser;
     int                 nDataHandlerCounter;
@@ -192,7 +193,7 @@ class OGRGeoRSSDataSource : public OGRDataSource
 
   public:
                         OGRGeoRSSDataSource();
-                        ~OGRGeoRSSDataSource();
+                        ~OGRGeoRSSDataSource() override;
 
     int                 Open( const char * pszFilename,
                               int bUpdate );
@@ -200,22 +201,22 @@ class OGRGeoRSSDataSource : public OGRDataSource
     int                 Create( const char *pszFilename,
                               char **papszOptions );
 
-    const char*         GetName() { return pszName; }
+    const char*         GetName() override { return pszName; }
 
-    int                 GetLayerCount() { return nLayers; }
-    OGRLayer*           GetLayer( int );
+    int                 GetLayerCount() override { return nLayers; }
+    OGRLayer*           GetLayer( int ) override;
 
     OGRLayer *          ICreateLayer( const char * pszLayerName,
-                                    OGRSpatialReference *poSRS,
-                                    OGRwkbGeometryType eType,
-                                    char ** papszOptions );
+                                      OGRSpatialReference *poSRS,
+                                      OGRwkbGeometryType eType,
+                                      char ** papszOptions ) override;
 
-    int                 TestCapability( const char * );
+    int                 TestCapability( const char * ) override;
 
     VSILFILE *          GetOutputFP() { return fpOutput; }
     OGRGeoRSSFormat     GetFormat() { return eFormat; }
     OGRGeoRSSGeomDialect GetGeomDialect() { return eGeomDialect; }
-    int                 GetUseExtensions() { return bUseExtensions; }
+    bool                GetUseExtensions() { return bUseExtensions; }
 
 #ifdef HAVE_EXPAT
     void                startElementValidateCbk(const char *pszName, const char **ppszAttr);

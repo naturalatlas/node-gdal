@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gtm.h 33714 2016-03-13 05:42:13Z goatbar $
+ * $Id: gtm.h 3c7e475e5bd7bd39058020357f7010d1886ee51e 2016-10-25 16:46:26Z Kurt Schwehr $
  *
  * Project:  GTM Driver
  * Purpose:  Class for reading, parsing and handling a gtm file.
@@ -40,7 +40,6 @@
 #include "cpl_conv.h"
 #include "cpl_string.h"
 
-
 #ifndef FILE_OFFSETS
 #define FILE_OFFSETS
 #define NWPTSTYLES_OFFSET 27
@@ -78,7 +77,6 @@ void writeFloat(VSILFILE* fp, float val);
 void writeInt(VSILFILE* fp, int val);
 void writeUChar(VSILFILE* fp, unsigned char val);
 void writeUShort(VSILFILE* fp, unsigned short);
-
 
 class Waypoint
 {
@@ -138,9 +136,7 @@ private:
     int color;
     int nPoints;
     TrackPoint* pasTrackPoints;
-
 };
-
 
 class GTM
 {
@@ -148,7 +144,6 @@ public:
     GTM();
     ~GTM();
     bool Open(const char* pszFilename);
-
 
     // Check whether it is a valid GTM file or not.
     bool isValid();
@@ -200,7 +195,6 @@ private:
     bool readTrackPoints(double& latitude, double& longitude, GIntBig& datetime,
                          unsigned char& start, float& altitude);
     bool readFile(void* pBuffer, size_t nSize, size_t nCount);
-
 };
 
 #endif // OGR_GTM_GTM
