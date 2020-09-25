@@ -45,24 +45,21 @@
     "publish-yuidoc": "npm run yuidoc && node ./scripts/publish-docs.js"
   },
   "dependencies": {
-    "nan": "~2.14.0",
-    "node-pre-gyp": "^0.14.0"
+    "nan": "~2.14.1",
+    "node-pre-gyp": "^0.15.0"
   },
-  "bundledDependencies": [
-    "node-pre-gyp"
-  ],
   "devDependencies": {
-    "aws-sdk": "~2.299.0",
-    "chai": "~4.1.2",
+    "aws-sdk": "~2.760.0",
+    "chai": "~4.2.0",
     "eslint": "~4.5.0",
     "eslint-config-naturalatlas": "~1.0.1",
     "gh-pages": "~0.2.0",
     "mocha": "~5.2.0",
-    "node-gyp": "~3.8.0",
+    "node-gyp": "~7.1.0",
     "yuidoc-lucid-theme": "~0.1.2",
     "yuidocjs": "~0.3.50"
   },
   "engines": {
-    "node": ">= 4.0.0"
+    "node": ">= 10.0.0"
   }
 }

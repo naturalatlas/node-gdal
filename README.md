@@ -6,6 +6,8 @@
 
 Read and write raster and vector geospatial datasets straight from [Node.js](http://nodejs.org) with this native [GDAL](http://www.gdal.org/) binding. GDAL [2.0.1](http://trac.osgeo.org/gdal/wiki/Release/2.0.1-News) ([GEOS](http://trac.osgeo.org/geos/) [3.4.2](http://trac.osgeo.org/geos/browser/tags/3.4.2/NEWS), [Proj.4](http://trac.osgeo.org/proj/) [4.8.0](http://www.osgeo.org/node/1268)) comes bundled, so node-gdal will work straight out of the box. To get started, browse the [**API Documentation**](http://naturalatlas.github.io/node-gdal/classes/gdal.html) or [examples](examples/).
 
+For an alternate fork that's a little more bleeding-edge, check out [gdal-next](https://www.npmjs.com/package/gdal-next). The [module-alias](https://www.npmjs.com/package/module-alias) package can be useful if gdal is deep in your dependency tree and you don't want to update references everywhere. 
+
 ```sh
 $ npm install gdal --save
 ```

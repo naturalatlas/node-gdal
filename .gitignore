@@ -25,3 +25,4 @@ deps/libproj/proj.tar.gz
 deps/libexpat/expat.tar.gz
 lib/binding
 yuidocs
+package-lock.json
