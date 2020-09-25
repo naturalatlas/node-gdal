@@ -27,3 +27,4 @@ deps/libexpat/expat.tar.gz
 lib/binding
 yuidocs
 package-lock.json
+gdal_version.h.new

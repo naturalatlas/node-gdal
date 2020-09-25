@@ -214,3 +214,5 @@ formats_gypi=${formats_gypi//'$GDAL_FORMAT_GYPS'/$format_list_gyps}
 formats_gypi=${formats_gypi//'$GDAL_FORMAT_DEFS'/$format_list_defs}
 
 echo -e "$formats_gypi" > libgdal_formats.gypi
+
+(cd ./deps/libgdal/gdal/gcore && ./generate_gdal_version_h.sh)
