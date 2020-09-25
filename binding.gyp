@@ -13,7 +13,6 @@
 			"product_prefix": "",
 			"product_extension": "node",
 			"sources": [
-				"src/utils/fast_buffer.cpp",
 				"src/utils/typed_array.cpp",
 				"src/utils/string_list.cpp",
 				"src/utils/number_list.cpp",
