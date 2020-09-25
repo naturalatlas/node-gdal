@@ -1,14 +1,15 @@
 {
 	"variables": {
-		"toolset%":'',
+		"toolset%":"",
+		"deps_dir": "./deps",
 		"prefers_libcpp": "<!(python -c \"import os;import platform;u=platform.uname();print((u[0] == 'Darwin' and int(u[2][0:2]) >= 13) and '-stdlib=libstdc++' not in os.environ.get('CXXFLAGS','') and '-mmacosx-version-min' not in os.environ.get('CXXFLAGS',''))\")"
 	},
 	"target_defaults": {
 		"default_configuration": "Release",
 		"msbuild_toolset":"<(toolset)",
-		"cflags_cc!": ["-fno-exceptions"],
-		"cflags!": ["-fno-exceptions"],
-		'defines!': ["_HAS_EXCEPTIONS=0"],
+		"cflags_cc!": ["-fno-rtti", "-fno-exceptions"],
+		"cflags!": ["-fno-rtti", "-fno-exceptions"],
+		"defines!": ["_HAS_EXCEPTIONS=0"],
 		"defines": [
 			"NOGDI=1",
 			"HAVE_LIBZ"
@@ -34,8 +35,16 @@
 				"xcode_settings": {
 					"MACOSX_DEPLOYMENT_TARGET": "10.9"
 				}
+			}],
+			["OS == 'win'", {
+				"defines": [ "NOMINMAX", "WIN32" ]
 			}]
 		],
+		"link_settings": {
+			"ldflags": [
+				"-Wl,-z,now"
+			]
+		},
 		"configurations": {
 			"Debug": {
 				"cflags_cc!": ["-O3", "-Os", "-DNDEBUG"],
@@ -52,7 +61,7 @@
 				}
 			},
 			"Release": {
-				'defines': [ 'NDEBUG' ],
+				"defines": [ "NDEBUG" ],
 				"xcode_settings": {
 					"GCC_OPTIMIZATION_LEVEL": "s",
 					"GCC_GENERATE_DEBUGGING_SYMBOLS": "NO",

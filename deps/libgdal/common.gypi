@@ -4,7 +4,6 @@
 	],
 	"variables": {
 		"shared_geos%": "false",
-		"deps_dir": "../",
 		"endianness": "<!(python -c \"import sys;print(sys.byteorder.upper())\")",
 	},
 	"target_defaults": {
