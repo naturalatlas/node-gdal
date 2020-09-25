@@ -5,11 +5,13 @@
 # and `msvs_toolset: 14` (from Visual Studio 2015)
 # Note/TODO: it is not yet confirmed that earlier versions work with the the `Visual Studio 2017` os image.
 os: Visual Studio 2015
-
 platform:
   - x86
   - x64
-
+configuration:
+  - Release
+matrix:
+  fast_finish: true
 environment:
   matrix:
     - nodejs_version: 10
@@ -20,11 +22,8 @@ environment:
       msvs_toolset: 14
     - nodejs_version: 14
       msvs_toolset: 14
-
 install:
-  - ps: Start-FileDownload 'https://github.com/mapbox/ci-scripts/raw/v1.1.0/node/ci-cpp.bat' -FileName ci.bat
-  - CALL ci.bat
-
+  - .\scripts\winci.bat
 build: OFF
 test: OFF
 deploy: OFF

@@ -47,7 +47,7 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
 
-#undef HAVE_LIBDL 
+#undef HAVE_LIBDL
 
 /* Define to 1 if you have the <locale.h> header file. */
 #define HAVE_LOCALE_H 1
@@ -57,6 +57,9 @@
 #define HAVE_ERRNO_H 1
 
 #define HAVE_SEARCH_H 1
+
+/* Define to 1, if your compiler supports long long data type */
+#define HAVE_LONG_LONG 1
 
 /* Define to 1 if you have the <direct.h> header file. */
 #define HAVE_DIRECT_H
