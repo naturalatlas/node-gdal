@@ -69,7 +69,7 @@ describe('gdal', function() {
 
 			assert(lyr.features.count() > 0, 'features were created');
 
-			if (process.env.TARGET !== 'shared') {
+			if (process.env.TARGET !== 'SHARED') {
 				// for some reason shared gdal on travis has different contour behavior
 				// https://travis-ci.org/github/naturalatlas/node-gdal/builds/730319832
 				// (not really the binding's fault)

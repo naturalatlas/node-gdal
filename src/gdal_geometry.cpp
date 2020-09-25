@@ -34,6 +34,7 @@ void Geometry::Initialize(Local<Object> target)
 	//Nan::SetMethod(constructor, "fromWKBType", Geometry::create);
 	Nan::SetMethod(lcons, "fromWKT", Geometry::createFromWkt);
 	Nan::SetMethod(lcons, "fromWKB", Geometry::createFromWkb);
+	Nan::SetMethod(lcons, "fromGeoJson", Geometry::createFromGeoJson);
 	Nan::SetMethod(lcons, "getName", Geometry::getName);
 	Nan::SetMethod(lcons, "getConstructor", Geometry::getConstructor);
 
@@ -886,6 +887,48 @@ NAN_METHOD(Geometry::createFromWkb)
 	}
 
 	info.GetReturnValue().Set(Geometry::New(geom, true));
+}
+
+
+/**
+ * Creates a Geometry from a GeoJSON string. Requires GDAL>=2.3.
+ *
+ * @static
+ * @method fromGeoJson
+ * @param {Object} geojson
+ * @return gdal.Geometry
+ */
+NAN_METHOD(Geometry::createFromGeoJson) {
+	Nan::HandleScope scope;
+#if GDAL_VERSION_MAJOR < 2 || (GDAL_VERSION_MAJOR <= 2 && GDAL_VERSION_MINOR < 3)
+	Nan::ThrowError("GDAL < 2.3 does not support parsing GeoJSON directly");
+	return;
+#else
+	Local<Value> input;
+	NODE_ARG_OBJECT(0, "geojson", input);
+
+	std::string val;
+	if (input->IsString()) {
+		val = *Nan::Utf8String(input);
+	} else if (input->IsObject() && !input->IsNull()) {
+		// goes to text to pass it in, there isn't a performant way to
+		// go from v8 JSON -> CPLJSON anyways
+		Nan::JSON NanJSON;
+		Nan::MaybeLocal<String> result = NanJSON.Stringify(geo_obj);
+		if (result.IsEmpty()) {
+			Nan::ThrowError("Invalid GeoJSON");
+			return;
+		}
+		Local<String> stringified = result.ToLocalChecked();
+		val = *Nan::Utf8String(stringified);
+	} else {
+		Nan::ThrowError("Invalid GeoJSON (must a GeoJSON object or serialized string)");
+		return;
+	}
+
+	OGRGeometry *geom = OGRGeometryFactory::createFromGeoJson(val.c_str());
+	info.GetReturnValue().Set(Geometry::New(geom, true));
+#endif
 }
 
 /**

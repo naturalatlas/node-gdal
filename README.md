@@ -6,8 +6,6 @@
 
 Read and write raster and vector geospatial datasets straight from [Node.js](http://nodejs.org) with this native [GDAL](http://www.gdal.org/) binding. GDAL [2.0.1](http://trac.osgeo.org/gdal/wiki/Release/2.0.1-News) ([GEOS](http://trac.osgeo.org/geos/) [3.4.2](http://trac.osgeo.org/geos/browser/tags/3.4.2/NEWS), [Proj.4](http://trac.osgeo.org/proj/) [4.8.0](http://www.osgeo.org/node/1268)) comes bundled, so node-gdal will work straight out of the box. To get started, browse the [**API Documentation**](http://naturalatlas.github.io/node-gdal/classes/gdal.html) or [examples](examples/).
 
-For an alternate fork that's a little more bleeding-edge, check out [gdal-next](https://www.npmjs.com/package/gdal-next). The [module-alias](https://www.npmjs.com/package/module-alias) package can be useful if gdal is deep in your dependency tree and you don't want to update references everywhere. 
-
 ```sh
 $ npm install gdal --save
 ```
@@ -62,9 +60,13 @@ $ make test # test against bundled gdal
 $ make test-shared # test against shared gdal
 ```
 
+## Alternate Fork
+
+For an alternate fork that's more bleeding-edge at the moment, check out [gdal-next](https://www.npmjs.com/package/gdal-next) and evaluate which project works best for your needs. The [module-alias](https://www.npmjs.com/package/module-alias) package can be useful if gdal is deep in your dependency tree and you don't want to update references everywhere.
+
 ## License
 
-Copyright &copy; 2015–2017 [Natural Atlas, Inc.](https://github.com/naturalatlas) & [Contributors](https://github.com/naturalatlas/node-gdal/graphs/contributors)
+Copyright &copy; 2015–2020 [Natural Atlas, Inc.](https://github.com/naturalatlas) & [Contributors](https://github.com/naturalatlas/node-gdal/graphs/contributors)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: http://www.apache.org/licenses/LICENSE-2.0
 

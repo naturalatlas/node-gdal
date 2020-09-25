@@ -74,6 +74,7 @@ public:
 	static NAN_METHOD(create);
 	static NAN_METHOD(createFromWkt);
 	static NAN_METHOD(createFromWkb);
+	static NAN_METHOD(createFromGeoJson);
 	static NAN_METHOD(getName);
 	static NAN_METHOD(getConstructor);
 
