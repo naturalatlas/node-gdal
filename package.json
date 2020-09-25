@@ -54,7 +54,7 @@
   "devDependencies": {
     "aws-sdk": "~2.299.0",
     "chai": "~4.1.2",
-    "eslint": "~4.5.0",
+    "eslint": "~7.9.0",
     "eslint-config-naturalatlas": "~1.0.1",
     "gh-pages": "~0.2.0",
     "mocha": "~5.2.0",
