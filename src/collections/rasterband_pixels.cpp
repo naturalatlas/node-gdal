@@ -25,7 +25,7 @@ void RasterBandPixels::Initialize(Local<Object> target)
 	Nan::SetPrototypeMethod(lcons, "readBlock", readBlock);
 	Nan::SetPrototypeMethod(lcons, "writeBlock", writeBlock);
 
-	target->Set(Nan::New("RasterBandPixels").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("RasterBandPixels").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -78,7 +78,7 @@ Local<Value> RasterBandPixels::New(Local<Value> band_obj)
 	RasterBandPixels *wrapped = new RasterBandPixels();
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(RasterBandPixels::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(RasterBandPixels::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New("parent_").ToLocalChecked(), band_obj);
 
 	return scope.Escape(obj);

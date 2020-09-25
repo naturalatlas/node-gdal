@@ -24,7 +24,7 @@ void LineStringPoints::Initialize(Local<Object> target)
 	Nan::SetPrototypeMethod(lcons, "reverse", reverse);
 	Nan::SetPrototypeMethod(lcons, "resize", resize);
 
-	target->Set(Nan::New("LineStringPoints").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("LineStringPoints").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -69,7 +69,7 @@ Local<Value> LineStringPoints::New(Local<Value> geom)
 	LineStringPoints *wrapped = new LineStringPoints();
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(LineStringPoints::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(LineStringPoints::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New("parent_").ToLocalChecked(), geom);
 
 	return scope.Escape(obj);
@@ -211,12 +211,12 @@ NAN_METHOD(LineStringPoints::set)
 
 			Local<String> z_prop_name = Nan::New("z").ToLocalChecked();
 			if (Nan::HasOwnProperty(obj, z_prop_name).FromMaybe(false)) {
-				Local<Value> z_val = obj->Get(z_prop_name);
+				Local<Value> z_val = Nan::Get(obj, z_prop_name).ToLocalChecked();
 				if (!z_val->IsNumber()) {
 					Nan::ThrowError("z property must be number");
 					return;
 				}
-				geom->get()->setPoint(i, x, y, z_val->NumberValue());
+				geom->get()->setPoint(i, x, y, Nan::To<double>(z_val).ToChecked());
 			} else {
 				geom->get()->setPoint(i, x, y);
 			}
@@ -232,14 +232,14 @@ NAN_METHOD(LineStringPoints::set)
 			return;
 		}
 		if(n == 2){
-			geom->get()->setPoint(i, info[1]->NumberValue(), info[2]->NumberValue());
+			geom->get()->setPoint(i, Nan::To<double>(info[1]).ToChecked(), Nan::To<double>(info[2]).ToChecked());
 		} else {
 			if(!info[3]->IsNumber()){
 				Nan::ThrowError("Number expected for fourth argument");
 				return;
 			}
 
-			geom->get()->setPoint(i, info[1]->NumberValue(), info[2]->NumberValue(), info[3]->NumberValue());
+			geom->get()->setPoint(i, Nan::To<double>(info[1]).ToChecked(), Nan::To<double>(info[2]).ToChecked(), Nan::To<double>(info[3]).ToChecked());
 		}
 	}
 
@@ -287,7 +287,7 @@ NAN_METHOD(LineStringPoints::add)
 			Local<Array> array = info[0].As<Array>();
 			int length = array->Length();
 			for (int i = 0; i < length; i++){
-				Local<Value> element = array->Get(i);
+				Local<Value> element = Nan::Get(array, i).ToLocalChecked();
 				if(!element->IsObject()) {
 					Nan::ThrowError("All points must be Point objects or objects");
 					return;
@@ -305,12 +305,12 @@ NAN_METHOD(LineStringPoints::add)
 
 					Local<String> z_prop_name = Nan::New("z").ToLocalChecked();
 					if (Nan::HasOwnProperty(element_obj, z_prop_name).FromMaybe(false)) {
-						Local<Value> z_val = element_obj->Get(z_prop_name);
+						Local<Value> z_val = Nan::Get(element_obj, z_prop_name).ToLocalChecked();
 						if (!z_val->IsNumber()) {
 							Nan::ThrowError("z property must be number");
 							return;
 						}
-						geom->get()->addPoint(x, y, z_val->NumberValue());
+						geom->get()->addPoint(x, y, Nan::To<double>(z_val).ToChecked());
 					} else {
 						geom->get()->addPoint(x, y);
 					}
@@ -325,12 +325,12 @@ NAN_METHOD(LineStringPoints::add)
 
 			Local<String> z_prop_name = Nan::New("z").ToLocalChecked();
 			if (Nan::HasOwnProperty(obj, z_prop_name).FromMaybe(false)) {
-				Local<Value> z_val = obj->Get(z_prop_name);
+				Local<Value> z_val = Nan::Get(obj, z_prop_name).ToLocalChecked();
 				if (!z_val->IsNumber()) {
 					Nan::ThrowError("z property must be number");
 					return;
 				}
-				geom->get()->addPoint(x, y, z_val->NumberValue());
+				geom->get()->addPoint(x, y, Nan::To<double>(z_val).ToChecked());
 			} else {
 				geom->get()->addPoint(x, y);
 			}
@@ -346,14 +346,14 @@ NAN_METHOD(LineStringPoints::add)
 			return;
 		}
 		if(n == 2){
-			geom->get()->addPoint(info[0]->NumberValue(), info[1]->NumberValue());
+			geom->get()->addPoint(Nan::To<double>(info[0]).ToChecked(), Nan::To<double>(info[1]).ToChecked());
 		} else {
 			if(!info[2]->IsNumber()){
 				Nan::ThrowError("Number expected for third argument");
 				return;
 			}
 
-			geom->get()->addPoint(info[0]->NumberValue(), info[1]->NumberValue(), info[2]->NumberValue());
+			geom->get()->addPoint(Nan::To<double>(info[0]).ToChecked(), Nan::To<double>(info[1]).ToChecked(), Nan::To<double>(info[2]).ToChecked());
 		}
 	}
 

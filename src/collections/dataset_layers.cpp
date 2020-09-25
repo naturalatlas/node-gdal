@@ -26,7 +26,7 @@ void DatasetLayers::Initialize(Local<Object> target)
 
 	ATTR_DONT_ENUM(lcons, "ds", dsGetter, READ_ONLY_SETTER);
 
-	target->Set(Nan::New("DatasetLayers").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("DatasetLayers").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -74,7 +74,7 @@ Local<Value> DatasetLayers::New(Local<Value> ds_obj)
 	DatasetLayers *wrapped = new DatasetLayers();
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(DatasetLayers::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(DatasetLayers::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	Nan::SetPrivate(obj, Nan::New("parent_").ToLocalChecked(), ds_obj);
 
@@ -127,7 +127,7 @@ NAN_METHOD(DatasetLayers::get)
 		std::string layer_name = *Nan::Utf8String(info[0]);
 		lyr = raw->GetLayerByName(layer_name.c_str());
 	} else if(info[0]->IsNumber()) {
-		lyr = raw->GetLayer(info[0]->IntegerValue());
+		lyr = raw->GetLayer(Nan::To<int64_t>(info[0]).ToChecked());
 	} else {
 		Nan::ThrowTypeError("method must be given integer or string");
 		return;

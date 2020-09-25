@@ -29,7 +29,7 @@ Local<Value> TypedArray::New(GDALDataType type, unsigned int length)  {
 
 
 	// make ArrayBuffer
-	val = global->Get(Nan::New("ArrayBuffer").ToLocalChecked());
+	val = Nan::Get(global, Nan::New("ArrayBuffer").ToLocalChecked()).ToLocalChecked();
 
 	if(val.IsEmpty() || !val->IsFunction()) {
 		Nan::ThrowError("Error getting ArrayBuffer constructor");
@@ -47,7 +47,7 @@ Local<Value> TypedArray::New(GDALDataType type, unsigned int length)  {
 
 
 	// make TypedArray
-	val = global->Get(Nan::New(name).ToLocalChecked());
+	val = Nan::Get(global, Nan::New(name).ToLocalChecked()).ToLocalChecked();
 
 	if(val.IsEmpty() || !val->IsFunction()) {
 		Nan::ThrowError("Error getting typed array constructor");
@@ -62,7 +62,7 @@ Local<Value> TypedArray::New(GDALDataType type, unsigned int length)  {
 		return scope.Escape(Nan::Undefined());
 	}
 
-	array->Set(Nan::New("_gdal_type").ToLocalChecked(), Nan::New(type));
+	Nan::Set(array, Nan::New("_gdal_type").ToLocalChecked(), Nan::New(type));
 
 	return scope.Escape(array);
 }
@@ -72,10 +72,10 @@ GDALDataType TypedArray::Identify(Local<Object> obj) {
 
 	Local<String> sym = Nan::New("_gdal_type").ToLocalChecked();
 	if (!Nan::HasOwnProperty(obj, sym).FromMaybe(false)) return GDT_Unknown;
-	Local<Value> val = obj->Get(sym);
+	Local<Value> val = Nan::Get(obj, sym).ToLocalChecked();
 	if (!val->IsNumber()) return GDT_Unknown;
 
-	return (GDALDataType) val->Int32Value();
+	return (GDALDataType) Nan::To<int32_t>(val).ToChecked();
 }
 
 void* TypedArray::Validate(Local<Object> obj, GDALDataType type, int min_length){

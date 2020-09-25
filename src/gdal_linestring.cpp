@@ -27,7 +27,7 @@ void LineString::Initialize(Local<Object> target)
 
 	ATTR(lcons, "points", pointsGetter, READ_ONLY_SETTER);
 
-	target->Set(Nan::New("LineString").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("LineString").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -134,7 +134,7 @@ Local<Value> LineString::New(OGRLineString *geom, bool owned)
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::NewInstance(Nan::New(LineString::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	Local<Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(LineString::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }

@@ -23,7 +23,7 @@ void LinearRing::Initialize(Local<Object> target)
 	Nan::SetPrototypeMethod(lcons, "toString", toString);
 	Nan::SetPrototypeMethod(lcons, "getArea", getArea);
 
-	target->Set(Nan::New("LinearRing").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("LinearRing").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -125,7 +125,7 @@ Local<Value> LinearRing::New(OGRLinearRing *geom, bool owned)
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::NewInstance(Nan::New(LinearRing::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	Local<Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(LinearRing::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }

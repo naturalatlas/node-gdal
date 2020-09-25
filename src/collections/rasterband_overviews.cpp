@@ -19,7 +19,7 @@ void RasterBandOverviews::Initialize(Local<Object> target)
 	Nan::SetPrototypeMethod(lcons, "get", get);
 	Nan::SetPrototypeMethod(lcons, "getBySampleCount", getBySampleCount);
 
-	target->Set(Nan::New("RasterBandOverviews").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("RasterBandOverviews").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -65,7 +65,7 @@ Local<Value> RasterBandOverviews::New(Local<Value> band_obj)
 	RasterBandOverviews *wrapped = new RasterBandOverviews();
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(RasterBandOverviews::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(RasterBandOverviews::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New("parent_").ToLocalChecked(), band_obj);
 
 	return scope.Escape(obj);

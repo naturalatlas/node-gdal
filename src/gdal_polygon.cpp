@@ -24,7 +24,7 @@ void Polygon::Initialize(Local<Object> target)
 
 	ATTR(lcons, "rings", ringsGetter, READ_ONLY_SETTER);
 
-	target->Set(Nan::New("Polygon").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("Polygon").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -126,7 +126,7 @@ Local<Value> Polygon::New(OGRPolygon *geom, bool owned)
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::NewInstance(Nan::New(Polygon::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	Local<Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(Polygon::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }

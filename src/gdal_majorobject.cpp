@@ -22,7 +22,7 @@ Local<Object> MajorObject::getMetadata(GDALMajorObject *obj, const char* domain)
 			if (i_equal != std::string::npos) {
 				std::string key = pair.substr(0, i_equal);
 				std::string val = pair.substr(i_equal+1);
-				result->Set(Nan::New(key.c_str()).ToLocalChecked(), Nan::New(val.c_str()).ToLocalChecked());
+				Nan::Set(result, Nan::New(key.c_str()).ToLocalChecked(), Nan::New(val.c_str()).ToLocalChecked());
 			}
 			i++;
 		}

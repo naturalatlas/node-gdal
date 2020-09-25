@@ -63,7 +63,7 @@ void RasterBand::Initialize(Local<Object> target)
 	ATTR(lcons, "categoryNames", categoryNamesGetter, categoryNamesSetter);
 	ATTR(lcons, "colorInterpretation", colorInterpretationGetter, colorInterpretationSetter);
 
-	target->Set(Nan::New("RasterBand").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("RasterBand").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -143,7 +143,7 @@ Local<Value> RasterBand::New(GDALRasterBand *raw, GDALDataset *raw_parent)
 	RasterBand *wrapped = new RasterBand(raw);
 
 	Local<Value> ext = Nan::New<External>(wrapped);
-	Local<Object> obj = Nan::NewInstance(Nan::New(RasterBand::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	Local<Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(RasterBand::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
 	LOG("Adding band to cache[%p] (parent=%p)", raw, raw_parent);
 	cache.add(raw, obj);
@@ -332,10 +332,10 @@ NAN_METHOD(RasterBand::getStatistics)
 	}
 
 	Local<Object> result = Nan::New<Object>();
-	result->Set(Nan::New("min").ToLocalChecked(), Nan::New<Number>(min));
-	result->Set(Nan::New("max").ToLocalChecked(), Nan::New<Number>(max));
-	result->Set(Nan::New("mean").ToLocalChecked(), Nan::New<Number>(mean));
-	result->Set(Nan::New("std_dev").ToLocalChecked(), Nan::New<Number>(std_dev));
+	Nan::Set(result, Nan::New("min").ToLocalChecked(), Nan::New<Number>(min));
+	Nan::Set(result, Nan::New("max").ToLocalChecked(), Nan::New<Number>(max));
+	Nan::Set(result, Nan::New("mean").ToLocalChecked(), Nan::New<Number>(mean));
+	Nan::Set(result, Nan::New("std_dev").ToLocalChecked(), Nan::New<Number>(std_dev));
 
 	info.GetReturnValue().Set(result);
 }
@@ -377,10 +377,10 @@ NAN_METHOD(RasterBand::computeStatistics)
 	}
 
 	Local<Object> result = Nan::New<Object>();
-	result->Set(Nan::New("min").ToLocalChecked(), Nan::New<Number>(min));
-	result->Set(Nan::New("max").ToLocalChecked(), Nan::New<Number>(max));
-	result->Set(Nan::New("mean").ToLocalChecked(), Nan::New<Number>(mean));
-	result->Set(Nan::New("std_dev").ToLocalChecked(), Nan::New<Number>(std_dev));
+	Nan::Set(result, Nan::New("min").ToLocalChecked(), Nan::New<Number>(min));
+	Nan::Set(result, Nan::New("max").ToLocalChecked(), Nan::New<Number>(max));
+	Nan::Set(result, Nan::New("mean").ToLocalChecked(), Nan::New<Number>(mean));
+	Nan::Set(result, Nan::New("std_dev").ToLocalChecked(), Nan::New<Number>(std_dev));
 
 	info.GetReturnValue().Set(result);
 }
@@ -537,8 +537,8 @@ NAN_GETTER(RasterBand::sizeGetter)
 	}
 
 	Local<Object> result = Nan::New<Object>();
-	result->Set(Nan::New("x").ToLocalChecked(), Nan::New<Integer>(band->this_->GetXSize()));
-	result->Set(Nan::New("y").ToLocalChecked(), Nan::New<Integer>(band->this_->GetYSize()));
+	Nan::Set(result, Nan::New("x").ToLocalChecked(), Nan::New<Integer>(band->this_->GetXSize()));
+	Nan::Set(result, Nan::New("y").ToLocalChecked(), Nan::New<Integer>(band->this_->GetYSize()));
 	info.GetReturnValue().Set(result);
 }
 
@@ -562,8 +562,8 @@ NAN_GETTER(RasterBand::blockSizeGetter)
 	band->this_->GetBlockSize(&x, &y);
 
 	Local<Object> result = Nan::New<Object>();
-	result->Set(Nan::New("x").ToLocalChecked(), Nan::New<Integer>(x));
-	result->Set(Nan::New("y").ToLocalChecked(), Nan::New<Integer>(y));
+	Nan::Set(result, Nan::New("x").ToLocalChecked(), Nan::New<Integer>(x));
+	Nan::Set(result, Nan::New("y").ToLocalChecked(), Nan::New<Integer>(y));
 	info.GetReturnValue().Set(result);
 }
 
@@ -786,7 +786,7 @@ NAN_GETTER(RasterBand::categoryNamesGetter)
 	if (names) {
 		int i = 0;
 		while (names[i]) {
-			results->Set(i, Nan::New(names[i]).ToLocalChecked());
+			Nan::Set(results, i, Nan::New(names[i]).ToLocalChecked());
 			i++;
 		}
 	}
@@ -847,7 +847,7 @@ NAN_SETTER(RasterBand::noDataValueSetter)
 	if (value->IsNull() || value -> IsUndefined()){
 		input = std::numeric_limits<double>::quiet_NaN();
 	} else if (value->IsNumber()) {
-		input = value->NumberValue();
+		input = Nan::To<double>(value).ToChecked();
 	} else {
 		Nan::ThrowError("No data value must be a number");
 		return;
@@ -872,7 +872,7 @@ NAN_SETTER(RasterBand::scaleSetter)
 		Nan::ThrowError("Scale must be a number");
 		return;
 	}
-	double input = value->NumberValue();
+	double input = Nan::To<double>(value).ToChecked();
 	CPLErr err = band->this_->SetScale(input);
 	if (err) {
 		NODE_THROW_CPLERR(err);
@@ -892,7 +892,7 @@ NAN_SETTER(RasterBand::offsetSetter)
 		Nan::ThrowError("Offset must be a number");
 		return;
 	}
-	double input = value->NumberValue();
+	double input = Nan::To<double>(value).ToChecked();
 	CPLErr err = band->this_->SetOffset(input);
 	if (err) {
 		NODE_THROW_CPLERR(err);
@@ -922,7 +922,7 @@ NAN_SETTER(RasterBand::categoryNamesSetter)
 		strlist = new std::string [names->Length()];
 		unsigned int i;
 		for (i = 0; i < names->Length(); i++) {
-			strlist[i] = *Nan::Utf8String(names->Get(i));
+			strlist[i] = *Nan::Utf8String(Nan::Get(names, i).ToLocalChecked());
 			list[i] = (char*) strlist[i].c_str();
 		}
 		list[i] = NULL;

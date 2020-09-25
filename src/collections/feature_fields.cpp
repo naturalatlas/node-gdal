@@ -27,7 +27,7 @@ void FeatureFields::Initialize(Local<Object> target)
 
 	ATTR_DONT_ENUM(lcons, "feature", featureGetter, READ_ONLY_SETTER);
 
-	target->Set(Nan::New("FeatureFields").ToLocalChecked(), lcons->GetFunction());
+	Nan::Set(target, Nan::New("FeatureFields").ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -72,7 +72,7 @@ Local<Value> FeatureFields::New(Local<Value> layer_obj)
 	FeatureFields *wrapped = new FeatureFields();
 
 	v8::Local<v8::Value> ext = Nan::New<External>(wrapped);
-	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::New(FeatureFields::constructor)->GetFunction(), 1, &ext).ToLocalChecked();
+	v8::Local<v8::Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(FeatureFields::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New("parent_").ToLocalChecked(), layer_obj);
 
 	return scope.Escape(obj);
@@ -86,9 +86,9 @@ NAN_METHOD(FeatureFields::toString)
 
 inline bool setField(OGRFeature* f, int field_index, Local<Value> val){
 	if (val->IsInt32()) {
-		f->SetField(field_index, val->Int32Value());
+		f->SetField(field_index, Nan::To<int32_t>(val).ToChecked());
 	} else if (val->IsNumber()) {
-		f->SetField(field_index, val->NumberValue());
+		f->SetField(field_index, Nan::To<double>(val).ToChecked());
 	} else if (val->IsString()) {
 		std::string str = *Nan::Utf8String(val);
 		f->SetField(field_index, str.c_str());
@@ -143,7 +143,7 @@ NAN_METHOD(FeatureFields::set)
 			}
 
 			for (i = 0; i < n; i++) {
-				Local<Value> val = values->Get(i);
+				Local<Value> val = Nan::Get(values, i).ToLocalChecked();
 				if(setField(f->get(), i, val)){
 					Nan::ThrowError("Unsupported type of field value");
 					return;
@@ -175,7 +175,7 @@ NAN_METHOD(FeatureFields::set)
 					continue;
 				}
 
-				Local<Value> val = values->Get(Nan::New(field_name).ToLocalChecked());
+				Local<Value> val = Nan::Get(values, Nan::New(field_name).ToLocalChecked()).ToLocalChecked();
 				if (setField(f->get(), field_index, val)) {
 					Nan::ThrowError("Unsupported type of field value");
 					return;
@@ -262,7 +262,7 @@ NAN_METHOD(FeatureFields::reset)
 		field_index = f->get()->GetFieldIndex(field_name);
 		if(field_index == -1) continue;
 
-		Local<Value> val = values->Get(Nan::New(field_name).ToLocalChecked());
+		Local<Value> val = Nan::Get(values, Nan::New(field_name).ToLocalChecked()).ToLocalChecked();
 		if(setField(f->get(), field_index, val)){
 			Nan::ThrowError("Unsupported type of field value");
 			return;
@@ -361,7 +361,7 @@ NAN_METHOD(FeatureFields::toObject)
 			return; //get method threw an exception
 		}
 
-		obj->Set(Nan::New(key).ToLocalChecked(), val);
+		Nan::Set(obj, Nan::New(key).ToLocalChecked(), val);
 	}
 	info.GetReturnValue().Set(obj);
 }
@@ -394,7 +394,7 @@ NAN_METHOD(FeatureFields::toArray)
 			return; //get method threw an exception
 		}
 
-		array->Set(i, val);
+		Nan::Set(array, i, val);
 	}
 	info.GetReturnValue().Set(array);
 }
@@ -507,7 +507,7 @@ NAN_METHOD(FeatureFields::getNames)
 			Nan::ThrowError("Error getting field name");
 			return;
 		}
-		result->Set(i, Nan::New(field_name).ToLocalChecked());
+		Nan::Set(result, i, Nan::New(field_name).ToLocalChecked());
 	}
 
 	info.GetReturnValue().Set(result);
@@ -524,7 +524,7 @@ Local<Value> FeatureFields::getFieldAsIntegerList(OGRFeature* feature, int field
 	Local<Array> return_array = Nan::New<Array>(count_of_values);
 
 	for (int index = 0; index < count_of_values; index++) {
-		return_array->Set(index, Nan::New<Integer>(values[index]));
+		Nan::Set(return_array, index, Nan::New<Integer>(values[index]));
 	}
 
 	return scope.Escape(return_array);
@@ -542,7 +542,7 @@ Local<Value> FeatureFields::getFieldAsDoubleList(OGRFeature* feature, int field_
 	Local<Array> return_array = Nan::New<Array>(count_of_values);
 
 	for (int index = 0; index < count_of_values; index++) {
-		return_array->Set(index, Nan::New<Number>(values[index]));
+		Nan::Set(return_array, index, Nan::New<Number>(values[index]));
 	}
 
 	return scope.Escape(return_array);
@@ -559,7 +559,7 @@ Local<Value> FeatureFields::getFieldAsStringList(OGRFeature* feature, int field_
 	Local<Array> return_array = Nan::New<Array>(count_of_values);
 
 	for (int index = 0; index < count_of_values; index++) {
-		return_array->Set(index, SafeString::New(values[index]));
+		Nan::Set(return_array, index, SafeString::New(values[index]));
 	}
 
 	return scope.Escape(return_array);
@@ -597,25 +597,25 @@ Local<Value> FeatureFields::getFieldAsDateTime(OGRFeature* feature, int field_in
 		Local<Object> hash = Nan::New<Object>();
 
 		if (year) {
-			hash->Set(Nan::New("year").ToLocalChecked(), Nan::New<Integer>(year));
+			Nan::Set(hash, Nan::New("year").ToLocalChecked(), Nan::New<Integer>(year));
 		}
 		if (month) {
-			hash->Set(Nan::New("month").ToLocalChecked(), Nan::New<Integer>(month));
+			Nan::Set(hash, Nan::New("month").ToLocalChecked(), Nan::New<Integer>(month));
 		}
 		if (day) {
-			hash->Set(Nan::New("day").ToLocalChecked(), Nan::New<Integer>(day));
+			Nan::Set(hash, Nan::New("day").ToLocalChecked(), Nan::New<Integer>(day));
 		}
 		if (hour) {
-			hash->Set(Nan::New("hour").ToLocalChecked(), Nan::New<Integer>(hour));
+			Nan::Set(hash, Nan::New("hour").ToLocalChecked(), Nan::New<Integer>(hour));
 		}
 		if (minute) {
-			hash->Set(Nan::New("minute").ToLocalChecked(), Nan::New<Integer>(minute));
+			Nan::Set(hash, Nan::New("minute").ToLocalChecked(), Nan::New<Integer>(minute));
 		}
 		if (second) {
-			hash->Set(Nan::New("second").ToLocalChecked(), Nan::New<Integer>(second));
+			Nan::Set(hash, Nan::New("second").ToLocalChecked(), Nan::New<Integer>(second));
 		}
 		if (timezone) {
-			hash->Set(Nan::New("timezone").ToLocalChecked(), Nan::New<Integer>(timezone));
+			Nan::Set(hash, Nan::New("timezone").ToLocalChecked(), Nan::New<Integer>(timezone));
 		}
 
 		return scope.Escape(hash);

@@ -312,7 +312,7 @@ NAN_METHOD(Warper::suggestedWarpOutput)
 	NODE_ARG_OBJECT(0, "Warp options", obj);
 
 	if(Nan::HasOwnProperty(obj, Nan::New("src").ToLocalChecked()).FromMaybe(false)){
-		prop = obj->Get(Nan::New("src").ToLocalChecked());
+		prop = Nan::Get(obj, Nan::New("src").ToLocalChecked()).ToLocalChecked();
 		if(prop->IsObject() && !prop->IsNull() && Nan::New(Dataset::constructor)->HasInstance(prop)){
 			ds = Nan::ObjectWrap::Unwrap<Dataset>(prop.As<Object>());
 			if(!ds->getDataset()){
@@ -395,20 +395,20 @@ NAN_METHOD(Warper::suggestedWarpOutput)
 	}
 
 	Local<Array> result_geotransform = Nan::New<Array>();
-	result_geotransform->Set(0, Nan::New<Number>(geotransform[0]));
-	result_geotransform->Set(1, Nan::New<Number>(geotransform[1]));
-	result_geotransform->Set(2, Nan::New<Number>(geotransform[2]));
-	result_geotransform->Set(3, Nan::New<Number>(geotransform[3]));
-	result_geotransform->Set(4, Nan::New<Number>(geotransform[4]));
-	result_geotransform->Set(5, Nan::New<Number>(geotransform[5]));
+	Nan::Set(result_geotransform, 0, Nan::New<Number>(geotransform[0]));
+	Nan::Set(result_geotransform, 1, Nan::New<Number>(geotransform[1]));
+	Nan::Set(result_geotransform, 2, Nan::New<Number>(geotransform[2]));
+	Nan::Set(result_geotransform, 3, Nan::New<Number>(geotransform[3]));
+	Nan::Set(result_geotransform, 4, Nan::New<Number>(geotransform[4]));
+	Nan::Set(result_geotransform, 5, Nan::New<Number>(geotransform[5]));
 
 	Local<Object> result_size = Nan::New<Object>();
-	result_size->Set(Nan::New("x").ToLocalChecked(), Nan::New<Integer>(w));
-	result_size->Set(Nan::New("y").ToLocalChecked(), Nan::New<Integer>(h));
+	Nan::Set(result_size, Nan::New("x").ToLocalChecked(), Nan::New<Integer>(w));
+	Nan::Set(result_size, Nan::New("y").ToLocalChecked(), Nan::New<Integer>(h));
 
 	Local<Object> result = Nan::New<Object>();
-	result->Set(Nan::New("rasterSize").ToLocalChecked(), result_size);
-	result->Set(Nan::New("geoTransform").ToLocalChecked(), result_geotransform);
+	Nan::Set(result, Nan::New("rasterSize").ToLocalChecked(), result_size);
+	Nan::Set(result, Nan::New("geoTransform").ToLocalChecked(), result_geotransform);
 
 	info.GetReturnValue().Set(result);
 }
