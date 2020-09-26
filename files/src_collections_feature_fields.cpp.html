@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.8</b>
+                    API Docs for Version: <b>0.10.0</b>
                 </p>
             </li>
         </div>
@@ -177,7 +177,6 @@
     <pre class="prettyprint linenums">
 #include &quot;../gdal_common.hpp&quot;
 #include &quot;../gdal_feature.hpp&quot;
-#include &quot;../utils/fast_buffer.hpp&quot;
 #include &quot;feature_fields.hpp&quot;
 
 namespace node_gdal {
@@ -204,7 +203,7 @@ void FeatureFields::Initialize(Local&lt;Object&gt; target)
 
 	ATTR_DONT_ENUM(lcons, &quot;feature&quot;, featureGetter, READ_ONLY_SETTER);
 
-	target-&gt;Set(Nan::New(&quot;FeatureFields&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
+	Nan::Set(target, Nan::New(&quot;FeatureFields&quot;).ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -249,7 +248,7 @@ Local&lt;Value&gt; FeatureFields::New(Local&lt;Value&gt; layer_obj)
 	FeatureFields *wrapped = new FeatureFields();
 
 	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::New(FeatureFields::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
+	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::GetFunction(Nan::New(FeatureFields::constructor)).ToLocalChecked(), 1, &amp;ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New(&quot;parent_&quot;).ToLocalChecked(), layer_obj);
 
 	return scope.Escape(obj);
@@ -263,9 +262,9 @@ NAN_METHOD(FeatureFields::toString)
 
 inline bool setField(OGRFeature* f, int field_index, Local&lt;Value&gt; val){
 	if (val-&gt;IsInt32()) {
-		f-&gt;SetField(field_index, val-&gt;Int32Value());
+		f-&gt;SetField(field_index, Nan::To&lt;int32_t&gt;(val).ToChecked());
 	} else if (val-&gt;IsNumber()) {
-		f-&gt;SetField(field_index, val-&gt;NumberValue());
+		f-&gt;SetField(field_index, Nan::To&lt;double&gt;(val).ToChecked());
 	} else if (val-&gt;IsString()) {
 		std::string str = *Nan::Utf8String(val);
 		f-&gt;SetField(field_index, str.c_str());
@@ -320,7 +319,7 @@ NAN_METHOD(FeatureFields::set)
 			}
 
 			for (i = 0; i &lt; n; i++) {
-				Local&lt;Value&gt; val = values-&gt;Get(i);
+				Local&lt;Value&gt; val = Nan::Get(values, i).ToLocalChecked();
 				if(setField(f-&gt;get(), i, val)){
 					Nan::ThrowError(&quot;Unsupported type of field value&quot;);
 					return;
@@ -352,7 +351,7 @@ NAN_METHOD(FeatureFields::set)
 					continue;
 				}
 
-				Local&lt;Value&gt; val = values-&gt;Get(Nan::New(field_name).ToLocalChecked());
+				Local&lt;Value&gt; val = Nan::Get(values, Nan::New(field_name).ToLocalChecked()).ToLocalChecked();
 				if (setField(f-&gt;get(), field_index, val)) {
 					Nan::ThrowError(&quot;Unsupported type of field value&quot;);
 					return;
@@ -439,7 +438,7 @@ NAN_METHOD(FeatureFields::reset)
 		field_index = f-&gt;get()-&gt;GetFieldIndex(field_name);
 		if(field_index == -1) continue;
 
-		Local&lt;Value&gt; val = values-&gt;Get(Nan::New(field_name).ToLocalChecked());
+		Local&lt;Value&gt; val = Nan::Get(values, Nan::New(field_name).ToLocalChecked()).ToLocalChecked();
 		if(setField(f-&gt;get(), field_index, val)){
 			Nan::ThrowError(&quot;Unsupported type of field value&quot;);
 			return;
@@ -538,7 +537,7 @@ NAN_METHOD(FeatureFields::toObject)
 			return; //get method threw an exception
 		}
 
-		obj-&gt;Set(Nan::New(key).ToLocalChecked(), val);
+		Nan::Set(obj, Nan::New(key).ToLocalChecked(), val);
 	}
 	info.GetReturnValue().Set(obj);
 }
@@ -571,7 +570,7 @@ NAN_METHOD(FeatureFields::toArray)
 			return; //get method threw an exception
 		}
 
-		array-&gt;Set(i, val);
+		Nan::Set(array, i, val);
 	}
 	info.GetReturnValue().Set(array);
 }
@@ -684,7 +683,7 @@ NAN_METHOD(FeatureFields::getNames)
 			Nan::ThrowError(&quot;Error getting field name&quot;);
 			return;
 		}
-		result-&gt;Set(i, Nan::New(field_name).ToLocalChecked());
+		Nan::Set(result, i, Nan::New(field_name).ToLocalChecked());
 	}
 
 	info.GetReturnValue().Set(result);
@@ -701,7 +700,7 @@ Local&lt;Value&gt; FeatureFields::getFieldAsIntegerList(OGRFeature* feature, int
 	Local&lt;Array&gt; return_array = Nan::New&lt;Array&gt;(count_of_values);
 
 	for (int index = 0; index &lt; count_of_values; index++) {
-		return_array-&gt;Set(index, Nan::New&lt;Integer&gt;(values[index]));
+		Nan::Set(return_array, index, Nan::New&lt;Integer&gt;(values[index]));
 	}
 
 	return scope.Escape(return_array);
@@ -719,7 +718,7 @@ Local&lt;Value&gt; FeatureFields::getFieldAsDoubleList(OGRFeature* feature, int 
 	Local&lt;Array&gt; return_array = Nan::New&lt;Array&gt;(count_of_values);
 
 	for (int index = 0; index &lt; count_of_values; index++) {
-		return_array-&gt;Set(index, Nan::New&lt;Number&gt;(values[index]));
+		Nan::Set(return_array, index, Nan::New&lt;Number&gt;(values[index]));
 	}
 
 	return scope.Escape(return_array);
@@ -736,7 +735,7 @@ Local&lt;Value&gt; FeatureFields::getFieldAsStringList(OGRFeature* feature, int 
 	Local&lt;Array&gt; return_array = Nan::New&lt;Array&gt;(count_of_values);
 
 	for (int index = 0; index &lt; count_of_values; index++) {
-		return_array-&gt;Set(index, SafeString::New(values[index]));
+		Nan::Set(return_array, index, SafeString::New(values[index]));
 	}
 
 	return scope.Escape(return_array);
@@ -749,10 +748,10 @@ Local&lt;Value&gt; FeatureFields::getFieldAsBinary(OGRFeature* feature, int fiel
 
 	int count_of_bytes = 0;
 
-	unsigned char *data = (unsigned char*) feature-&gt;GetFieldAsBinary(field_index, &amp;count_of_bytes);
+	char *data = (char *)feature-&gt;GetFieldAsBinary(field_index, &amp;count_of_bytes);
 
 	if (count_of_bytes &gt; 0) {
-		return scope.Escape(FastBuffer::New(data, count_of_bytes));
+		return scope.Escape(Nan::NewBuffer(data, count_of_bytes).ToLocalChecked());
 	}
 
 	return scope.Escape(Nan::Undefined());
@@ -774,25 +773,25 @@ Local&lt;Value&gt; FeatureFields::getFieldAsDateTime(OGRFeature* feature, int fi
 		Local&lt;Object&gt; hash = Nan::New&lt;Object&gt;();
 
 		if (year) {
-			hash-&gt;Set(Nan::New(&quot;year&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(year));
+			Nan::Set(hash, Nan::New(&quot;year&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(year));
 		}
 		if (month) {
-			hash-&gt;Set(Nan::New(&quot;month&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(month));
+			Nan::Set(hash, Nan::New(&quot;month&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(month));
 		}
 		if (day) {
-			hash-&gt;Set(Nan::New(&quot;day&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(day));
+			Nan::Set(hash, Nan::New(&quot;day&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(day));
 		}
 		if (hour) {
-			hash-&gt;Set(Nan::New(&quot;hour&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(hour));
+			Nan::Set(hash, Nan::New(&quot;hour&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(hour));
 		}
 		if (minute) {
-			hash-&gt;Set(Nan::New(&quot;minute&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(minute));
+			Nan::Set(hash, Nan::New(&quot;minute&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(minute));
 		}
 		if (second) {
-			hash-&gt;Set(Nan::New(&quot;second&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(second));
+			Nan::Set(hash, Nan::New(&quot;second&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(second));
 		}
 		if (timezone) {
-			hash-&gt;Set(Nan::New(&quot;timezone&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(timezone));
+			Nan::Set(hash, Nan::New(&quot;timezone&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(timezone));
 		}
 
 		return scope.Escape(hash);

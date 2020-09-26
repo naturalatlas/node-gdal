@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.8</b>
+                    API Docs for Version: <b>0.10.0</b>
                 </p>
             </li>
         </div>
@@ -489,7 +489,7 @@ NAN_METHOD(Warper::suggestedWarpOutput)
 	NODE_ARG_OBJECT(0, &quot;Warp options&quot;, obj);
 
 	if(Nan::HasOwnProperty(obj, Nan::New(&quot;src&quot;).ToLocalChecked()).FromMaybe(false)){
-		prop = obj-&gt;Get(Nan::New(&quot;src&quot;).ToLocalChecked());
+		prop = Nan::Get(obj, Nan::New(&quot;src&quot;).ToLocalChecked()).ToLocalChecked();
 		if(prop-&gt;IsObject() &amp;&amp; !prop-&gt;IsNull() &amp;&amp; Nan::New(Dataset::constructor)-&gt;HasInstance(prop)){
 			ds = Nan::ObjectWrap::Unwrap&lt;Dataset&gt;(prop.As&lt;Object&gt;());
 			if(!ds-&gt;getDataset()){
@@ -572,26 +572,27 @@ NAN_METHOD(Warper::suggestedWarpOutput)
 	}
 
 	Local&lt;Array&gt; result_geotransform = Nan::New&lt;Array&gt;();
-	result_geotransform-&gt;Set(0, Nan::New&lt;Number&gt;(geotransform[0]));
-	result_geotransform-&gt;Set(1, Nan::New&lt;Number&gt;(geotransform[1]));
-	result_geotransform-&gt;Set(2, Nan::New&lt;Number&gt;(geotransform[2]));
-	result_geotransform-&gt;Set(3, Nan::New&lt;Number&gt;(geotransform[3]));
-	result_geotransform-&gt;Set(4, Nan::New&lt;Number&gt;(geotransform[4]));
-	result_geotransform-&gt;Set(5, Nan::New&lt;Number&gt;(geotransform[5]));
+	Nan::Set(result_geotransform, 0, Nan::New&lt;Number&gt;(geotransform[0]));
+	Nan::Set(result_geotransform, 1, Nan::New&lt;Number&gt;(geotransform[1]));
+	Nan::Set(result_geotransform, 2, Nan::New&lt;Number&gt;(geotransform[2]));
+	Nan::Set(result_geotransform, 3, Nan::New&lt;Number&gt;(geotransform[3]));
+	Nan::Set(result_geotransform, 4, Nan::New&lt;Number&gt;(geotransform[4]));
+	Nan::Set(result_geotransform, 5, Nan::New&lt;Number&gt;(geotransform[5]));
 
 	Local&lt;Object&gt; result_size = Nan::New&lt;Object&gt;();
-	result_size-&gt;Set(Nan::New(&quot;x&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(w));
-	result_size-&gt;Set(Nan::New(&quot;y&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(h));
+	Nan::Set(result_size, Nan::New(&quot;x&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(w));
+	Nan::Set(result_size, Nan::New(&quot;y&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(h));
 
 	Local&lt;Object&gt; result = Nan::New&lt;Object&gt;();
-	result-&gt;Set(Nan::New(&quot;rasterSize&quot;).ToLocalChecked(), result_size);
-	result-&gt;Set(Nan::New(&quot;geoTransform&quot;).ToLocalChecked(), result_geotransform);
+	Nan::Set(result, Nan::New(&quot;rasterSize&quot;).ToLocalChecked(), result_size);
+	Nan::Set(result, Nan::New(&quot;geoTransform&quot;).ToLocalChecked(), result_geotransform);
 
 	info.GetReturnValue().Set(result);
 }
 
 
 } //node_gdal namespace
+
     </pre>
 </div>
 

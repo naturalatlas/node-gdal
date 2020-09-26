@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.8</b>
+                    API Docs for Version: <b>0.10.0</b>
                 </p>
             </li>
         </div>
@@ -196,7 +196,7 @@ void CoordinateTransformation::Initialize(Local&lt;Object&gt; target)
 	Nan::SetPrototypeMethod(lcons, &quot;toString&quot;, toString);
 	Nan::SetPrototypeMethod(lcons, &quot;transformPoint&quot;, transformPoint);
 
-	target-&gt;Set(Nan::New(&quot;CoordinateTransformation&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
+	Nan::Set(target, Nan::New(&quot;CoordinateTransformation&quot;).ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -332,7 +332,7 @@ Local&lt;Value&gt; CoordinateTransformation::New(OGRCoordinateTransformation *tr
 	CoordinateTransformation *wrapped = new CoordinateTransformation(transform);
 
 	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::New(CoordinateTransformation::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
+	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::GetFunction(Nan::New(CoordinateTransformation::constructor)).ToLocalChecked(), 1, &amp;ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }
@@ -367,17 +367,17 @@ NAN_METHOD(CoordinateTransformation::transformPoint)
 
 	if (info.Length() == 1 &amp;&amp; info[0]-&gt;IsObject()) {
 		Local&lt;Object&gt; obj = info[0].As&lt;Object&gt;();
-		Local&lt;Value&gt; arg_x = obj-&gt;Get(Nan::New(&quot;x&quot;).ToLocalChecked());
-		Local&lt;Value&gt; arg_y = obj-&gt;Get(Nan::New(&quot;y&quot;).ToLocalChecked());
-		Local&lt;Value&gt; arg_z = obj-&gt;Get(Nan::New(&quot;z&quot;).ToLocalChecked());
+		Local&lt;Value&gt; arg_x = Nan::Get(obj, Nan::New(&quot;x&quot;).ToLocalChecked()).ToLocalChecked();
+		Local&lt;Value&gt; arg_y = Nan::Get(obj, Nan::New(&quot;y&quot;).ToLocalChecked()).ToLocalChecked();
+		Local&lt;Value&gt; arg_z = Nan::Get(obj, Nan::New(&quot;z&quot;).ToLocalChecked()).ToLocalChecked();
 		if (!arg_x-&gt;IsNumber() || !arg_y-&gt;IsNumber()) {
 			Nan::ThrowError(&quot;point must contain numerical properties x and y&quot;);
 			return;
 		}
-		x = static_cast&lt;double&gt;(arg_x-&gt;NumberValue());
-		y = static_cast&lt;double&gt;(arg_y-&gt;NumberValue());
+		x = static_cast&lt;double&gt;(Nan::To&lt;double&gt;(arg_x).ToChecked());
+		y = static_cast&lt;double&gt;(Nan::To&lt;double&gt;(arg_y).ToChecked());
 		if (arg_z-&gt;IsNumber()) {
-			z = static_cast&lt;double&gt;(arg_z-&gt;NumberValue());
+			z = static_cast&lt;double&gt;(Nan::To&lt;double&gt;(arg_z).ToChecked());
 		}
 	} else {
 		NODE_ARG_DOUBLE(0, &quot;x&quot;, x);
@@ -391,14 +391,15 @@ NAN_METHOD(CoordinateTransformation::transformPoint)
 	}
 
 	Local&lt;Object&gt; result = Nan::New&lt;Object&gt;();
-	result-&gt;Set(Nan::New(&quot;x&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(x));
-	result-&gt;Set(Nan::New(&quot;y&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(y));
-	result-&gt;Set(Nan::New(&quot;z&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(z));
+	Nan::Set(result, Nan::New(&quot;x&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(x));
+	Nan::Set(result, Nan::New(&quot;y&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(y));
+	Nan::Set(result, Nan::New(&quot;z&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(z));
 
 	info.GetReturnValue().Set(result);
 }
 
 } // namespace node_gdal
+
     </pre>
 </div>
 

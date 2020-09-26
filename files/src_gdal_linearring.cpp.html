@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.8</b>
+                    API Docs for Version: <b>0.10.0</b>
                 </p>
             </li>
         </div>
@@ -200,7 +200,7 @@ void LinearRing::Initialize(Local&lt;Object&gt; target)
 	Nan::SetPrototypeMethod(lcons, &quot;toString&quot;, toString);
 	Nan::SetPrototypeMethod(lcons, &quot;getArea&quot;, getArea);
 
-	target-&gt;Set(Nan::New(&quot;LinearRing&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
+	Nan::Set(target, Nan::New(&quot;LinearRing&quot;).ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -302,7 +302,7 @@ Local&lt;Value&gt; LinearRing::New(OGRLinearRing *geom, bool owned)
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
 	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::New(LinearRing::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
+	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::GetFunction(Nan::New(LinearRing::constructor)).ToLocalChecked(), 1, &amp;ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }
@@ -322,6 +322,7 @@ NAN_METHOD(LinearRing::toString)
 NODE_WRAPPED_METHOD_WITH_RESULT(LinearRing, getArea, Number, get_Area);
 
 } // namespace node_gdal
+
     </pre>
 </div>
 

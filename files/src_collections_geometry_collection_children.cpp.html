@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.8</b>
+                    API Docs for Version: <b>0.10.0</b>
                 </p>
             </li>
         </div>
@@ -198,7 +198,7 @@ void GeometryCollectionChildren::Initialize(Local&lt;Object&gt; target)
 	Nan::SetPrototypeMethod(lcons, &quot;remove&quot;, remove);
 	Nan::SetPrototypeMethod(lcons, &quot;add&quot;, add);
 
-	target-&gt;Set(Nan::New(&quot;GeometryCollectionChildren&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
+	Nan::Set(target, Nan::New(&quot;GeometryCollectionChildren&quot;).ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -243,7 +243,7 @@ Local&lt;Value&gt; GeometryCollectionChildren::New(Local&lt;Value&gt; geom)
 	GeometryCollectionChildren *wrapped = new GeometryCollectionChildren();
 
 	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::New(GeometryCollectionChildren::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
+	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::GetFunction(Nan::New(GeometryCollectionChildren::constructor)).ToLocalChecked(), 1, &amp;ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New(&quot;parent_&quot;).ToLocalChecked(), geom);
 
 	return scope.Escape(obj);
@@ -351,7 +351,7 @@ NAN_METHOD(GeometryCollectionChildren::add)
 		Local&lt;Array&gt; array = info[0].As&lt;Array&gt;();
 		int length = array-&gt;Length();
 		for (int i = 0; i &lt; length; i++){
-			Local&lt;Value&gt; element = array-&gt;Get(i);
+			Local&lt;Value&gt; element = Nan::Get(array, i).ToLocalChecked();
 			if(IS_WRAPPED(element, Geometry)){
 				child = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(element.As&lt;Object&gt;());
 				OGRErr err = geom-&gt;get()-&gt;addGeometry(child-&gt;get());
@@ -380,6 +380,7 @@ NAN_METHOD(GeometryCollectionChildren::add)
 }
 
 } // namespace node_gdal
+
     </pre>
 </div>
 

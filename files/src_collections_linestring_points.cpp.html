@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.8</b>
+                    API Docs for Version: <b>0.10.0</b>
                 </p>
             </li>
         </div>
@@ -201,7 +201,7 @@ void LineStringPoints::Initialize(Local&lt;Object&gt; target)
 	Nan::SetPrototypeMethod(lcons, &quot;reverse&quot;, reverse);
 	Nan::SetPrototypeMethod(lcons, &quot;resize&quot;, resize);
 
-	target-&gt;Set(Nan::New(&quot;LineStringPoints&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
+	Nan::Set(target, Nan::New(&quot;LineStringPoints&quot;).ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -246,7 +246,7 @@ Local&lt;Value&gt; LineStringPoints::New(Local&lt;Value&gt; geom)
 	LineStringPoints *wrapped = new LineStringPoints();
 
 	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::New(LineStringPoints::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
+	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::GetFunction(Nan::New(LineStringPoints::constructor)).ToLocalChecked(), 1, &amp;ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New(&quot;parent_&quot;).ToLocalChecked(), geom);
 
 	return scope.Escape(obj);
@@ -388,12 +388,12 @@ NAN_METHOD(LineStringPoints::set)
 
 			Local&lt;String&gt; z_prop_name = Nan::New(&quot;z&quot;).ToLocalChecked();
 			if (Nan::HasOwnProperty(obj, z_prop_name).FromMaybe(false)) {
-				Local&lt;Value&gt; z_val = obj-&gt;Get(z_prop_name);
+				Local&lt;Value&gt; z_val = Nan::Get(obj, z_prop_name).ToLocalChecked();
 				if (!z_val-&gt;IsNumber()) {
 					Nan::ThrowError(&quot;z property must be number&quot;);
 					return;
 				}
-				geom-&gt;get()-&gt;setPoint(i, x, y, z_val-&gt;NumberValue());
+				geom-&gt;get()-&gt;setPoint(i, x, y, Nan::To&lt;double&gt;(z_val).ToChecked());
 			} else {
 				geom-&gt;get()-&gt;setPoint(i, x, y);
 			}
@@ -409,14 +409,14 @@ NAN_METHOD(LineStringPoints::set)
 			return;
 		}
 		if(n == 2){
-			geom-&gt;get()-&gt;setPoint(i, info[1]-&gt;NumberValue(), info[2]-&gt;NumberValue());
+			geom-&gt;get()-&gt;setPoint(i, Nan::To&lt;double&gt;(info[1]).ToChecked(), Nan::To&lt;double&gt;(info[2]).ToChecked());
 		} else {
 			if(!info[3]-&gt;IsNumber()){
 				Nan::ThrowError(&quot;Number expected for fourth argument&quot;);
 				return;
 			}
 
-			geom-&gt;get()-&gt;setPoint(i, info[1]-&gt;NumberValue(), info[2]-&gt;NumberValue(), info[3]-&gt;NumberValue());
+			geom-&gt;get()-&gt;setPoint(i, Nan::To&lt;double&gt;(info[1]).ToChecked(), Nan::To&lt;double&gt;(info[2]).ToChecked(), Nan::To&lt;double&gt;(info[3]).ToChecked());
 		}
 	}
 
@@ -464,7 +464,7 @@ NAN_METHOD(LineStringPoints::add)
 			Local&lt;Array&gt; array = info[0].As&lt;Array&gt;();
 			int length = array-&gt;Length();
 			for (int i = 0; i &lt; length; i++){
-				Local&lt;Value&gt; element = array-&gt;Get(i);
+				Local&lt;Value&gt; element = Nan::Get(array, i).ToLocalChecked();
 				if(!element-&gt;IsObject()) {
 					Nan::ThrowError(&quot;All points must be Point objects or objects&quot;);
 					return;
@@ -482,12 +482,12 @@ NAN_METHOD(LineStringPoints::add)
 
 					Local&lt;String&gt; z_prop_name = Nan::New(&quot;z&quot;).ToLocalChecked();
 					if (Nan::HasOwnProperty(element_obj, z_prop_name).FromMaybe(false)) {
-						Local&lt;Value&gt; z_val = element_obj-&gt;Get(z_prop_name);
+						Local&lt;Value&gt; z_val = Nan::Get(element_obj, z_prop_name).ToLocalChecked();
 						if (!z_val-&gt;IsNumber()) {
 							Nan::ThrowError(&quot;z property must be number&quot;);
 							return;
 						}
-						geom-&gt;get()-&gt;addPoint(x, y, z_val-&gt;NumberValue());
+						geom-&gt;get()-&gt;addPoint(x, y, Nan::To&lt;double&gt;(z_val).ToChecked());
 					} else {
 						geom-&gt;get()-&gt;addPoint(x, y);
 					}
@@ -502,12 +502,12 @@ NAN_METHOD(LineStringPoints::add)
 
 			Local&lt;String&gt; z_prop_name = Nan::New(&quot;z&quot;).ToLocalChecked();
 			if (Nan::HasOwnProperty(obj, z_prop_name).FromMaybe(false)) {
-				Local&lt;Value&gt; z_val = obj-&gt;Get(z_prop_name);
+				Local&lt;Value&gt; z_val = Nan::Get(obj, z_prop_name).ToLocalChecked();
 				if (!z_val-&gt;IsNumber()) {
 					Nan::ThrowError(&quot;z property must be number&quot;);
 					return;
 				}
-				geom-&gt;get()-&gt;addPoint(x, y, z_val-&gt;NumberValue());
+				geom-&gt;get()-&gt;addPoint(x, y, Nan::To&lt;double&gt;(z_val).ToChecked());
 			} else {
 				geom-&gt;get()-&gt;addPoint(x, y);
 			}
@@ -523,14 +523,14 @@ NAN_METHOD(LineStringPoints::add)
 			return;
 		}
 		if(n == 2){
-			geom-&gt;get()-&gt;addPoint(info[0]-&gt;NumberValue(), info[1]-&gt;NumberValue());
+			geom-&gt;get()-&gt;addPoint(Nan::To&lt;double&gt;(info[0]).ToChecked(), Nan::To&lt;double&gt;(info[1]).ToChecked());
 		} else {
 			if(!info[2]-&gt;IsNumber()){
 				Nan::ThrowError(&quot;Number expected for third argument&quot;);
 				return;
 			}
 
-			geom-&gt;get()-&gt;addPoint(info[0]-&gt;NumberValue(), info[1]-&gt;NumberValue(), info[2]-&gt;NumberValue());
+			geom-&gt;get()-&gt;addPoint(Nan::To&lt;double&gt;(info[0]).ToChecked(), Nan::To&lt;double&gt;(info[1]).ToChecked(), Nan::To&lt;double&gt;(info[2]).ToChecked());
 		}
 	}
 
@@ -538,6 +538,7 @@ NAN_METHOD(LineStringPoints::add)
 }
 
 } // namespace node_gdal
+
     </pre>
 </div>
 

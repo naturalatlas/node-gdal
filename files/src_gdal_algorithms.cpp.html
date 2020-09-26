@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.8</b>
+                    API Docs for Version: <b>0.10.0</b>
                 </p>
             </li>
         </div>
@@ -280,7 +280,7 @@ NAN_METHOD(Algorithms::contourGenerate)
 	NODE_DOUBLE_FROM_OBJ_OPT(obj, &quot;interval&quot;, interval);
 	NODE_DOUBLE_FROM_OBJ_OPT(obj, &quot;offset&quot;, base);
 	if(Nan::HasOwnProperty(obj, Nan::New(&quot;fixedLevels&quot;).ToLocalChecked()).FromMaybe(false)){
-		if(fixed_level_array.parse(obj-&gt;Get(Nan::New(&quot;fixedLevels&quot;).ToLocalChecked()))){
+		if(fixed_level_array.parse(Nan::Get(obj, Nan::New(&quot;fixedLevels&quot;).ToLocalChecked()).ToLocalChecked())){
 			return; //error parsing double list
 		} else {
 			fixed_levels = fixed_level_array.get();
@@ -288,10 +288,10 @@ NAN_METHOD(Algorithms::contourGenerate)
 		}
 	}
 	if(Nan::HasOwnProperty(obj, Nan::New(&quot;nodata&quot;).ToLocalChecked()).FromMaybe(false)){
-		prop = obj-&gt;Get(Nan::New(&quot;nodata&quot;).ToLocalChecked());
+		prop = Nan::Get(obj, Nan::New(&quot;nodata&quot;).ToLocalChecked()).ToLocalChecked();
 		if(prop-&gt;IsNumber()){
 			use_nodata = 1;
-			nodata = prop-&gt;NumberValue();
+			nodata = Nan::To&lt;double&gt;(prop).ToChecked();
 		} else if(!prop-&gt;IsNull() &amp;&amp; !prop-&gt;IsUndefined()){
 			Nan::ThrowTypeError(&quot;nodata property must be a number&quot;);
 		}
@@ -450,7 +450,7 @@ NAN_METHOD(Algorithms::polygonize)
 	}
 
 	CPLErr err;
-	if(Nan::HasOwnProperty(obj, Nan::New(&quot;useFloats&quot;).ToLocalChecked()).FromMaybe(false) &amp;&amp; obj-&gt;Get(Nan::New(&quot;useFloats&quot;).ToLocalChecked())-&gt;BooleanValue()){
+	if(Nan::HasOwnProperty(obj, Nan::New(&quot;useFloats&quot;).ToLocalChecked()).FromMaybe(false) &amp;&amp; Nan::To&lt;bool&gt;(Nan::Get(obj, Nan::New(&quot;useFloats&quot;).ToLocalChecked()).ToLocalChecked()).ToChecked()){
 		err = GDALFPolygonize(src-&gt;get(), mask ? mask-&gt;get() : NULL, reinterpret_cast&lt;OGRLayerH&gt;(dst-&gt;get()), pix_val_field, papszOptions, NULL, NULL);
 	} else {
 		err = GDALPolygonize(src-&gt;get(), mask ? mask-&gt;get() : NULL, reinterpret_cast&lt;OGRLayerH&gt;(dst-&gt;get()), pix_val_field, papszOptions, NULL, NULL);
@@ -467,6 +467,7 @@ NAN_METHOD(Algorithms::polygonize)
 }
 
 } //node_gdal namespace
+
     </pre>
 </div>
 

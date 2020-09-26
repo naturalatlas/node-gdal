@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.8</b>
+                    API Docs for Version: <b>0.10.0</b>
                 </p>
             </li>
         </div>
@@ -204,7 +204,7 @@ void LineString::Initialize(Local&lt;Object&gt; target)
 
 	ATTR(lcons, &quot;points&quot;, pointsGetter, READ_ONLY_SETTER);
 
-	target-&gt;Set(Nan::New(&quot;LineString&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
+	Nan::Set(target, Nan::New(&quot;LineString&quot;).ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -311,7 +311,7 @@ Local&lt;Value&gt; LineString::New(OGRLineString *geom, bool owned)
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
 	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::New(LineString::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
+	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::GetFunction(Nan::New(LineString::constructor)).ToLocalChecked(), 1, &amp;ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }

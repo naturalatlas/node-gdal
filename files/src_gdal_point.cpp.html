@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.8</b>
+                    API Docs for Version: <b>0.10.0</b>
                 </p>
             </li>
         </div>
@@ -201,7 +201,7 @@ void Point::Initialize(Local&lt;Object&gt; target)
 	ATTR(lcons, &quot;y&quot;, yGetter, ySetter);
 	ATTR(lcons, &quot;z&quot;, zGetter, zSetter);
 
-	target-&gt;Set(Nan::New(&quot;Point&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
+	Nan::Set(target, Nan::New(&quot;Point&quot;).ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -316,7 +316,7 @@ Local&lt;Value&gt; Point::New(OGRPoint *geom, bool owned)
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
 	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::New(Point::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
+	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::GetFunction(Nan::New(Point::constructor)).ToLocalChecked(), 1, &amp;ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }
@@ -347,7 +347,7 @@ NAN_SETTER(Point::xSetter)
 		Nan::ThrowError(&quot;y must be a number&quot;);
 		return;
 	}
-	double x = value-&gt;NumberValue();
+	double x = Nan::To&lt;double&gt;(value).ToChecked();
 
 	((OGRPoint* )geom-&gt;this_)-&gt;setX(x);
 }
@@ -372,7 +372,7 @@ NAN_SETTER(Point::ySetter)
 		Nan::ThrowError(&quot;y must be a number&quot;);
 		return;
 	}
-	double y = value-&gt;NumberValue();
+	double y = Nan::To&lt;double&gt;(value).ToChecked();
 
 	((OGRPoint* )geom-&gt;this_)-&gt;setY(y);
 }
@@ -396,12 +396,13 @@ NAN_SETTER(Point::zSetter)
 		Nan::ThrowError(&quot;z must be a number&quot;);
 		return;
 	}
-	double z = value-&gt;NumberValue();
+	double z = Nan::To&lt;double&gt;(value).ToChecked();
 
 	((OGRPoint* )geom-&gt;this_)-&gt;setZ(z);
 }
 
 } // namespace node_gdal
+
     </pre>
 </div>
 

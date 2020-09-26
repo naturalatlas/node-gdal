@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.8</b>
+                    API Docs for Version: <b>0.10.0</b>
                 </p>
             </li>
         </div>
@@ -236,7 +236,7 @@ void SpatialReference::Initialize(Local&lt;Object&gt; target)
 	Nan::SetPrototypeMethod(lcons, &quot;autoIdentifyEPSG&quot;, autoIdentifyEPSG);
 	Nan::SetPrototypeMethod(lcons, &quot;validate&quot;, validate);
 
-	target-&gt;Set(Nan::New(&quot;SpatialReference&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
+	Nan::Set(target, Nan::New(&quot;SpatialReference&quot;).ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -350,7 +350,7 @@ Local&lt;Value&gt; SpatialReference::New(OGRSpatialReference *raw, bool owned)
 	SpatialReference *wrapped = new SpatialReference(cloned_srs);
 	wrapped-&gt;owned_ = true;
 	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::New(SpatialReference::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
+	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::GetFunction(Nan::New(SpatialReference::constructor)).ToLocalChecked(), 1, &amp;ext).ToLocalChecked();
 
 	cache.add(cloned_srs, raw, obj);
 
@@ -1069,8 +1069,8 @@ NAN_METHOD(SpatialReference::getLinearUnits)
 	double units = srs-&gt;this_-&gt;GetLinearUnits(&amp;unit_name);
 
 	Local&lt;Object&gt; result = Nan::New&lt;Object&gt;();
-	result-&gt;Set(Nan::New(&quot;value&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(units));
-	result-&gt;Set(Nan::New(&quot;units&quot;).ToLocalChecked(), SafeString::New(unit_name));
+	Nan::Set(result, Nan::New(&quot;value&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(units));
+	Nan::Set(result, Nan::New(&quot;units&quot;).ToLocalChecked(), SafeString::New(unit_name));
 
 	info.GetReturnValue().Set(result);
 }
@@ -1091,8 +1091,8 @@ NAN_METHOD(SpatialReference::getAngularUnits)
 	double units = srs-&gt;this_-&gt;GetAngularUnits(&amp;unit_name);
 
 	Local&lt;Object&gt; result = Nan::New&lt;Object&gt;();
-	result-&gt;Set(Nan::New(&quot;value&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(units));
-	result-&gt;Set(Nan::New(&quot;units&quot;).ToLocalChecked(), SafeString::New(unit_name));
+	Nan::Set(result, Nan::New(&quot;value&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(units));
+	Nan::Set(result, Nan::New(&quot;units&quot;).ToLocalChecked(), SafeString::New(unit_name));
 
 	info.GetReturnValue().Set(result);
 }

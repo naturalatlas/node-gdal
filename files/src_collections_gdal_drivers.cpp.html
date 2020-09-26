@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.8</b>
+                    API Docs for Version: <b>0.10.0</b>
                 </p>
             </li>
         </div>
@@ -201,7 +201,7 @@ void GDALDrivers::Initialize(Local&lt;Object&gt; target)
 	OGRRegisterAll();
 	#endif
 
-	target-&gt;Set(Nan::New(&quot;GDALDrivers&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
+	Nan::Set(target, Nan::New(&quot;GDALDrivers&quot;).ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 	
 	constructor.Reset(lcons);
 }
@@ -246,7 +246,7 @@ Local&lt;Value&gt; GDALDrivers::New()
 	GDALDrivers *wrapped = new GDALDrivers();
 
 	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::New(GDALDrivers::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
+	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::GetFunction(Nan::New(GDALDrivers::constructor)).ToLocalChecked(), 1, &amp;ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }
@@ -322,7 +322,7 @@ NAN_METHOD(GDALDrivers::get)
 		}
 
 	} else if(info[0]-&gt;IsNumber()) {
-		int i = static_cast&lt;int&gt;(info[0]-&gt;IntegerValue());
+		int i = static_cast&lt;int&gt;(Nan::To&lt;int64_t&gt;(info[0]).ToChecked());
 
 		gdal_driver = GetGDALDriverManager()-&gt;GetDriver(i);
 		if(gdal_driver) {
@@ -373,7 +373,7 @@ NAN_METHOD(GDALDrivers::getNames)
 		#if GDAL_VERSION_MAJOR &lt; 2
 		if(name == &quot;VRT&quot;) name = &quot;VRT:raster&quot;;
 		#endif
-		driver_names-&gt;Set(i, SafeString::New(name.c_str()));
+		Nan::Set(driver_names, i, SafeString::New(name.c_str()));
 	}
 
 
@@ -382,7 +382,7 @@ NAN_METHOD(GDALDrivers::getNames)
 		OGRSFDriver *driver = OGRSFDriverRegistrar::GetRegistrar()-&gt;GetDriver(i - gdal_count);
 		name = driver-&gt;GetName();
 		if(name == &quot;VRT&quot;) name = &quot;VRT:vector&quot;;
-		driver_names-&gt;Set(i, SafeString::New(name.c_str()));
+		Nan::Set(driver_names, i, SafeString::New(name.c_str()));
 	}
 	#endif
 	
@@ -409,6 +409,7 @@ NAN_METHOD(GDALDrivers::count)
 }
 
 } // namespace node_gdal
+
     </pre>
 </div>
 

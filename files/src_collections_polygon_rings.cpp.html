@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.8</b>
+                    API Docs for Version: <b>0.10.0</b>
                 </p>
             </li>
         </div>
@@ -198,7 +198,7 @@ void PolygonRings::Initialize(Local&lt;Object&gt; target)
 	Nan::SetPrototypeMethod(lcons, &quot;get&quot;, get);
 	Nan::SetPrototypeMethod(lcons, &quot;add&quot;, add);
 
-	target-&gt;Set(Nan::New(&quot;PolygonRings&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
+	Nan::Set(target, Nan::New(&quot;PolygonRings&quot;).ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -243,7 +243,7 @@ Local&lt;Value&gt; PolygonRings::New(Local&lt;Value&gt; geom)
 	PolygonRings *wrapped = new PolygonRings();
 
 	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::New(PolygonRings::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
+	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::GetFunction(Nan::New(PolygonRings::constructor)).ToLocalChecked(), 1, &amp;ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New(&quot;parent_&quot;).ToLocalChecked(), geom);
 
 	return scope.Escape(obj);
@@ -344,7 +344,7 @@ NAN_METHOD(PolygonRings::add)
 		Local&lt;Array&gt; array = info[0].As&lt;Array&gt;();
 		int length = array-&gt;Length();
 		for (int i = 0; i &lt; length; i++){
-			Local&lt;Value&gt; element = array-&gt;Get(i);
+			Local&lt;Value&gt; element = Nan::Get(array, i).ToLocalChecked();
 			if (IS_WRAPPED(element, LinearRing)){
 				ring = Nan::ObjectWrap::Unwrap&lt;LinearRing&gt;(element.As&lt;Object&gt;());
 				geom-&gt;get()-&gt;addRing(ring-&gt;get());
@@ -365,6 +365,7 @@ NAN_METHOD(PolygonRings::add)
 }
 
 } // namespace node_gdal
+
     </pre>
 </div>
 

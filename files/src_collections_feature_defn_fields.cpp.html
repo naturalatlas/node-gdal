@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.8</b>
+                    API Docs for Version: <b>0.10.0</b>
                 </p>
             </li>
         </div>
@@ -204,7 +204,7 @@ void FeatureDefnFields::Initialize(Local&lt;Object&gt; target)
 
 	ATTR_DONT_ENUM(lcons, &quot;featureDefn&quot;, featureDefnGetter, READ_ONLY_SETTER);
 
-	target-&gt;Set(Nan::New(&quot;FeatureDefnFields&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
+	Nan::Set(target, Nan::New(&quot;FeatureDefnFields&quot;).ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -249,7 +249,7 @@ Local&lt;Value&gt; FeatureDefnFields::New(Local&lt;Value&gt; feature_defn)
 	FeatureDefnFields *wrapped = new FeatureDefnFields();
 
 	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::New(FeatureDefnFields::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
+	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::GetFunction(Nan::New(FeatureDefnFields::constructor)).ToLocalChecked(), 1, &amp;ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New(&quot;parent_&quot;).ToLocalChecked(), feature_defn);
 
 	return scope.Escape(obj);
@@ -356,7 +356,7 @@ NAN_METHOD(FeatureDefnFields::getNames)
 
 	for (int i = 0; i &lt; n;  i++) {
 		OGRFieldDefn *field_def = feature_def-&gt;get()-&gt;GetFieldDefn(i);
-		result-&gt;Set(i, SafeString::New(field_def-&gt;GetNameRef()));
+		Nan::Set(result, i, SafeString::New(field_def-&gt;GetNameRef()));
 	}
 
 	info.GetReturnValue().Set(result);
@@ -425,7 +425,7 @@ NAN_METHOD(FeatureDefnFields::add)
 		Local&lt;Array&gt; array = info[0].As&lt;Array&gt;();
 		int n = array-&gt;Length();
 		for (int i = 0; i &lt; n; i++) {
-			Local&lt;Value&gt; element = array-&gt;Get(i);
+			Local&lt;Value&gt; element = Nan::Get(array, i).ToLocalChecked();
 			if (IS_WRAPPED(element, FieldDefn)) {
 				field_def = Nan::ObjectWrap::Unwrap&lt;FieldDefn&gt;(element.As&lt;Object&gt;());
 				feature_def-&gt;get()-&gt;AddFieldDefn(field_def-&gt;get());
@@ -482,14 +482,14 @@ NAN_METHOD(FeatureDefnFields::reorder)
 	int *field_map_array = new int[n];
 
 	for (int i = 0; i &lt; n; i++) {
-		Local&lt;Value&gt; val = field_map-&gt;Get(i);
+		Local&lt;Value&gt; val = Nan::Get(field_map, i).ToLocalChecked();
 		if (!val-&gt;IsNumber()) {
 			delete [] field_map_array;
 			Nan::ThrowError(&quot;Array must only contain integers&quot;);
 			return;
 		}
 
-		int key = val-&gt;IntegerValue();
+		int key = Nan::To&lt;int64_t&gt;(val).ToChecked();
 		if (key &lt; 0 || key &gt;= n) {
 			delete [] field_map_array;
 			Nan::ThrowError(&quot;Values must be between 0 and field count - 1&quot;);

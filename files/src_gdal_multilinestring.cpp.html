@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.8</b>
+                    API Docs for Version: <b>0.10.0</b>
                 </p>
             </li>
         </div>
@@ -201,7 +201,7 @@ void MultiLineString::Initialize(Local&lt;Object&gt; target)
 	Nan::SetPrototypeMethod(lcons, &quot;toString&quot;, toString);
 	Nan::SetPrototypeMethod(lcons, &quot;polygonize&quot;, polygonize);
 
-	target-&gt;Set(Nan::New(&quot;MultiLineString&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
+	Nan::Set(target, Nan::New(&quot;MultiLineString&quot;).ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -300,7 +300,7 @@ Local&lt;Value&gt; MultiLineString::New(OGRMultiLineString *geom, bool owned)
 	UPDATE_AMOUNT_OF_GEOMETRY_MEMORY(wrapped);
 
 	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::New(MultiLineString::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
+	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::GetFunction(Nan::New(MultiLineString::constructor)).ToLocalChecked(), 1, &amp;ext).ToLocalChecked();
 
 	return scope.Escape(obj);
 }
@@ -327,6 +327,7 @@ NAN_METHOD(MultiLineString::polygonize)
 }
 
 } // namespace node_gdal
+
     </pre>
 </div>
 

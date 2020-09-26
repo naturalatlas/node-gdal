@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.8</b>
+                    API Docs for Version: <b>0.10.0</b>
                 </p>
             </li>
         </div>
@@ -223,7 +223,7 @@ void Dataset::Initialize(Local&lt;Object&gt; target)
 	ATTR(lcons, &quot;srs&quot;, srsGetter, srsSetter);
 	ATTR(lcons, &quot;geoTransform&quot;, geoTransformGetter, geoTransformSetter);
 
-	target-&gt;Set(Nan::New(&quot;Dataset&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
+	Nan::Set(target, Nan::New(&quot;Dataset&quot;).ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -348,7 +348,7 @@ Local&lt;Value&gt; Dataset::New(GDALDataset *raw)
 	Dataset *wrapped = new Dataset(raw);
 
 	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::New(Dataset::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
+	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::GetFunction(Nan::New(Dataset::constructor)).ToLocalChecked(), 1, &amp;ext).ToLocalChecked();
 
 	dataset_cache.add(raw, obj);
 	wrapped-&gt;uid = ptr_manager.add(raw);
@@ -371,7 +371,7 @@ Local&lt;Value&gt; Dataset::New(OGRDataSource *raw)
 	Dataset *wrapped = new Dataset(raw);
 
 	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::New(Dataset::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
+	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::GetFunction(Nan::New(Dataset::constructor)).ToLocalChecked(), 1, &amp;ext).ToLocalChecked();
 
 	datasource_cache.add(raw, obj);
 	wrapped-&gt;uid = ptr_manager.add(raw);
@@ -629,7 +629,7 @@ NAN_METHOD(Dataset::getFileList)
 
 	int i = 0;
 	while (list[i]) {
-		results-&gt;Set(i, SafeString::New(list[i]));
+		Nan::Set(results, i, SafeString::New(list[i]));
 		i++;
 	}
 
@@ -680,14 +680,14 @@ NAN_METHOD(Dataset::getGCPs)
 	for (int i = 0; i &lt; n; i++) {
 		GDAL_GCP gcp = gcps[i];
 		Local&lt;Object&gt; obj = Nan::New&lt;Object&gt;();
-		obj-&gt;Set(Nan::New(&quot;pszId&quot;).ToLocalChecked(), Nan::New(gcp.pszId).ToLocalChecked());
-		obj-&gt;Set(Nan::New(&quot;pszInfo&quot;).ToLocalChecked(), Nan::New(gcp.pszInfo).ToLocalChecked());
-		obj-&gt;Set(Nan::New(&quot;dfGCPPixel&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(gcp.dfGCPPixel));
-		obj-&gt;Set(Nan::New(&quot;dfGCPLine&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(gcp.dfGCPLine));
-		obj-&gt;Set(Nan::New(&quot;dfGCPX&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(gcp.dfGCPX));
-		obj-&gt;Set(Nan::New(&quot;dfGCPY&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(gcp.dfGCPY));
-		obj-&gt;Set(Nan::New(&quot;dfGCPZ&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(gcp.dfGCPZ));
-		results-&gt;Set(i, obj);
+		Nan::Set(obj, Nan::New(&quot;pszId&quot;).ToLocalChecked(), Nan::New(gcp.pszId).ToLocalChecked());
+		Nan::Set(obj, Nan::New(&quot;pszInfo&quot;).ToLocalChecked(), Nan::New(gcp.pszInfo).ToLocalChecked());
+		Nan::Set(obj, Nan::New(&quot;dfGCPPixel&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(gcp.dfGCPPixel));
+		Nan::Set(obj, Nan::New(&quot;dfGCPLine&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(gcp.dfGCPLine));
+		Nan::Set(obj, Nan::New(&quot;dfGCPX&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(gcp.dfGCPX));
+		Nan::Set(obj, Nan::New(&quot;dfGCPY&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(gcp.dfGCPY));
+		Nan::Set(obj, Nan::New(&quot;dfGCPZ&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(gcp.dfGCPZ));
+		Nan::Set(results, i, obj);
 	}
 
 	info.GetReturnValue().Set(results);
@@ -734,7 +734,7 @@ NAN_METHOD(Dataset::setGCPs)
 	std::string *pszInfo_list = new std::string [gcps-&gt;Length()];
 	GDAL_GCP *gcp = list;
 	for (unsigned int i = 0; i &lt; gcps-&gt;Length(); ++i) {
-		Local&lt;Value&gt; val = gcps-&gt;Get(i);
+		Local&lt;Value&gt; val = Nan::Get(gcps, i).ToLocalChecked();
 		if (!val-&gt;IsObject()) {
 			if (list) {
 				delete [] list;
@@ -817,27 +817,27 @@ NAN_METHOD(Dataset::buildOverviews)
 
 	o = new int[n_overviews];
 	for(i = 0; i&lt;n_overviews; i++){
-		Local&lt;Value&gt; val = overviews-&gt;Get(i);
+		Local&lt;Value&gt; val = Nan::Get(overviews, i).ToLocalChecked();
 		if(!val-&gt;IsNumber()) {
 			delete [] o;
 			Nan::ThrowError(&quot;overviews array must only contain numbers&quot;);
 			return;
 		}
-		o[i] = val-&gt;Int32Value();
+		o[i] = Nan::To&lt;int32_t&gt;(val).ToChecked();
 	}
 
 	if(!bands.IsEmpty()){
 		n_bands = bands-&gt;Length();
 		b = new int[n_bands];
 		for(i = 0; i&lt;n_bands; i++){
-			Local&lt;Value&gt; val = bands-&gt;Get(i);
+			Local&lt;Value&gt; val = Nan::Get(bands, i).ToLocalChecked();
 			if(!val-&gt;IsNumber()) {
 				delete [] o;
 				delete [] b;
 				Nan::ThrowError(&quot;band array must only contain numbers&quot;);
 				return;
 			}
-			b[i] = val-&gt;Int32Value();
+			b[i] = Nan::To&lt;int32_t&gt;(val).ToChecked();
 			if(b[i] &gt; raw-&gt;GetRasterCount() || b[i] &lt; 1) {
 				//BuildOverviews prints an error but segfaults before returning
 				delete [] o;
@@ -928,8 +928,8 @@ NAN_GETTER(Dataset::rasterSizeGetter)
 	#endif
 
 	Local&lt;Object&gt; result = Nan::New&lt;Object&gt;();
-	result-&gt;Set(Nan::New(&quot;x&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(raw-&gt;GetRasterXSize()));
-	result-&gt;Set(Nan::New(&quot;y&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(raw-&gt;GetRasterYSize()));
+	Nan::Set(result, Nan::New(&quot;x&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(raw-&gt;GetRasterXSize()));
+	Nan::Set(result, Nan::New(&quot;y&quot;).ToLocalChecked(), Nan::New&lt;Integer&gt;(raw-&gt;GetRasterYSize()));
 	info.GetReturnValue().Set(result);
 }
 
@@ -1017,12 +1017,12 @@ NAN_GETTER(Dataset::geoTransformGetter)
 	}
 
 	Local&lt;Array&gt; result = Nan::New&lt;Array&gt;(6);
-	result-&gt;Set(0, Nan::New&lt;Number&gt;(transform[0]));
-	result-&gt;Set(1, Nan::New&lt;Number&gt;(transform[1]));
-	result-&gt;Set(2, Nan::New&lt;Number&gt;(transform[2]));
-	result-&gt;Set(3, Nan::New&lt;Number&gt;(transform[3]));
-	result-&gt;Set(4, Nan::New&lt;Number&gt;(transform[4]));
-	result-&gt;Set(5, Nan::New&lt;Number&gt;(transform[5]));
+	Nan::Set(result, 0, Nan::New&lt;Number&gt;(transform[0]));
+	Nan::Set(result, 1, Nan::New&lt;Number&gt;(transform[1]));
+	Nan::Set(result, 2, Nan::New&lt;Number&gt;(transform[2]));
+	Nan::Set(result, 3, Nan::New&lt;Number&gt;(transform[3]));
+	Nan::Set(result, 4, Nan::New&lt;Number&gt;(transform[4]));
+	Nan::Set(result, 5, Nan::New&lt;Number&gt;(transform[5]));
 
 	info.GetReturnValue().Set(result);
 }
@@ -1130,12 +1130,12 @@ NAN_SETTER(Dataset::geoTransformSetter)
 
 	double buffer[6];
 	for (int i = 0; i &lt; 6; i++) {
-		Local&lt;Value&gt; val = transform-&gt;Get(i);
+		Local&lt;Value&gt; val = Nan::Get(transform, i).ToLocalChecked();
 		if (!val-&gt;IsNumber()) {
 			Nan::ThrowError(&quot;Transform array must only contain numbers&quot;);
 			return;
 		}
-		buffer[i] = val-&gt;NumberValue();
+		buffer[i] = Nan::To&lt;double&gt;(val).ToChecked();
 	}
 
 	CPLErr err = raw-&gt;SetGeoTransform(buffer);

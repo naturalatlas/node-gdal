@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.8</b>
+                    API Docs for Version: <b>0.10.0</b>
                 </p>
             </li>
         </div>
@@ -215,7 +215,7 @@ void Feature::Initialize(Local&lt;Object&gt; target)
 	ATTR(lcons, &quot;defn&quot;, defnGetter, READ_ONLY_SETTER);
 	ATTR(lcons, &quot;fid&quot;, fidGetter, fidSetter);
 
-	target-&gt;Set(Nan::New(&quot;Feature&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
+	Nan::Set(target, Nan::New(&quot;Feature&quot;).ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -343,7 +343,7 @@ Local&lt;Value&gt; Feature::New(OGRFeature *feature, bool owned)
 	Feature *wrapped = new Feature(feature);
 	wrapped-&gt;owned_ = owned;
 	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::New(Feature::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
+	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::GetFunction(Nan::New(Feature::constructor)).ToLocalChecked(), 1, &amp;ext).ToLocalChecked();
 	return scope.Escape(obj);
 }
 
@@ -530,7 +530,7 @@ NAN_METHOD(Feature::setFrom)
 		int *index_map_ptr = new int[index_map-&gt;Length()];
 
 		for (unsigned index = 0; index &lt; index_map-&gt;Length(); index++) {
-			Local&lt;Value&gt; field_index(index_map-&gt;Get(Nan::New&lt;Integer&gt;(index)));
+			Local&lt;Value&gt; field_index(Nan::Get(index_map, Nan::New&lt;Integer&gt;(index)).ToLocalChecked());
 
 			if (!field_index-&gt;IsUint32()) {
 				delete [] index_map_ptr;
@@ -538,7 +538,7 @@ NAN_METHOD(Feature::setFrom)
 				return;
 			}
 
-			int val = (int)field_index-&gt;Uint32Value(); //todo: validate index? perhaps ogr already does this and throws an error
+			int val = (int)Nan::To&lt;uint32_t&gt;(field_index).ToChecked(); //todo: validate index? perhaps ogr already does this and throws an error
 
 			index_map_ptr[index] = val;
 		}
@@ -609,7 +609,7 @@ NAN_SETTER(Feature::fidSetter)
 		Nan::ThrowError(&quot;fid must be an integer&quot;);
 		return;
 	}
-	feature-&gt;this_-&gt;SetFID(value-&gt;IntegerValue());
+	feature-&gt;this_-&gt;SetFID(Nan::To&lt;int64_t&gt;(value).ToChecked());
 }
 
 } // namespace node_gdal

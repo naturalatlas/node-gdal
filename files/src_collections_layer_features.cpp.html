@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.8</b>
+                    API Docs for Version: <b>0.10.0</b>
                 </p>
             </li>
         </div>
@@ -203,7 +203,7 @@ void LayerFeatures::Initialize(Local&lt;Object&gt; target)
 
 	ATTR_DONT_ENUM(lcons, &quot;layer&quot;, layerGetter, READ_ONLY_SETTER);
 
-	target-&gt;Set(Nan::New(&quot;LayerFeatures&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
+	Nan::Set(target, Nan::New(&quot;LayerFeatures&quot;).ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -248,7 +248,7 @@ Local&lt;Value&gt; LayerFeatures::New(Local&lt;Value&gt; layer_obj)
 	LayerFeatures *wrapped = new LayerFeatures();
 
 	v8::Local&lt;v8::Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::New(LayerFeatures::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
+	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::GetFunction(Nan::New(LayerFeatures::constructor)).ToLocalChecked(), 1, &amp;ext).ToLocalChecked();
 	Nan::SetPrivate(obj, Nan::New(&quot;parent_&quot;).ToLocalChecked(), layer_obj);
 
 	return scope.Escape(obj);

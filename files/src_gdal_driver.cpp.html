@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.8</b>
+                    API Docs for Version: <b>0.10.0</b>
                 </p>
             </li>
         </div>
@@ -208,7 +208,7 @@ void Driver::Initialize(Local&lt;Object&gt; target)
 
 	ATTR(lcons, &quot;description&quot;, descriptionGetter, READ_ONLY_SETTER);
 
-	target-&gt;Set(Nan::New(&quot;Driver&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
+	Nan::Set(target, Nan::New(&quot;Driver&quot;).ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -317,7 +317,7 @@ Local&lt;Value&gt; Driver::New(GDALDriver *driver)
 
 	Driver *wrapped = new Driver(driver);
 	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::New(Driver::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
+	Local&lt;Object&gt; obj = Nan::NewInstance(Nan::GetFunction(Nan::New(Driver::constructor)).ToLocalChecked(), 1, &amp;ext).ToLocalChecked();
 
 	//LOG(&quot;ADDING DRIVER TO CACHE [%p]&quot;, driver);
 	cache.add(driver, obj);
@@ -340,7 +340,7 @@ Local&lt;Value&gt; Driver::New(OGRSFDriver *driver)
 
 	Driver *wrapped = new Driver(driver);
 	Local&lt;Value&gt; ext = Nan::New&lt;External&gt;(wrapped);
-	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::New(Driver::constructor)-&gt;GetFunction(), 1, &amp;ext).ToLocalChecked();
+	v8::Local&lt;v8::Object&gt; obj = Nan::NewInstance(Nan::GetFunction(Nan::New(Driver::constructor)).ToLocalChecked(), 1, &amp;ext).ToLocalChecked();
 
 	cache_ogr.add(driver, obj);
 
@@ -648,7 +648,7 @@ NAN_METHOD(Driver::getMetadata)
 	#if GDAL_VERSION_MAJOR &lt; 2
 	if (driver-&gt;uses_ogr){
 		result = Nan::New&lt;Object&gt;();
-		result-&gt;Set(Nan::New(&quot;DCAP_VECTOR&quot;).ToLocalChecked(), Nan::New(&quot;YES&quot;).ToLocalChecked());
+		Nan::Set(result, Nan::New(&quot;DCAP_VECTOR&quot;).ToLocalChecked(), Nan::New(&quot;YES&quot;).ToLocalChecked());
 		info.GetReturnValue().Set(result);
 		return;
 	}
@@ -657,7 +657,7 @@ NAN_METHOD(Driver::getMetadata)
 	GDALDriver* raw = driver-&gt;getGDALDriver();
 	result = MajorObject::getMetadata(raw, domain.empty() ? NULL : domain.c_str());
 	#if GDAL_VERSION_MAJOR &lt; 2
-		result-&gt;Set(Nan::New(&quot;DCAP_RASTER&quot;).ToLocalChecked(), Nan::New(&quot;YES&quot;).ToLocalChecked());
+		Nan::Set(result, Nan::New(&quot;DCAP_RASTER&quot;).ToLocalChecked(), Nan::New(&quot;YES&quot;).ToLocalChecked());
 	#endif
 	info.GetReturnValue().Set(result);
 }
@@ -715,6 +715,7 @@ NAN_METHOD(Driver::open)
 }
 
 } // namespace node_gdal
+
     </pre>
 </div>
 

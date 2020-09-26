@@ -24,7 +24,7 @@
             <li class="divider-vertical"></li>
             <li>
                 <p class="navbar-text">
-                    API Docs for Version: <b>0.9.8</b>
+                    API Docs for Version: <b>0.10.0</b>
                 </p>
             </li>
         </div>
@@ -189,8 +189,6 @@
 #include &quot;gdal_multilinestring.hpp&quot;
 #include &quot;gdal_multipolygon.hpp&quot;
 
-#include &quot;utils/fast_buffer.hpp&quot;
-
 #include &lt;node_buffer.h&gt;
 #include &lt;sstream&gt;
 #include &lt;stdlib.h&gt;
@@ -211,6 +209,7 @@ void Geometry::Initialize(Local&lt;Object&gt; target)
 	//Nan::SetMethod(constructor, &quot;fromWKBType&quot;, Geometry::create);
 	Nan::SetMethod(lcons, &quot;fromWKT&quot;, Geometry::createFromWkt);
 	Nan::SetMethod(lcons, &quot;fromWKB&quot;, Geometry::createFromWkb);
+	Nan::SetMethod(lcons, &quot;fromGeoJson&quot;, Geometry::createFromGeoJson);
 	Nan::SetMethod(lcons, &quot;getName&quot;, Geometry::getName);
 	Nan::SetMethod(lcons, &quot;getConstructor&quot;, Geometry::getConstructor);
 
@@ -256,11 +255,11 @@ void Geometry::Initialize(Local&lt;Object&gt; target)
 	ATTR(lcons, &quot;srs&quot;, srsGetter, srsSetter);
 	ATTR(lcons, &quot;wkbSize&quot;, wkbSizeGetter, READ_ONLY_SETTER);
 	ATTR(lcons, &quot;dimension&quot;, dimensionGetter, READ_ONLY_SETTER);
-	ATTR(lcons, &quot;coordinateDimension&quot;, coordinateDimensionGetter, READ_ONLY_SETTER);
+	ATTR(lcons, &quot;coordinateDimension&quot;, coordinateDimensionGetter, coordinateDimensionSetter);
 	ATTR(lcons, &quot;wkbType&quot;, typeGetter, READ_ONLY_SETTER);
 	ATTR(lcons, &quot;name&quot;, nameGetter, READ_ONLY_SETTER);
 
-	target-&gt;Set(Nan::New(&quot;Geometry&quot;).ToLocalChecked(), lcons-&gt;GetFunction());
+	Nan::Set(target, Nan::New(&quot;Geometry&quot;).ToLocalChecked(), Nan::GetFunction(lcons).ToLocalChecked());
 
 	constructor.Reset(lcons);
 }
@@ -830,8 +829,7 @@ NAN_METHOD(Geometry::exportToWKB)
 		return;
 	}
 
-	Local&lt;Value&gt; result = FastBuffer::New(data, size);
-	free(data);
+	Local&lt;Value&gt; result = Nan::NewBuffer((char *)data, size).ToLocalChecked();
 
 	info.GetReturnValue().Set(result);
 
@@ -943,10 +941,10 @@ NAN_METHOD(Geometry::getEnvelope)
 	geom-&gt;this_-&gt;getEnvelope(envelope);
 
 	Local&lt;Object&gt; obj = Nan::New&lt;Object&gt;();
-	obj-&gt;Set(Nan::New(&quot;minX&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MinX));
-	obj-&gt;Set(Nan::New(&quot;maxX&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MaxX));
-	obj-&gt;Set(Nan::New(&quot;minY&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MinY));
-	obj-&gt;Set(Nan::New(&quot;maxY&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MaxY));
+	Nan::Set(obj, Nan::New(&quot;minX&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MinX));
+	Nan::Set(obj, Nan::New(&quot;maxX&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MaxX));
+	Nan::Set(obj, Nan::New(&quot;minY&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MinY));
+	Nan::Set(obj, Nan::New(&quot;maxY&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MaxY));
 
 	delete envelope;
 
@@ -971,12 +969,12 @@ NAN_METHOD(Geometry::getEnvelope3D)
 	geom-&gt;this_-&gt;getEnvelope(envelope);
 
 	Local&lt;Object&gt; obj = Nan::New&lt;Object&gt;();
-	obj-&gt;Set(Nan::New(&quot;minX&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MinX));
-	obj-&gt;Set(Nan::New(&quot;maxX&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MaxX));
-	obj-&gt;Set(Nan::New(&quot;minY&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MinY));
-	obj-&gt;Set(Nan::New(&quot;maxY&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MaxY));
-	obj-&gt;Set(Nan::New(&quot;minZ&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MinZ));
-	obj-&gt;Set(Nan::New(&quot;maxZ&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MaxZ));
+	Nan::Set(obj, Nan::New(&quot;minX&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MinX));
+	Nan::Set(obj, Nan::New(&quot;maxX&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MaxX));
+	Nan::Set(obj, Nan::New(&quot;minY&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MinY));
+	Nan::Set(obj, Nan::New(&quot;maxY&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MaxY));
+	Nan::Set(obj, Nan::New(&quot;minZ&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MinZ));
+	Nan::Set(obj, Nan::New(&quot;maxZ&quot;).ToLocalChecked(), Nan::New&lt;Number&gt;(envelope-&gt;MaxZ));
 
 	delete envelope;
 
@@ -1063,6 +1061,52 @@ NAN_METHOD(Geometry::createFromWkb)
 	}
 
 	info.GetReturnValue().Set(Geometry::New(geom, true));
+}
+
+
+/**
+ * Creates a Geometry from a GeoJSON string. Requires GDAL&gt;=2.3.
+ *
+ * @static
+ * @method fromGeoJson
+ * @param {Object} geojson
+ * @return gdal.Geometry
+ */
+NAN_METHOD(Geometry::createFromGeoJson) {
+	Nan::HandleScope scope;
+#if GDAL_VERSION_MAJOR &lt; 2 || (GDAL_VERSION_MAJOR &lt;= 2 &amp;&amp; GDAL_VERSION_MINOR &lt; 3)
+	Nan::ThrowError(&quot;GDAL &lt; 2.3 does not support parsing GeoJSON directly&quot;);
+	return;
+#else
+	if (info.Length() &lt; 1) {
+		Nan::ThrowError(&quot;Missing required argument&quot;);
+		return;
+	}
+	Local&lt;Value&gt; input = info[0].As&lt;Value&gt;();
+
+	std::string val;
+	if (input-&gt;IsString()) {
+		val = *Nan::Utf8String(input);
+	} else if (input-&gt;IsObject() &amp;&amp; !input-&gt;IsNull()) {
+		// goes to text to pass it in, there isn&#x27;t a performant way to
+		// go from v8 JSON -&gt; CPLJSON anyways
+		Nan::JSON NanJSON;
+		v8::Local&lt;v8::Object&gt; inputObject = v8::Local&lt;v8::Object&gt;::Cast(input);
+		Nan::MaybeLocal&lt;String&gt; result = NanJSON.Stringify(inputObject);
+		if (result.IsEmpty()) {
+			Nan::ThrowError(&quot;Invalid GeoJSON&quot;);
+			return;
+		}
+		Local&lt;String&gt; stringified = result.ToLocalChecked();
+		val = *Nan::Utf8String(stringified);
+	} else {
+		Nan::ThrowError(&quot;Invalid GeoJSON (must a GeoJSON object or serialized string)&quot;);
+		return;
+	}
+
+	OGRGeometry *geom = OGRGeometryFactory::createFromGeoJson(val.c_str());
+	info.GetReturnValue().Set(Geometry::New(geom, true));
+#endif
 }
 
 /**
@@ -1161,7 +1205,6 @@ NAN_GETTER(Geometry::dimensionGetter)
 }
 
 /**
- * @readOnly
  * @attribute coordinateDimension
  * @type Integer
  */
@@ -1172,19 +1215,38 @@ NAN_GETTER(Geometry::coordinateDimensionGetter)
 	info.GetReturnValue().Set(Nan::New&lt;Integer&gt;(geom-&gt;this_-&gt;getCoordinateDimension()));
 }
 
+NAN_SETTER(Geometry::coordinateDimensionSetter)
+{
+	Nan::HandleScope scope;
+	Geometry *geom = Nan::ObjectWrap::Unwrap&lt;Geometry&gt;(info.This());
+
+	if (!value-&gt;IsInt32()) {
+		Nan::ThrowError(&quot;coordinateDimension must be an integer&quot;);
+		return;
+	}
+	int dim = Nan::To&lt;int64_t&gt;(value).ToChecked();
+	if (dim != 2 &amp;&amp; dim != 3) {
+		Nan::ThrowError(&quot;coordinateDimension must be 2 or 3&quot;);
+		return;
+	}
+
+	geom-&gt;this_-&gt;setCoordinateDimension(dim);
+}
+
+
 Local&lt;Value&gt; Geometry::getConstructor(OGRwkbGeometryType type){
 	Nan::EscapableHandleScope scope;
 
 	type = wkbFlatten(type);
 	switch (type) {
-		case wkbPoint:              return scope.Escape(Nan::New(Point::constructor)-&gt;GetFunction());
-		case wkbLineString:         return scope.Escape(Nan::New(LineString::constructor)-&gt;GetFunction());
-		case wkbLinearRing:         return scope.Escape(Nan::New(LinearRing::constructor)-&gt;GetFunction());
-		case wkbPolygon:            return scope.Escape(Nan::New(Polygon::constructor)-&gt;GetFunction());
-		case wkbGeometryCollection: return scope.Escape(Nan::New(GeometryCollection::constructor)-&gt;GetFunction());
-		case wkbMultiPoint:         return scope.Escape(Nan::New(MultiPoint::constructor)-&gt;GetFunction());
-		case wkbMultiLineString:    return scope.Escape(Nan::New(MultiLineString::constructor)-&gt;GetFunction());
-		case wkbMultiPolygon:       return scope.Escape(Nan::New(MultiPolygon::constructor)-&gt;GetFunction());
+		case wkbPoint:              return scope.Escape(Nan::GetFunction(Nan::New(Point::constructor)).ToLocalChecked());
+		case wkbLineString:         return scope.Escape(Nan::GetFunction(Nan::New(LineString::constructor)).ToLocalChecked());
+		case wkbLinearRing:         return scope.Escape(Nan::GetFunction(Nan::New(LinearRing::constructor)).ToLocalChecked());
+		case wkbPolygon:            return scope.Escape(Nan::GetFunction(Nan::New(Polygon::constructor)).ToLocalChecked());
+		case wkbGeometryCollection: return scope.Escape(Nan::GetFunction(Nan::New(GeometryCollection::constructor)).ToLocalChecked());
+		case wkbMultiPoint:         return scope.Escape(Nan::GetFunction(Nan::New(MultiPoint::constructor)).ToLocalChecked());
+		case wkbMultiLineString:    return scope.Escape(Nan::GetFunction(Nan::New(MultiLineString::constructor)).ToLocalChecked());
+		case wkbMultiPolygon:       return scope.Escape(Nan::GetFunction(Nan::New(MultiPolygon::constructor)).ToLocalChecked());
 		default:                    return scope.Escape(Nan::Null());
 	}
 }
@@ -1224,6 +1286,7 @@ NAN_METHOD(Geometry::getName)
 }
 
 } // namespace node_gdal
+
     </pre>
 </div>
 
