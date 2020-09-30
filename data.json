@@ -2,7 +2,7 @@
     "project": {
         "name": "node-gdal",
         "description": "Node.js bindings for GDAL (Geospatial Data Abstraction Library)",
-        "version": "0.10.0",
+        "version": "0.10.1",
         "url": "https://github.com/naturalatlas/node-gdal",
         "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png"
     },
@@ -5656,7 +5656,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 189,
+            "line": 193,
             "description": "Set a GeogCS based on well known name.",
             "itemtype": "method",
             "name": "setWellKnownGeogCS",
@@ -5671,7 +5671,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 197,
+            "line": 201,
             "description": "Convert in place to ESRI WKT format.",
             "throws": {
                 "description": "Error"
@@ -5682,7 +5682,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 205,
+            "line": 209,
             "description": "Convert in place from ESRI WKT format.",
             "throws": {
                 "description": "Error"
@@ -5693,7 +5693,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 213,
+            "line": 217,
             "description": "This method returns `true` if EPSG feels this geographic coordinate system\nshould be treated as having lat/long coordinate ordering.\n\nCurrently this returns `true` for all geographic coordinate systems with an\nEPSG code set, and AXIS values set defining it as lat, long. Note that\ncoordinate systems with an EPSG code and no axis settings will be assumed\nto not be lat/long.\n\n`false` will be returned for all coordinate systems that are not geographic,\nor that do not have an EPSG code set.",
             "itemtype": "method",
             "name": "EPSGTreatsAsLatLong",
@@ -5705,7 +5705,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 230,
+            "line": 234,
             "description": "This method returns `true` if EPSG feels this projected coordinate system should\nbe treated as having northing/easting coordinate ordering.",
             "itemtype": "method",
             "name": "EPSGTreatsAsNorthingEasting",
@@ -5717,7 +5717,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 239,
+            "line": 243,
             "description": "Check if geocentric coordinate system.",
             "itemtype": "method",
             "name": "isGeocentric",
@@ -5729,7 +5729,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 247,
+            "line": 251,
             "description": "Check if geographic coordinate system.",
             "itemtype": "method",
             "name": "isGeographic",
@@ -5741,7 +5741,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 255,
+            "line": 259,
             "description": "Check if projected coordinate system.",
             "itemtype": "method",
             "name": "isProjected",
@@ -5753,7 +5753,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 263,
+            "line": 267,
             "description": "Check if local coordinate system.",
             "itemtype": "method",
             "name": "isLocal",
@@ -5765,7 +5765,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 271,
+            "line": 275,
             "description": "Check if vertical coordinate system.",
             "itemtype": "method",
             "name": "isVertical",
@@ -5777,7 +5777,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 279,
+            "line": 283,
             "description": "Check if compound coordinate system.",
             "itemtype": "method",
             "name": "isCompound",
@@ -5789,7 +5789,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 287,
+            "line": 291,
             "description": "Do the GeogCS'es match?",
             "itemtype": "method",
             "name": "isSameGeogCS",
@@ -5808,7 +5808,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 296,
+            "line": 300,
             "description": "Do the VertCS'es match?",
             "itemtype": "method",
             "name": "isSameVertCS",
@@ -5827,7 +5827,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 305,
+            "line": 309,
             "description": "Do these two spatial references describe the same system?",
             "itemtype": "method",
             "name": "isSame",
@@ -5846,7 +5846,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 314,
+            "line": 318,
             "description": "Set EPSG authority info if possible.",
             "throws": {
                 "description": "Error"
@@ -5857,7 +5857,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 322,
+            "line": 326,
             "description": "Clones the spatial reference.",
             "itemtype": "method",
             "name": "clone",
@@ -5869,7 +5869,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 335,
+            "line": 339,
             "description": "Make a duplicate of the GEOGCS node of this OGRSpatialReference object.",
             "itemtype": "method",
             "name": "cloneGeogCS",
@@ -5881,7 +5881,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 348,
+            "line": 352,
             "description": "Get the authority name for a node. The most common authority is \"EPSG\".",
             "itemtype": "method",
             "name": "getAuthorityName",
@@ -5900,7 +5900,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 367,
+            "line": 371,
             "description": "Get the authority code for a node.",
             "itemtype": "method",
             "name": "getAuthorityCode",
@@ -5919,7 +5919,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 386,
+            "line": 390,
             "description": "Convert this SRS into WKT format.",
             "throws": {
                 "description": "Error"
@@ -5934,7 +5934,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 412,
+            "line": 416,
             "description": "Convert this SRS into a a nicely formatted WKT string for display to a person.",
             "throws": {
                 "description": "Error"
@@ -5958,7 +5958,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 442,
+            "line": 446,
             "description": "Export coordinate system in PROJ.4 format.",
             "throws": {
                 "description": "Error"
@@ -5973,7 +5973,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 473,
+            "line": 477,
             "description": "Export coordinate system in XML format.",
             "throws": {
                 "description": "Error"
@@ -5988,7 +5988,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 499,
+            "line": 503,
             "description": "Fetch indicated attribute of named node.",
             "itemtype": "method",
             "name": "getAttrValue",
@@ -6014,7 +6014,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 519,
+            "line": 523,
             "description": "Creates a spatial reference from a WKT string.",
             "static": 1,
             "throws": {
@@ -6037,7 +6037,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 546,
+            "line": 550,
             "description": "Creates a spatial reference from a Proj.4 string.",
             "static": 1,
             "throws": {
@@ -6060,7 +6060,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 572,
+            "line": 576,
             "description": "Creates a spatial reference from a WMSAUTO string.\n\nNote that the WMS 1.3 specification does not include the units code, while\napparently earlier specs do. GDAL tries to guess around this.",
             "example": [
                 "\n```\nvar wms = 'AUTO:42001,99,8888';\nvar ref = gdal.SpatialReference.fromWMSAUTO(wms);```"
@@ -6086,7 +6086,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 606,
+            "line": 610,
             "description": "Import coordinate system from XML format (GML only currently).",
             "static": 1,
             "throws": {
@@ -6109,7 +6109,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 632,
+            "line": 636,
             "description": "Initialize from OGC URN.\n\nThe OGC URN should be prefixed with \"urn:ogc:def:crs:\" per recommendation\npaper 06-023r1. Currently EPSG and OGC authority values are supported,\nincluding OGC auto codes, but not including CRS1 or CRS88 (NAVD88).",
             "static": 1,
             "throws": {
@@ -6132,7 +6132,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 662,
+            "line": 666,
             "description": "Initialize from OGC URL.\n\nThe OGC URL should be prefixed with \"http://opengis.net/def/crs\" per best\npractice paper 11-135. Currently EPSG and OGC authority values are supported,\nincluding OGC auto codes, but not including CRS1 or CRS88 (NAVD88).",
             "static": 1,
             "throws": {
@@ -6155,7 +6155,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 692,
+            "line": 696,
             "description": "Initialize spatial reference from a URL.\n\nThis method will download the spatial reference from the given URL.",
             "static": 1,
             "throws": {
@@ -6178,7 +6178,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 720,
+            "line": 724,
             "description": "Initialize from a Mapinfo style CoordSys definition.",
             "static": 1,
             "throws": {
@@ -6201,7 +6201,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 746,
+            "line": 750,
             "description": "Initialize from an arbitrary spatial reference string.\n\nThis method will examine the provided input, and try to deduce the format,\nand then use it to initialize the spatial reference system.",
             "static": 1,
             "throws": {
@@ -6224,7 +6224,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 775,
+            "line": 779,
             "description": "Initialize from EPSG GCS or PCS code.",
             "example": [
                 "\n```\nvar ref = gdal.SpatialReference.fromEPSGA(4326);```"
@@ -6250,7 +6250,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 805,
+            "line": 809,
             "description": "Initialize from EPSG GCS or PCS code.\n\nThis method is similar to `fromEPSG()` except that EPSG preferred axis ordering\n*will* be applied for geographic and projected coordinate systems. EPSG normally\ndefines geographic coordinate systems to use lat/long, and also there are also\na few projected coordinate systems that use northing/easting order contrary\nto typical GIS use).",
             "example": [
                 "\n```\nvar ref = gdal.SpatialReference.fromEPSGA(26910);```"
@@ -6276,7 +6276,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 841,
+            "line": 845,
             "description": "Import coordinate system from ESRI .prj format(s).\n\nThis function will read the text loaded from an ESRI .prj file, and translate it into an OGRSpatialReference definition. This should support many (but by no means all) old style (Arc/Info 7.x) .prj files, as well as the newer pseudo-OGC WKT .prj files. Note that new style .prj files are in OGC WKT format, but require some manipulation to correct datum names, and units on some projection parameters. This is addressed within importFromESRI() by an automatical call to morphFromESRI().\n\nCurrently only GEOGRAPHIC, UTM, STATEPLANE, GREATBRITIAN_GRID, ALBERS, EQUIDISTANT_CONIC, TRANSVERSE (mercator), POLAR, MERCATOR and POLYCONIC projections are supported from old style files.",
             "static": 1,
             "throws": {
@@ -6299,7 +6299,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 879,
+            "line": 883,
             "description": "Fetch linear geographic coordinate system units.",
             "itemtype": "method",
             "name": "getLinearUnits",
@@ -6311,7 +6311,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 901,
+            "line": 905,
             "description": "Fetch angular geographic coordinate system units.",
             "itemtype": "method",
             "name": "getAngularUnits",
@@ -6323,7 +6323,7 @@
         },
         {
             "file": "src/gdal_spatial_reference.cpp",
-            "line": 923,
+            "line": 927,
             "description": "Validate SRS tokens.\n\nThis method attempts to verify that the spatial reference system is well formed, and consists of known tokens. The validation is not comprehensive.",
             "itemtype": "method",
             "name": "validate",
