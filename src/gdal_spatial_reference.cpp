@@ -175,7 +175,11 @@ Local<Value> SpatialReference::New(OGRSpatialReference *raw, bool owned)
 	Local<Value> ext = Nan::New<External>(wrapped);
 	Local<Object> obj = Nan::NewInstance(Nan::GetFunction(Nan::New(SpatialReference::constructor)).ToLocalChecked(), 1, &ext).ToLocalChecked();
 
-	cache.add(cloned_srs, raw, obj);
+	if (owned) {
+		raw->Release(); // decrement reference counter and delete if 0
+	} else {
+		cache.add(cloned_srs, raw, obj);
+	}
 
 	return scope.Escape(obj);
 }
@@ -329,7 +333,7 @@ NAN_METHOD(SpatialReference::clone)
 {
 	Nan::HandleScope scope;
 	SpatialReference *srs = Nan::ObjectWrap::Unwrap<SpatialReference>(info.This());
-	info.GetReturnValue().Set(SpatialReference::New(srs->this_->Clone()));
+	info.GetReturnValue().Set(SpatialReference::New(srs->this_->Clone(), true));
 }
 
 /**
@@ -342,7 +346,7 @@ NAN_METHOD(SpatialReference::cloneGeogCS)
 {
 	Nan::HandleScope scope;
 	SpatialReference *srs = Nan::ObjectWrap::Unwrap<SpatialReference>(info.This());
-	info.GetReturnValue().Set(SpatialReference::New(srs->this_->CloneGeogCS()));
+	info.GetReturnValue().Set(SpatialReference::New(srs->this_->CloneGeogCS(), true));
 }
 
 /**
