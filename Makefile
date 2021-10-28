@@ -1,6 +1,6 @@
-.PHONY: clean clean-test build rebuild release test test-concurrent test-syntax authors
+.PHONY: clean clean-test build rebuild release test test-concurrent authors
 
-MOCHA_ARGS=test -R list -gc --require ./test/_common.js
+MOCHA_ARGS=test -R list --require ./test/_common.js
 
 all: build
 
@@ -23,7 +23,7 @@ clean-test:
 	@rm -rf ./test/data/**/*.tmp*
 
 ./node_modules/.bin/node-pre-gyp:
-	npm install node-pre-gyp
+	npm install @mapbox/node-pre-gyp
 
 build: ./node_modules/.bin/node-pre-gyp
 	./node_modules/.bin/node-pre-gyp configure --enable-logging=true
@@ -38,15 +38,12 @@ rebuild:
 	@make
 
 test: clean-test build
-	./node_modules/.bin/mocha $(MOCHA_ARGS)
+	node --expose-gc ./node_modules/.bin/mocha $(MOCHA_ARGS)
 	@make clean-test
 
 test-shared: clean-test build-shared
-	./node_modules/.bin/mocha $(MOCHA_ARGS)
+	node --expose-gc ./node_modules/.bin/mocha $(MOCHA_ARGS)
 	@make clean-test
-
-test-syntax:
-	npm run test-syntax
 
 test-concurrent: clean-test
 	node ./node_modules/.bin/_mocha \

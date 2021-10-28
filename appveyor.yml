@@ -14,13 +14,11 @@ matrix:
   fast_finish: true
 environment:
   matrix:
-    - nodejs_version: 10
-      msvs_toolset: 14
     - nodejs_version: 12
       msvs_toolset: 14
-    - nodejs_version: 13
-      msvs_toolset: 14
     - nodejs_version: 14
+      msvs_toolset: 14
+    - nodejs_version: 16
       msvs_toolset: 14
 install:
   - .\scripts\winci.bat

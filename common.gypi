@@ -16,7 +16,7 @@
 		],
 		"xcode_settings": {
 			"GCC_ENABLE_CPP_EXCEPTIONS": "YES",
-			"CLANG_CXX_LANGUAGE_STANDARD": "c++11",
+			"CLANG_CXX_LANGUAGE_STANDARD": "c++14",
 			"OTHER_CFLAGS": [
 				"-mmacosx-version-min=10.7",
 				"-Wno-deprecated-register",
@@ -24,7 +24,7 @@
 			],
 			"OTHER_CPLUSPLUSFLAGS": [
 				"-mmacosx-version-min=10.7",
-				"-std=c++11",
+				"-std=c++14",
 				"-stdlib=libc++",
 				"-Wno-deprecated-register",
 				"-Wno-unused-const-variable"

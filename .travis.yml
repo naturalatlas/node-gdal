@@ -14,6 +14,24 @@ addons:
 matrix:
   include:
     - os: osx
+      env: NODE_NVM_VERSION="17" TARGET=STATIC
+    - os: linux
+      env: NODE_NVM_VERSION="17" TARGET=STATIC
+    - os: osx
+      env: NODE_NVM_VERSION="17" TARGET=SHARED
+    - os: linux
+      dist: trusty
+      env: NODE_NVM_VERSION="17" TARGET=SHARED
+    - os: osx
+      env: NODE_NVM_VERSION="16" TARGET=STATIC
+    - os: linux
+      env: NODE_NVM_VERSION="16" TARGET=STATIC
+    - os: osx
+      env: NODE_NVM_VERSION="16" TARGET=SHARED
+    - os: linux
+      dist: trusty
+      env: NODE_NVM_VERSION="16" TARGET=SHARED
+    - os: osx
       env: NODE_NVM_VERSION="14" TARGET=STATIC
     - os: linux
       env: NODE_NVM_VERSION="14" TARGET=STATIC
@@ -23,15 +41,6 @@ matrix:
       dist: trusty
       env: NODE_NVM_VERSION="14" TARGET=SHARED
     - os: osx
-      env: NODE_NVM_VERSION="13" TARGET=STATIC
-    - os: linux
-      env: NODE_NVM_VERSION="13" TARGET=STATIC
-    - os: osx
-      env: NODE_NVM_VERSION="13" TARGET=SHARED
-    - os: linux
-      dist: trusty
-      env: NODE_NVM_VERSION="13" TARGET=SHARED
-    - os: osx
       env: NODE_NVM_VERSION="12" TARGET=STATIC
     - os: linux
       env: NODE_NVM_VERSION="12" TARGET=STATIC
@@ -40,18 +49,9 @@ matrix:
     - os: linux
       dist: trusty
       env: NODE_NVM_VERSION="12" TARGET=SHARED
-    - os: osx
-      env: NODE_NVM_VERSION="10" TARGET=STATIC
-    - os: linux
-      env: NODE_NVM_VERSION="10" TARGET=STATIC
-    - os: osx
-      env: NODE_NVM_VERSION="10" TARGET=SHARED
-    - os: linux
-      dist: trusty
-      env: NODE_NVM_VERSION="10" TARGET=SHARED
 
 before_install:
-  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then export CXX=g++-4.8; fi
+  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then export CXX=g++-6 CXXFLAGS=-std=c++14 CC=gcc-6; fi
   - COMMIT_MESSAGE=$(git show -s --format=%B $TRAVIS_COMMIT | tr -d '\n')
   - PUBLISH_BINARY=false
   - if test "${COMMIT_MESSAGE#*'[publish binary]'}" != "$COMMIT_MESSAGE" && test "${TRAVIS_BRANCH}" == "master" && test "${TRAVIS_PULL_REQUEST}" == "false"; then PUBLISH_BINARY=true; fi;
