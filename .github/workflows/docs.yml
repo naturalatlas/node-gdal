@@ -15,5 +15,8 @@ jobs:
       - run: npm install
       - name: Build Docs
         run: npm run yuidoc
-      - name: Publish Docs
-        run: npm run publish-yuidoc
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./yuidocs
