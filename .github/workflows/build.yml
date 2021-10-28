@@ -1,9 +1,16 @@
 name: Build
-on: push
+on:
+  push:
+    branches:
+    tags:
+      - '*'
+  pull_request:
+  workflow_dispatch:
 jobs:
   build-node:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-20.04, macos-11, windows-2019]
         node: [12.x, 14.x, 16.x, 17.x]
