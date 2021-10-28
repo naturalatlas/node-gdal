@@ -1,8 +1,7 @@
 # node-gdal
 [![NPM version](http://img.shields.io/npm/v/gdal.svg?style=flat)](https://www.npmjs.org/package/gdal)
 [![Installs](http://img.shields.io/npm/dm/gdal.svg?style=flat)](https://www.npmjs.org/package/gdal)
-[![Build Status](https://travis-ci.org/naturalatlas/node-gdal.svg)](https://travis-ci.org/naturalatlas/node-gdal)
-[<img src="https://ci.appveyor.com/api/projects/status/mo06c2r5opdwak95?svg=true" height="20" alt="" />](https://ci.appveyor.com/project/brianreavis/node-gdal)
+[![Build](https://github.com/naturalatlas/node-gdal/actions/workflows/build.yml/badge.svg)](https://github.com/naturalatlas/node-gdal/actions/workflows/build.yml)
 
 Read and write raster and vector geospatial datasets straight from [Node.js](http://nodejs.org) with this native [GDAL](http://www.gdal.org/) binding. GDAL [2.4.4](https://github.com/OSGeo/gdal/releases/tag/v2.4.4) ([GEOS](http://trac.osgeo.org/geos/) [3.4.2](http://trac.osgeo.org/geos/browser/tags/3.4.2/NEWS), [PROJ](http://trac.osgeo.org/proj/) [4.8.0](http://www.osgeo.org/node/1268)) comes bundled, so node-gdal will work straight out of the box. To get started, browse the [**API Documentation**](http://naturalatlas.github.io/node-gdal/classes/gdal.html) or [examples](examples/).
 
@@ -67,7 +66,7 @@ For an alternate fork that's more bleeding-edge at the moment, check out [gdal-n
 
 ## License
 
-Copyright &copy; 2015–2020 [Natural Atlas, Inc.](https://github.com/naturalatlas) & [Contributors](https://github.com/naturalatlas/node-gdal/graphs/contributors)
+Copyright &copy; 2015–2021 [Natural Atlas, Inc.](https://github.com/naturalatlas) & [Contributors](https://github.com/naturalatlas/node-gdal/graphs/contributors)
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: http://www.apache.org/licenses/LICENSE-2.0
 

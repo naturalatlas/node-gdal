@@ -32,3 +32,39 @@ jobs:
           path: build/stage/naturalatlas/node-gdal/releases/download/**/*.gz
           name: bindings
           if-no-files-found: error
+  release:
+    needs: [build-node]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - uses: actions/download-artifact@v2
+        with:
+          name: bindings
+          path: builds/bindings
+        id: upload-release-asset
+      - run: ls -lah builds/bindings/
+      - name: Parse semver string
+        id: semver_parser
+        uses: booxmedialtd/ws-action-parse-semver@v1
+        with:
+          input_string: ${{ github.ref }}
+          version_extractor_regex: 'tags\/(.*)$'
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.semver_parser.outputs.fullversion }}
+          release_name: ${{ steps.semver_parser.outputs.fullversion }}
+          draft: false
+          prerelease: steps.semver_parser.outputs.prerelease != []
+      - uses: AButler/upload-release-assets@v2.0
+        with:
+          files: 'builds/bindings/**/*'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          release-tag: ${{ steps.semver_parser.outputs.fullversion }}

@@ -1,5 +1,5 @@
-var ghpages = require('gh-pages');
-var path = require('path');
+const ghpages = require('gh-pages');
+const path = require('path');
 
 process.stdout.write('Publishing to "gh-pages" branch... ');
 ghpages.publish(path.resolve(__dirname, '../yuidocs'), {message: 'Updated documentation [skip ci]'}, function(err) {

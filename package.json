@@ -39,22 +39,21 @@
   "scripts": {
     "test": "mocha -n expose-gc -R tap --timeout 600000 --no-colors --require ./test/_common.js test",
     "install": "node-pre-gyp install --fallback-to-build",
-    "postpublish": "npm run publish-yuidoc",
     "yuidoc": "yuidoc --extension .js,.cpp,.hpp",
-    "publish-yuidoc": "npm run yuidoc && node ./scripts/publish-docs.js"
+    "publish-yuidoc": "node ./scripts/publish-docs.js"
   },
   "dependencies": {
     "@mapbox/node-pre-gyp": "^1.0.6",
     "nan": "~2.15.0"
   },
   "devDependencies": {
-    "aws-sdk": "~2.1016.0",
+    "aws-sdk": "~2.1017.0",
     "chai": "~4.3.4",
     "gh-pages": "~3.2.3",
     "mocha": "~9.1.3",
     "node-gyp": "~8.3.0",
     "yuidoc-lucid-theme": "~0.1.2",
-    "yuidocjs": "~0.3.50"
+    "yuidocjs": "~0.10.2"
   },
   "engines": {
     "node": ">= 10.0.0"

@@ -1,9 +1,11 @@
 .gitignore
 .npmignore
 .gitmodules
+.github
 node_modules
 lib/binding
 build
+builds
 test
 benchmark
 Makefile
@@ -12,6 +14,9 @@ appveyor.yml
 examples
 docs
 *.tgz
+*.tar.gz
 *.bz2
 *.log
+*.node
 yuidocs
+yuidoc.json
