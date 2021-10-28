@@ -1,6 +1,6 @@
 .PHONY: clean clean-test build rebuild release test test-concurrent authors
 
-MOCHA_ARGS=test -R list --require ./test/_common.js
+MOCHA_ARGS=-n expose-gc -R list --require ./test/_common.js test
 
 all: build
 
@@ -38,11 +38,11 @@ rebuild:
 	@make
 
 test: clean-test build
-	node --expose-gc ./node_modules/.bin/mocha $(MOCHA_ARGS)
+	./node_modules/.bin/mocha $(MOCHA_ARGS)
 	@make clean-test
 
 test-shared: clean-test build-shared
-	node --expose-gc ./node_modules/.bin/mocha $(MOCHA_ARGS)
+	./node_modules/.bin/mocha $(MOCHA_ARGS)
 	@make clean-test
 
 test-concurrent: clean-test

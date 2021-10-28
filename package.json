@@ -37,7 +37,7 @@
     "email": "brandon@naturalatlas.com"
   },
   "scripts": {
-    "test": "node --expose-gc ./node_modules/.bin/mocha test -R tap --timeout 600000 --no-colors --require ./test/_common.js",
+    "test": "mocha -n expose-gc -R tap --timeout 600000 --no-colors --require ./test/_common.js test",
     "install": "node-pre-gyp install --fallback-to-build",
     "postpublish": "npm run publish-yuidoc",
     "yuidoc": "yuidoc --extension .js,.cpp,.hpp",

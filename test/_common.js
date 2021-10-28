@@ -1,4 +1,4 @@
-var gdal = require('../lib/gdal.js');
+const gdal = require('../lib/gdal.js');
 
 // gc tracing
 try {
@@ -8,7 +8,7 @@ try {
 }
 
 // seg fault handler
-var SegfaultHandler;
+let SegfaultHandler;
 try {
 	SegfaultHandler = require('segfault-handler');
 	SegfaultHandler.registerHandler();
