@@ -22,10 +22,10 @@
   ],
   "binary": {
     "module_name": "gdal",
-    "module_path": "./lib/binding/{node_abi}-{platform}-{arch}",
-    "remote_path": "./{module_name}/v{version}/{toolset}/",
-    "host": "https://mapbox-node-binary.s3.amazonaws.com",
-    "package_name": "{node_abi}-{platform}-{arch}.tar.gz"
+    "module_path": "./lib/binding",
+    "remote_path": "naturalatlas/node-gdal/releases/download/{version}",
+    "host": "https://github.com",
+    "package_name": "{node_abi}-{platform}-{arch}-{libc}.tar.gz"
   },
   "repository": {
     "type": "git",

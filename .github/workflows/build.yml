@@ -1,0 +1,34 @@
+name: Build
+on: push
+jobs:
+  build-node:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, macos-11, windows-2019]
+        node: [12.x, 14.x, 16.x, 17.x]
+        architecture: [x64]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+          architecture: ${{ matrix.architecture_node }}
+      - run: node --version
+      - run: npm --version
+      - run: npm install node-gyp@8.3.0 --global
+      - run: npm config set msbuild_path "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
+        if: ${{ runner.os == 'Windows' }}
+      - run: export CXX=g++-6 CXXFLAGS=-std=c++14 CC=gcc-6
+        if: ${{ runner.os == 'Linux' }}
+      - run: npm install --build-from-source
+        env:
+          npm_config_arch: ${{ matrix.architecture }}
+          npm_config_target_arch: ${{ matrix.architecture }}
+      - run: ./node_modules/.bin/node-pre-gyp package testpackage
+      - npm test
+      - uses: actions/upload-artifact@v2
+        with:
+          path: build/stage/naturalatlas/node-gdal/releases/download/**/*.gz
+          name: bindings
+          if-no-files-found: error
