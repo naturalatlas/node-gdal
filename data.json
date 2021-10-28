@@ -2,7 +2,7 @@
     "project": {
         "name": "node-gdal",
         "description": "Node.js bindings for GDAL (Geospatial Data Abstraction Library)",
-        "version": "0.10.1",
+        "version": "0.11.0-alpha.2",
         "url": "https://github.com/naturalatlas/node-gdal",
         "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/GDALLogoColor.svg/200px-GDALLogoColor.svg.png"
     },
@@ -1020,6 +1020,7 @@
             "description": "Resampling options that can be used with the gdal.reprojectImage() method."
         }
     },
+    "elements": {},
     "classitems": [
         {
             "file": "lib/envelope.js",
@@ -2961,8 +2962,8 @@
                     "type": "Integer"
                 },
                 {
-                    "name": "data",
-                    "description": "The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) to put the data in. A new array is created if not given.",
+                    "name": "data] The [TypedArray",
+                    "description": "(https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) to put the data in. A new array is created if not given.",
                     "type": "TypedArray",
                     "optional": true
                 },
@@ -3106,8 +3107,8 @@
                     "type": "Integer"
                 },
                 {
-                    "name": "data",
-                    "description": "The [TypedArray](https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) to put the data in. A new array is created if not given.",
+                    "name": "data] The [TypedArray",
+                    "description": "(https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView#Typed_array_subclasses) to put the data in. A new array is created if not given.",
                     "type": "TypedArray",
                     "optional": true
                 }
@@ -6442,8 +6443,8 @@
                             "optional": true
                         },
                         {
-                            "name": "options",
-                            "description": "Warp options (see: [reference](http://www.gdal.org/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08))",
+                            "name": "options] Warp options (see: [reference",
+                            "description": "(http://www.gdal.org/structGDALWarpOptions.html#a0ed77f9917bb96c7a9aabd73d4d06e08))",
                             "type": "String[]|object",
                             "optional": true
                         }

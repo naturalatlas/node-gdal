@@ -50,6 +50,7 @@ YUI.add("yuidoc-meta", function(Y) {
         "gdal.SpatialReference"
     ],
     "modules": [],
-    "allModules": []
+    "allModules": [],
+    "elements": []
 } };
 });
