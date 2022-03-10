@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, macos-11, windows-2019]
+        os: [ubuntu-18.04, macos-11, windows-2019]
         node: [12.x, 14.x, 16.x, 17.x]
         architecture: [x64]
     steps:
@@ -22,13 +22,22 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           architecture: ${{ matrix.architecture_node }}
-      - run: node --version
-      - run: npm --version
+      - name: Node Version
+        run: node --version
+      - name: NPM Version
+        run: npm --version
       - run: npm install node-gyp@8.3.0 --global
       - run: npm config set msbuild_path "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
         if: ${{ runner.os == 'Windows' }}
-      - run: export CXX=g++-6 CXXFLAGS=-std=c++14 CC=gcc-6
+      - name: GCC Flags
         if: ${{ runner.os == 'Linux' }}
+        run: |
+          echo "CC=gcc-6" >> $GITHUB_ENV
+          echo "CXX=g++-6" >> $GITHUB_ENV
+          echo "CXXFLAGS=-std=c++14" >> $GITHUB_ENV
+      - name: GCC Version
+        if: ${{ runner.os == 'Linux' }}
+        run: $CC --version
       - run: npm install --build-from-source
         env:
           npm_config_arch: ${{ matrix.architecture }}
