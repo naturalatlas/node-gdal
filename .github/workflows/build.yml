@@ -29,6 +29,9 @@ jobs:
       - run: npm install node-gyp@8.3.0 --global
       - run: npm config set msbuild_path "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
         if: ${{ runner.os == 'Windows' }}
+      - name: Install gcc-6
+        if: ${{ runner.os == 'Linux' }}
+        run: sudo apt-get install -y gcc-6 g++-6
       - name: GCC Flags
         if: ${{ runner.os == 'Linux' }}
         run: |
