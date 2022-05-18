@@ -2,7 +2,7 @@
 	"variables": {
 		"toolset%":"",
 		"deps_dir": "./deps",
-		"prefers_libcpp": "<!(python -c \"import os;import platform;u=platform.uname();print((u[0] == 'Darwin' and int(u[2][0:2]) >= 13) and '-stdlib=libstdc++' not in os.environ.get('CXXFLAGS','') and '-mmacosx-version-min' not in os.environ.get('CXXFLAGS',''))\")"
+		"prefers_libcpp": "<!(python3 -c \"import os;import platform;u=platform.uname();print((u[0] == 'Darwin' and int(u[2][0:2]) >= 13) and '-stdlib=libstdc++' not in os.environ.get('CXXFLAGS','') and '-mmacosx-version-min' not in os.environ.get('CXXFLAGS',''))\")"
 	},
 	"target_defaults": {
 		"default_configuration": "Release",
