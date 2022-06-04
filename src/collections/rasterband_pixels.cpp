@@ -43,8 +43,8 @@ RasterBandPixels::~RasterBandPixels()
  * 
  * Note: Typed arrays should be created with an external ArrayBuffer for versions of node >= 0.11
  * ```
- * var n = 16*16;
- * var data = new Float32Array(new ArrayBuffer(n));
+ * var n = 16 * 16;
+ * var data = new Float32Array(new ArrayBuffer(n * 4)); // 4 bytes per float
  * //read data into the existing array
  * band.pixels.read(0,0,16,16,data);```
  *
